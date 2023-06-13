@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare
+package br.com.gabrielmorais.autocare.ui.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

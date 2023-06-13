@@ -12,15 +12,16 @@
         android:theme="@style/Theme.AutoCare"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activities.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AutoCare">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.activities.RegisterActivity"/>
+        <activity android:name=".ui.activities.LoginActivity"/>
     </application>
 
 </manifest>
