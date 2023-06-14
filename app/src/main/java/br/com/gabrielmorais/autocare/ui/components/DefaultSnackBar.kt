@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -37,8 +38,10 @@ fun DefaultSnackBar(
 }
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun DefaultSnackBarPreview() {
-  DefaultSnackBar()
+  Box {
+    DefaultSnackBar()
+  }
 }
