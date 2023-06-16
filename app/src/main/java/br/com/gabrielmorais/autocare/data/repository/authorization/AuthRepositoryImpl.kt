@@ -1,6 +1,6 @@
-package br.com.gabrielmorais.autocare.ui.authorization
+package br.com.gabrielmorais.autocare.data.repository.authorization
 
-import br.com.gabrielmorais.autocare.ui.utils.Resource
+import br.com.gabrielmorais.autocare.utils.Resource
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -31,5 +31,9 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
     }.catch {
       emit(Resource.Error(it.message.toString()))
     }
+  }
+
+  override fun logout() {
+    firebaseAuth.signOut()
   }
 }

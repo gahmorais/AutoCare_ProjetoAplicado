@@ -3,8 +3,8 @@ package br.com.gabrielmorais.autocare.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginState
-import br.com.gabrielmorais.autocare.ui.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.ui.utils.Resource
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow

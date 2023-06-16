@@ -25,9 +25,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterActivity
-import br.com.gabrielmorais.autocare.ui.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.viewmodels.LoginViewModel
@@ -48,9 +48,9 @@ class LoginActivity : ComponentActivity() {
     }
   }
 
-  override fun onStart() {
-    super.onStart()
-    viewModel.currentUser?.let {
+  override fun onResume() {
+    super.onResume()
+    viewModel.currentUser?.let { user ->
       val openActivity = Intent(this, MainActivity::class.java)
       startActivity(openActivity)
     }

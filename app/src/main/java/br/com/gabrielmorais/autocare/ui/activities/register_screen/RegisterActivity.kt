@@ -24,12 +24,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.gabrielmorais.autocare.ui.authorization.AuthRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.viewmodels.RegisterViewModel
 import br.com.gabrielmorais.autocare.ui.viewmodels.factory.RegisterViewModelFactory
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +39,10 @@ import kotlinx.coroutines.launch
 
 class RegisterActivity : ComponentActivity() {
   private val viewModel by viewModels<RegisterViewModel> {
-    RegisterViewModelFactory(AuthRepositoryImpl(Firebase.auth))
+    RegisterViewModelFactory(
+      AuthRepositoryImpl(Firebase.auth),
+      UserRepositoryImpl(Firebase.database)
+    )
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +53,7 @@ class RegisterActivity : ComponentActivity() {
 
 @Composable
 fun RegisterScreen(viewModel: RegisterViewModel) {
+
   val scaffoldState = rememberScaffoldState()
   val scope = rememberCoroutineScope()
   val state = viewModel.registerState.collectAsState(initial = null)
@@ -56,6 +62,7 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
   var password by remember { mutableStateOf("") }
   var confirmPassword by remember { mutableStateOf("") }
   var showPassword by remember { mutableStateOf(false) }
+
   AutoCareTheme {
     Scaffold(
       modifier = Modifier.fillMaxSize(),
@@ -120,7 +127,9 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
 
         TextButton(
           modifier = Modifier.fillMaxWidth(),
-          onClick = { viewModel.registerUser(email, password) }) {
+          onClick = {
+            viewModel.registerUser(email, password)
+          }) {
           Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
         }
       }
