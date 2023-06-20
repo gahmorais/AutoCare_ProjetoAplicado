@@ -2,8 +2,8 @@ package br.com.gabrielmorais.autocare.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginState
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginState
 import br.com.gabrielmorais.autocare.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
   private val _loginState = Channel<LoginState>()
   val loginState = _loginState.receiveAsFlow()
-  val currentUser = authRepository.currentUser
+  var currentUser = authRepository.getCurrentUser()
   fun loginUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
     authRepository.login(email, password).collect { result ->
       when (result) {
@@ -25,4 +25,11 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
       }
     }
   }
+
+  fun getCurrentUserListener(){
+    authRepository.getCurrentUserListener {
+      currentUser = it.currentUser
+    }
+  }
+
 }

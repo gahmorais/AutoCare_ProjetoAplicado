@@ -4,5 +4,6 @@ data class Vehicle(
   val brand: String,
   val model: String,
   val plate: String,
-  val maintenanceRecord: List<Maintenance>
+  val photo: String? = null,
+  val maintenanceRecord: List<Maintenance> = listOf()
 )

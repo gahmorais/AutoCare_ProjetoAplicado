@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.login_screen
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -48,14 +49,16 @@ class LoginActivity : ComponentActivity() {
     }
   }
 
-  override fun onResume() {
-    super.onResume()
+  override fun onStart() {
+    super.onStart()
+
+    viewModel.getCurrentUserListener()
     viewModel.currentUser?.let { user ->
+      Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
       val openActivity = Intent(this, MainActivity::class.java)
       startActivity(openActivity)
     }
   }
-
 }
 
 @Composable
