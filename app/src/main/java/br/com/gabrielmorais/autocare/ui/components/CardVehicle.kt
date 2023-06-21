@@ -10,7 +10,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -36,7 +35,6 @@ fun CardVehicle(
 ) {
   Card(
     modifier = modifier,
-    backgroundColor = Color.LightGray,
     elevation = 5.dp,
   ) {
     Row(
@@ -79,6 +77,6 @@ fun CardVehiclePreview() {
 val vehicleSample = Vehicle(
   brand = "Renault",
   model = "Sandero",
-  plate = "PFB3631",
+  plate = "XXX1234",
   photo = URL_VEHICLE_SAMPLE
 )

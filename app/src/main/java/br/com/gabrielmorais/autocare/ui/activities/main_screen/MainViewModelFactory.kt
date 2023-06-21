@@ -1,18 +1,16 @@
-package br.com.gabrielmorais.autocare.ui.viewmodels.factory
+package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import br.com.gabrielmorais.autocare.data.repository.UserRepository
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.ui.viewmodels.RegisterViewModel
 
-class RegisterViewModelFactory(
+class MainViewModelFactory(
   private val authRepository: AuthRepository,
-  private val userRepository: UserRepository
-) :
-  ViewModelProvider.Factory {
+  private val userRepository: UserRepository,
+) : ViewModelProvider.Factory {
   @Suppress("UNCHECKED_CAST")
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    return RegisterViewModel(authRepository, userRepository) as T
+    return MainViewModel(authRepository, userRepository) as T
   }
 }

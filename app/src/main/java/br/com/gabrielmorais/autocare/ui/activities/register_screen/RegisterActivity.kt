@@ -28,8 +28,8 @@ import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.viewmodels.RegisterViewModel
-import br.com.gabrielmorais.autocare.ui.viewmodels.factory.RegisterViewModelFactory
+import br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel.RegisterViewModel
+import br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel.RegisterViewModelFactory
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase

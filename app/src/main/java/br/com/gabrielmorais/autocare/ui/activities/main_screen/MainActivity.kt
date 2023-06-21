@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,27 +26,36 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
+import br.com.gabrielmorais.autocare.ui.activities.my_account_activity.MyAccountActivity
+import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.components.vehicleSample
-import br.com.gabrielmorais.autocare.ui.viewmodels.MainViewModel
-import br.com.gabrielmorais.autocare.ui.viewmodels.factory.MainViewModelFactory
+import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
+import br.com.gabrielmorais.autocare.ui.theme.Typography
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
   private val viewModel by viewModels<MainViewModel> {
-    MainViewModelFactory(AuthRepositoryImpl(Firebase.auth))
+    MainViewModelFactory(
+      AuthRepositoryImpl(Firebase.auth),
+      UserRepositoryImpl(FirebaseDatabase.getInstance())
+    )
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MainScreen(viewModel)
+      AutoCareTheme {
+        MainScreen(viewModel)
+      }
     }
   }
 }
@@ -54,6 +64,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(viewModel: MainViewModel? = null) {
   val scaffoldState = rememberScaffoldState()
   val scrollState = rememberScrollState()
+  val context = LocalContext.current
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
@@ -67,18 +78,17 @@ fun MainScreen(viewModel: MainViewModel? = null) {
         .padding(contentPadding)
         .verticalScroll(scrollState),
     ) {
-      repeat(10) {
-        CardVehicle(
-          vehicle = vehicleSample,
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp)
-            .clip(shape = RoundedCornerShape(15.dp)),
-          onClick = {
-
-          }
-        )
-      }
+      CardVehicle(
+        vehicle = vehicleSample,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(5.dp)
+          .clip(shape = RoundedCornerShape(15.dp)),
+        onClick = {
+          val intent = Intent(context, VehicleDetailsActivity::class.java)
+          context.startActivity(intent)
+        }
+      )
     }
   }
 }
@@ -108,6 +118,7 @@ fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
 
 @Composable
 fun DrawerContent() {
+  val context = LocalContext.current
   Column(
     modifier = Modifier.fillMaxWidth(),
     verticalArrangement = Arrangement.Center,
@@ -129,11 +140,14 @@ fun DrawerContent() {
     Text(text = "Usuário 1", style = TextStyle(fontSize = 25.sp))
   }
 
-  TextButton(modifier = Modifier.fillMaxWidth(), onClick = { }) {
-    Text(text = "Minha conta")
+  TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
+    val intent = Intent(context, MyAccountActivity::class.java)
+    context.startActivity(intent)
+  }) {
+    Text(text = "Minha conta", style = Typography.h6)
   }
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = { }) {
-    Text(text = "Manutenções")
+    Text(text = "Manutenções", style = Typography.h6)
   }
 }
 

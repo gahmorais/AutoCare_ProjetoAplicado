@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.ui.viewmodels
+package br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
