@@ -6,10 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -73,7 +70,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   val scrollState = rememberScrollState()
   val context = LocalContext.current
   val user = viewModel?.user?.collectAsState(initial = null)
-
+  val vehicleList = user?.value?.vehicles
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
@@ -87,7 +84,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
         .padding(contentPadding)
         .verticalScroll(scrollState),
     ) {
-      user?.value?.vehicles?.map {vehicle ->
+      vehicleList?.map { vehicle ->
         CardVehicle(
           vehicle = vehicle,
           modifier = Modifier
@@ -99,7 +96,14 @@ fun MainScreen(viewModel: MainViewModel? = null) {
             context.startActivity(intent)
           }
         )
+      } ?: Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+      ) {
+        Text(text = "Nenhum veículo cadastrado")
       }
+
     }
   }
 }
