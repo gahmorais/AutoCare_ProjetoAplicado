@@ -56,6 +56,7 @@ class LoginActivity : ComponentActivity() {
     viewModel.currentUser?.let { user ->
       Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
       val openActivity = Intent(this, MainActivity::class.java)
+      openActivity.putExtra("user_id", user.uid)
       startActivity(openActivity)
     }
   }

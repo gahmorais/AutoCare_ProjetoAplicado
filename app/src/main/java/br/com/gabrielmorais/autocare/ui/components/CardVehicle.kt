@@ -1,10 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -19,13 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 
-
-private const val URL_VEHICLE_SAMPLE =
-  "https://quatrorodas.abril.com.br/wp-content/uploads/2022/10/stepway10_001-1-e1665169601442.jpg?quality=70&strip=info&w=1280&h=720&crop=1"
 
 @Composable
 fun CardVehicle(
@@ -47,7 +42,7 @@ fun CardVehicle(
         modifier = Modifier.height(100.dp),
         model = ImageRequest
           .Builder(LocalContext.current)
-          .data(vehicle.photo)
+          .data(vehicle.photo ?: vehicleSample.photo)
           .transformations(CircleCropTransformation())
           .crossfade(true)
           .build(),
@@ -59,9 +54,13 @@ fun CardVehicle(
         Modifier
           .padding(horizontal = 10.dp),
       ) {
-        Text(text = vehicle.brand, style = TextStyle(fontSize = 25.sp))
-        Text(text = vehicle.model, style = TextStyle(fontSize = 25.sp))
-        Text(text = vehicle.plate, style = TextStyle(fontSize = 25.sp))
+        Text(text = vehicle.nickName ?: "")
+        Row() {
+          Text(text = vehicle.brand ?: "", style = TextStyle(fontSize = 25.sp))
+          Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+          Text(text = vehicle.model ?: "", style = TextStyle(fontSize = 25.sp))
+        }
+        Text(text = vehicle.plate ?: "", style = TextStyle(fontSize = 25.sp))
       }
     }
   }
@@ -72,11 +71,3 @@ fun CardVehicle(
 fun CardVehiclePreview() {
   CardVehicle(vehicleSample)
 }
-
-
-val vehicleSample = Vehicle(
-  brand = "Renault",
-  model = "Sandero",
-  plate = "XXX1234",
-  photo = URL_VEHICLE_SAMPLE
-)

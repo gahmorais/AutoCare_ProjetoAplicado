@@ -1,10 +1,17 @@
 package br.com.gabrielmorais.autocare.data.models
 
-import java.util.UUID
-
 data class User(
-  val id: String = UUID.randomUUID().toString(),
-  val email: String,
-  val name: String = "",
-  val vehicles: List<Vehicle> = listOf()
+  val id: String? = null,
+  val photo: String? = null,
+  val email: String? = null,
+  val name: String? = null,
+  val vehicles: List<Vehicle>? = null
+)
+
+data class UserFirebase(
+  val id: String? = null,
+  val photo: String? = null,
+  val email: String? = null,
+  val name: String? = null,
+  val vehicles: HashMap<String, Any>? = null
 )

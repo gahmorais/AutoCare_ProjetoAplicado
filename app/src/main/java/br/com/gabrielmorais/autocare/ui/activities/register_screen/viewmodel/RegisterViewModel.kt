@@ -24,7 +24,7 @@ class RegisterViewModel(
       when (result) {
         is Resource.Success -> {
           result.data?.user?.uid?.apply {
-            createUser(User(this, email))
+            createUser(User(id = this, email = email))
           }
         }
         is Resource.Loading -> {

@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -26,12 +27,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
+import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_activity.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
-import br.com.gabrielmorais.autocare.ui.components.vehicleSample
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import coil.compose.AsyncImage
@@ -52,6 +54,11 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    val userId = intent.getStringExtra("user_id")
+    Log.i("MainActivity", "onCreate: $userId")
+    userId?.let { id ->
+      viewModel.getUser(userId = id)
+    }
     setContent {
       AutoCareTheme {
         MainScreen(viewModel)
@@ -65,30 +72,34 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   val scaffoldState = rememberScaffoldState()
   val scrollState = rememberScrollState()
   val context = LocalContext.current
+  val user = viewModel?.user?.collectAsState(initial = null)
+
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
       TopBar(scaffoldState = scaffoldState, viewModel = viewModel)
     },
     drawerGesturesEnabled = true,
-    drawerContent = { DrawerContent() }
+    drawerContent = { DrawerContent(user?.value) }
   ) { contentPadding ->
     Column(
       Modifier
         .padding(contentPadding)
         .verticalScroll(scrollState),
     ) {
-      CardVehicle(
-        vehicle = vehicleSample,
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(5.dp)
-          .clip(shape = RoundedCornerShape(15.dp)),
-        onClick = {
-          val intent = Intent(context, VehicleDetailsActivity::class.java)
-          context.startActivity(intent)
-        }
-      )
+      user?.value?.vehicles?.map {vehicle ->
+        CardVehicle(
+          vehicle = vehicle,
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp)
+            .clip(shape = RoundedCornerShape(15.dp)),
+          onClick = {
+            val intent = Intent(context, VehicleDetailsActivity::class.java)
+            context.startActivity(intent)
+          }
+        )
+      }
     }
   }
 }
@@ -117,8 +128,9 @@ fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
 }
 
 @Composable
-fun DrawerContent() {
+fun DrawerContent(user: User? = null) {
   val context = LocalContext.current
+  Log.i("MainScreen", "MainScreen: DrawerContent ${user?.name}")
   Column(
     modifier = Modifier.fillMaxWidth(),
     verticalArrangement = Arrangement.Center,
@@ -131,17 +143,18 @@ fun DrawerContent() {
       alignment = Alignment.Center,
       model = ImageRequest
         .Builder(LocalContext.current)
-        .data("https://static.catapult.co/cdn-cgi/image/width=1170,height=658,dpr=2,fit=cover,format=auto/production/stories/31705/cover_photos/original/iron_man_site_1633028435_1637683340.jpg")
+        .data(user?.photo ?: userSample.photo)
         .crossfade(true)
         .transformations(CircleCropTransformation())
         .build(),
       contentDescription = "Profile Image"
     )
-    Text(text = "Usuário 1", style = TextStyle(fontSize = 25.sp))
+    Text(text = user?.name ?: "Desconhecido", style = TextStyle(fontSize = 25.sp))
   }
 
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
     val intent = Intent(context, MyAccountActivity::class.java)
+    intent.putExtra("user_id", user?.id)
     context.startActivity(intent)
   }) {
     Text(text = "Minha conta", style = Typography.h6)
