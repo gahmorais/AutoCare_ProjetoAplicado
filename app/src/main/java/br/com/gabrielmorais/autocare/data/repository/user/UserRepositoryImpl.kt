@@ -42,7 +42,7 @@ class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepositor
         }
 
         override fun onCancelled(error: DatabaseError) {
-          
+
         }
       })
   }

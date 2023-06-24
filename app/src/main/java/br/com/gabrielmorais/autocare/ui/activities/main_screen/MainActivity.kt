@@ -55,15 +55,19 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val userId = intent.getStringExtra("user_id")
-    Log.i("MainActivity", "onCreate: $userId")
-    userId?.let { id ->
-      viewModel.getUser(userId = id)
-    }
     setContent {
       AutoCareTheme {
         MainScreen(viewModel)
       }
+    }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    val userId = intent.getStringExtra("user_id")
+    Log.i("MainActivity", "onCreate: $userId")
+    userId?.let { id ->
+      viewModel.getUser(userId = id)
     }
   }
 }
@@ -75,6 +79,9 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   val context = LocalContext.current
   val user = viewModel?.user?.collectAsState(initial = null)
   val vehicleList = user?.value?.vehicles
+
+  Log.i("Lista de veículos'", "MainScreen: $vehicleList")
+
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {

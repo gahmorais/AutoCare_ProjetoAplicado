@@ -10,13 +10,18 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
-  private val _loginState = Channel<LoginState>()
+  private val _loginState = Channel<LoginState<String?>>()
   val loginState = _loginState.receiveAsFlow()
   var currentUser = authRepository.getCurrentUser()
   fun loginUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
     authRepository.login(email, password).collect { resource ->
       when (resource.status) {
-        Status.SUCCESS -> _loginState.send(LoginState(isSuccess = "Login realizado com sucesso"))
+        Status.SUCCESS -> _loginState.send(
+          LoginState(
+            isSuccess = "Login realizado com sucesso",
+            data = resource.data?.user?.uid
+          )
+        )
         Status.LOADING -> _loginState.send(LoginState(isLoading = true))
         Status.ERROR -> _loginState.send(LoginState(isError = resource.message))
       }

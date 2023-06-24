@@ -150,6 +150,8 @@ fun LoginScreen(viewModel: LoginViewModel) {
     scope.launch {
       if (state.value?.isSuccess?.isNotEmpty() == true) {
         val openActivity = Intent(context, MainActivity::class.java)
+        val userId = state.value?.data ?: ""
+        openActivity.putExtra("user_id", userId)
         context.startActivity(openActivity)
       }
     }
