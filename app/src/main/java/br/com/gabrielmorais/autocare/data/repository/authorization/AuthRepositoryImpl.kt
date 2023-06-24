@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare.data.repository.authorization
 
-import br.com.gabrielmorais.autocare.utils.Resource
+
+import br.com.gabrielmorais.autocare.data.repository.Resource
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
@@ -11,23 +12,23 @@ import kotlinx.coroutines.tasks.await
 class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepository {
 
 
-  override fun login(email: String, password: String): Flow<Resource<AuthResult>> {
+  override fun login(email: String, password: String): Flow<Resource<AuthResult?>> {
     return flow {
-      emit(Resource.Loading())
+      emit(Resource.loading(null))
       val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-      emit(Resource.Success(result))
-    }.catch {
-      emit(Resource.Error(it.message.toString()))
+      emit(Resource.success(result))
+    }.catch { error ->
+      emit(Resource.error(null, error.message ?: "Ocorreu um erro"))
     }
   }
 
   override fun register(email: String, password: String): Flow<Resource<AuthResult>> {
     return flow {
-      emit(Resource.Loading())
-      val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-      emit(Resource.Success(result))
-    }.catch {
-      emit(Resource.Error(it.message.toString()))
+      emit(Resource.loading(null))
+      val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+      emit(Resource.success(result))
+    }.catch { error ->
+      emit(Resource.error(null, error.message ?: "Ocorreu um erro"))
     }
   }
 

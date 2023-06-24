@@ -6,10 +6,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -21,12 +24,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_activity.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
@@ -79,32 +83,47 @@ fun MainScreen(viewModel: MainViewModel? = null) {
     drawerGesturesEnabled = true,
     drawerContent = { DrawerContent(user?.value) }
   ) { contentPadding ->
-    Column(
-      Modifier
-        .padding(contentPadding)
-        .verticalScroll(scrollState),
-    ) {
-      vehicleList?.map { vehicle ->
-        CardVehicle(
-          vehicle = vehicle,
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp)
-            .clip(shape = RoundedCornerShape(15.dp)),
-          onClick = {
-            val intent = Intent(context, VehicleDetailsActivity::class.java)
-            context.startActivity(intent)
-          }
-        )
-      } ?: Column(
-        modifier = Modifier.fillMaxSize(),
+    if (!vehicleList.isNullOrEmpty()) {
+      LazyColumn(
+        modifier = Modifier
+          .padding(contentPadding)
+          .scrollable(scrollState, orientation = Orientation.Vertical)
+      ) {
+        items(vehicleList) { vehicle ->
+          CardVehicle(
+            vehicle = vehicle,
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(5.dp)
+              .clip(shape = RoundedCornerShape(15.dp)),
+            onCardClick = {
+              val intent = Intent(context, VehicleDetailsActivity::class.java)
+              context.startActivity(intent)
+            }
+          )
+        }
+      }
+    } else
+      Column(
+        modifier = Modifier
+          .padding(contentPadding)
+          .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
       ) {
-        Text(text = "Nenhum veículo cadastrado")
+        Box(
+          modifier = Modifier
+            .weight(1F)
+            .wrapContentHeight(Alignment.CenterVertically)
+        ) {
+          Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Nenhum veículo cadastrado",
+            textAlign = TextAlign.Center,
+            style = Typography.h4
+          )
+        }
       }
-
-    }
   }
 }
 

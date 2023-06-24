@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -22,11 +23,13 @@ import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CardVehicle(
   vehicle: Vehicle,
   modifier: Modifier = Modifier,
-  onClick: () -> Unit = {},
+  onCardClick: () -> Unit = {},
+  onLongClick: () -> Unit = {},
 ) {
   Card(
     modifier = modifier,
@@ -35,7 +38,10 @@ fun CardVehicle(
     Row(
       modifier
         .padding(5.dp)
-        .clickable { onClick() },
+        .combinedClickable(
+          onClick = { onCardClick() },
+          onLongClick = { onLongClick() }
+        ),
       verticalAlignment = Alignment.CenterVertically
     ) {
       AsyncImage(

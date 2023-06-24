@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +29,26 @@ class MyAccountViewModel(
     try {
       userRepository.getUser(userId) {
         viewModelScope.launch { _user.emit(it) }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
+  fun updateUser(user: User) {
+    try {
+      userRepository.updateUser(user) {
+        _message.value = it
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
+  fun deleteVehicle(userId: String, vehicleId: String) {
+    try {
+      userRepository.deleteVehicle(userId, vehicleId) {
+        _message.value = it
       }
     } catch (e: Exception) {
       e.printStackTrace()

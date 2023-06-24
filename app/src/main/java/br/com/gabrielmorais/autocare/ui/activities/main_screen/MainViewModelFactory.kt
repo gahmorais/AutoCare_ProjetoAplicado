@@ -2,7 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import br.com.gabrielmorais.autocare.data.repository.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 
 class MainViewModelFactory(

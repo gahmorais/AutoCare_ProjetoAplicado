@@ -3,10 +3,10 @@ package br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.UserRepository
-import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterState
+import br.com.gabrielmorais.autocare.data.repository.Status
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.utils.Resource
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -20,18 +20,18 @@ class RegisterViewModel(
   val registerState = _registerState.receiveAsFlow()
 
   fun registerUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
-    authRepository.register(email, password).collect { result ->
-      when (result) {
-        is Resource.Success -> {
-          result.data?.user?.uid?.apply {
+    authRepository.register(email, password).collect { resource ->
+      when (resource.status) {
+        Status.SUCCESS -> {
+          resource.data?.user?.uid?.apply {
             createUser(User(id = this, email = email))
           }
         }
-        is Resource.Loading -> {
+        Status.LOADING -> {
           _registerState.send(RegisterState(isLoading = true))
         }
-        is Resource.Error -> {
-          _registerState.send(RegisterState(isError = result.message))
+        Status.ERROR -> {
+          _registerState.send(RegisterState(isError = resource.message))
         }
       }
     }

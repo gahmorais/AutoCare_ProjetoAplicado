@@ -3,7 +3,7 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +18,7 @@ class MainViewModel(
   fun logout() = authRepository.logout()
 
   fun getUser(userId: String) {
+
     try {
       userRepository.getUser(userId) {
         viewModelScope.launch { _user.emit(it) }

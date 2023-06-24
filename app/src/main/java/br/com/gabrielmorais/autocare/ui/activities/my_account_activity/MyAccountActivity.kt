@@ -5,9 +5,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,17 +23,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MyAccountActivity : ComponentActivity() {
   private val viewModel = MyAccountViewModel(
-    UserRepositoryImpl(FirebaseDatabase.getInstance())
+    UserRepositoryImpl(Firebase.database)
   )
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +50,8 @@ class MyAccountActivity : ComponentActivity() {
 
     lifecycleScope.launch {
       viewModel.message.collectLatest { message ->
-        Toast.makeText(this@MyAccountActivity, message, Toast.LENGTH_SHORT).show()
+        if (message.isNotBlank())
+          Toast.makeText(this@MyAccountActivity, message, Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -53,14 +60,15 @@ class MyAccountActivity : ComponentActivity() {
 }
 
 
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
 
   val user = viewModel?.user?.collectAsState(initial = null)
   var email by remember { mutableStateOf("") }
-  var name by remember { mutableStateOf("") }
+  var name by remember { mutableStateOf(user?.value?.name ?: "") }
   val addVehicleDialogState = remember { AddVehicleDialogState() }
-  var showDialog by remember { mutableStateOf(false) }
+  var showDialogAddVehicle by remember { mutableStateOf(false) }
   Log.i("MyAccountActivity", "MyAccountScreen: $user")
   AutoCareTheme {
     Scaffold(
@@ -76,25 +84,37 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = "Email") },
-          value = email,
+          enabled = false,
+          value = user?.value?.email ?: "",
           onValueChange = { email = it }
         )
 
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = "Nome") },
+          placeholder = { Text(text = "John Doe") },
           value = name,
           onValueChange = { name = it }
         )
 
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.Center
+        ) {
           TextButton(onClick = { /*TODO*/ }) {
             Text(
               text = "Trocar senha",
               style = Typography.subtitle1,
             )
           }
-          TextButton(onClick = { /*TODO*/ }) {
+          TextButton(onClick = {
+            user?.value?.let {
+              val updatedUser = it.copy(
+                name = name
+              )
+              viewModel.updateUser(updatedUser)
+            }
+          }) {
             Text(
               text = "Atualizar dados",
               style = Typography.subtitle1,
@@ -110,26 +130,76 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
         )
 
         Spacer(modifier = Modifier.padding(vertical = 16.dp))
-        user?.value?.vehicles?.map { vehicle ->
-          CardVehicle(
-            modifier = Modifier.fillMaxWidth(),
-            vehicle = vehicle,
-          )
-          Spacer(modifier = Modifier.padding(vertical = 8.dp))
+        LazyColumn(
+          modifier = Modifier.padding(vertical = 8.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+          itemsIndexed(items = user?.value?.vehicles ?: listOf(), key = { _, item ->
+            item.id ?: 0
+          }) { _, vehicle ->
+            val state = rememberDismissState(
+              confirmStateChange = {
+                if (it == DismissValue.DismissedToStart) {
+                  val userId = user?.value?.id ?: ""
+                  val vehicleId = vehicle.id ?: ""
+                  viewModel?.deleteVehicle(userId, vehicleId)
+                }
+                true
+              }
+            )
+            SwipeToDismiss(
+              modifier = Modifier
+                .padding(vertical = 1.dp)
+                .animateItemPlacement(),
+              state = state,
+              background = {
+                val color = when (state.dismissDirection) {
+                  DismissDirection.EndToStart -> Color.Red
+                  else -> Color.Transparent
+                }
+                Box(
+                  modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = color),
+
+                  ) {
+                  Icon(
+                    modifier = Modifier
+                      .align(Alignment.CenterEnd)
+                      .padding(end = 10.dp)
+                      .size(25.dp),
+                    imageVector = Icons.Rounded.Delete,
+                    contentDescription = null
+                  )
+                }
+              },
+
+              directions = setOf(DismissDirection.EndToStart),
+              dismissThresholds = { directions ->
+                FractionalThreshold(0.66F)
+              }
+            ) {
+              CardVehicle(
+                modifier = Modifier.fillMaxWidth(),
+                vehicle = vehicle,
+              )
+            }
+
+          }
         }
         Button(
           modifier = Modifier.fillMaxWidth(),
-          onClick = { showDialog = showDialog.not() },
+          onClick = { showDialogAddVehicle = showDialogAddVehicle.not() },
         ) {
           Text(text = "Adicionar veículo", style = Typography.h5)
         }
 
-        if (showDialog) {
+        if (showDialogAddVehicle) {
           Box(modifier = Modifier.background(Color.White)) {
             AddVehicleDialog(
               addVehicleDialogState,
               onDismiss = {
-                showDialog = false
+                showDialogAddVehicle = false
               },
               onConfirm = {
                 val newVehicle = Vehicle(
@@ -142,7 +212,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 user?.value?.id?.let {
                   Log.d("MyAccountScreen", "MyAccountScreen: $it")
                   viewModel.saveVehicle(it, newVehicle)
-                  showDialog = false
+                  showDialogAddVehicle = false
                 }
               })
           }

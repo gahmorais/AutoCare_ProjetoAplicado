@@ -30,8 +30,8 @@ import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositor
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterActivity
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
+import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.viewmodels.LoginViewModel
 import br.com.gabrielmorais.autocare.ui.viewmodels.factory.LoginViewModelFactory
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -71,72 +71,78 @@ fun LoginScreen(viewModel: LoginViewModel) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val state = viewModel.loginState.collectAsState(initial = null)
-  AutoCareTheme {
-    Scaffold(
-      modifier = Modifier.fillMaxSize(),
-      snackbarHost = { scaffoldState.snackbarHostState },
-      scaffoldState = scaffoldState
-    ) { contentPadding ->
-      Column(
-        Modifier
-          .fillMaxSize()
-          .padding(contentPadding)
-          .padding(horizontal = 16.dp)
-      ) {
-        OutlinedTextField(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-          value = email,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-          label = { Text(text = "Email") },
-          leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
-          placeholder = { Text(text = "email@email.com.br") },
-          onValueChange = { email = it },
-        )
-        OutlinedTextField(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 32.dp),
-          value = password,
-          label = { Text(text = "Senha") },
-          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-          leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-          trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
-              Icon(
-                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = null
-              )
+  if (state.value?.isLoading == true) {
+    LoadingPage("Efetuando login")
+  } else {
+    AutoCareTheme {
+      Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = { scaffoldState.snackbarHostState },
+        scaffoldState = scaffoldState
+      ) { contentPadding ->
+        Column(
+          Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .padding(horizontal = 16.dp)
+        ) {
+          OutlinedTextField(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 32.dp),
+            value = email,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            label = { Text(text = "Email") },
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
+            placeholder = { Text(text = "email@email.com.br") },
+            onValueChange = { email = it },
+          )
+          OutlinedTextField(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(bottom = 32.dp),
+            value = password,
+            label = { Text(text = "Senha") },
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+            trailingIcon = {
+              IconButton(onClick = { showPassword = !showPassword }) {
+                Icon(
+                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                  contentDescription = null
+                )
+              }
+            },
+            onValueChange = { password = it },
+          )
+          Row(modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+              modifier = Modifier.fillMaxWidth(0.5f),
+              onClick = {
+                val intent = Intent(context, RegisterActivity::class.java)
+                context.startActivity(intent)
+              }) {
+              Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
             }
-          },
-          onValueChange = { password = it },
-        )
-        Row(modifier = Modifier.fillMaxWidth()) {
-          TextButton(
-            modifier = Modifier.fillMaxWidth(0.5f),
-            onClick = {
-              val intent = Intent(context, RegisterActivity::class.java)
-              context.startActivity(intent)
-            }) {
-            Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
-          }
-          TextButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { viewModel.loginUser(email, password) }) {
-            Text(text = "Login", style = TextStyle(fontSize = 24.sp))
+            TextButton(
+              modifier = Modifier.fillMaxWidth(),
+              onClick = {
+                viewModel.loginUser(email, password)
+              }) {
+              Text(text = "Login", style = TextStyle(fontSize = 24.sp))
+            }
           }
         }
-      }
-      Box(
-        Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
-      ) {
-        DefaultSnackBar(
-          snackbarHostState = scaffoldState.snackbarHostState,
-          onDismiss = {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-          })
+        Box(
+          Modifier.fillMaxSize(),
+          contentAlignment = Alignment.BottomCenter
+        ) {
+          DefaultSnackBar(
+            snackbarHostState = scaffoldState.snackbarHostState,
+            onDismiss = {
+              scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            })
+        }
       }
     }
   }

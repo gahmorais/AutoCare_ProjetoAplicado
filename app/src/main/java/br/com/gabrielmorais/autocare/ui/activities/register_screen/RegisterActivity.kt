@@ -24,12 +24,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.gabrielmorais.autocare.data.repository.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel.RegisterViewModel
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.viewmodel.RegisterViewModelFactory
+import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -63,104 +64,110 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
   var confirmPassword by remember { mutableStateOf("") }
   var showPassword by remember { mutableStateOf(false) }
 
-  AutoCareTheme {
-    Scaffold(
-      modifier = Modifier.fillMaxSize(),
-      scaffoldState = scaffoldState,
-      snackbarHost = { scaffoldState.snackbarHostState }
-    ) { contentPadding ->
-      Column(
-        modifier = Modifier
-          .padding(contentPadding)
-          .padding(horizontal = 16.dp)
-          .fillMaxSize(),
-      ) {
-
-        OutlinedTextField(
+  if (state.value?.isLoading == true) {
+    LoadingPage("Registrando usuário")
+  } else {
+    AutoCareTheme {
+      Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        scaffoldState = scaffoldState,
+        snackbarHost = { scaffoldState.snackbarHostState }
+      ) { contentPadding ->
+        Column(
           modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-          value = email,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-          label = { Text(text = "Email") },
-          leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
-          placeholder = { Text(text = "email@email.com.br") },
-          onValueChange = { email = it },
-        )
-        OutlinedTextField(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 32.dp),
-          value = password,
-          label = { Text(text = "Senha") },
-          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-          leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-          trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
-              Icon(
-                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = null
-              )
-            }
-          },
-          onValueChange = { password = it },
-        )
+            .padding(contentPadding)
+            .padding(horizontal = 16.dp)
+            .fillMaxSize(),
+        ) {
 
-        OutlinedTextField(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 32.dp),
-          value = confirmPassword,
-          label = { Text(text = "Confirme a senha") },
-          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-          leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-          trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
-              Icon(
-                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = null
-              )
-            }
-          },
-          onValueChange = { confirmPassword = it },
-        )
+          OutlinedTextField(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 32.dp),
+            value = email,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            label = { Text(text = "Email") },
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
+            placeholder = { Text(text = "email@email.com.br") },
+            onValueChange = { email = it },
+          )
+          OutlinedTextField(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(bottom = 32.dp),
+            value = password,
+            label = { Text(text = "Senha") },
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+            trailingIcon = {
+              IconButton(onClick = { showPassword = !showPassword }) {
+                Icon(
+                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                  contentDescription = null
+                )
+              }
+            },
+            onValueChange = { password = it },
+          )
 
-        TextButton(
-          modifier = Modifier.fillMaxWidth(),
-          onClick = {
-            viewModel.registerUser(email, password)
-          }) {
-          Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
-        }
-      }
-      Box(
-        Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
-      ) {
-        DefaultSnackBar(
-          snackbarHostState = scaffoldState.snackbarHostState,
-          onDismiss = {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-          })
-      }
+          OutlinedTextField(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(bottom = 32.dp),
+            value = confirmPassword,
+            label = { Text(text = "Confirme a senha") },
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+            trailingIcon = {
+              IconButton(onClick = { showPassword = !showPassword }) {
+                Icon(
+                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                  contentDescription = null
+                )
+              }
+            },
+            onValueChange = { confirmPassword = it },
+          )
 
-      LaunchedEffect(key1 = state.value?.isSuccess) {
-        scope.launch {
-          if (state.value?.isSuccess?.isNotEmpty() == true) {
-            val success = state.value?.isSuccess
-            Toast.makeText(context, "$success", Toast.LENGTH_SHORT).show()
-            context.finish()
+          TextButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+              viewModel.registerUser(email, password)
+            }) {
+            Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
           }
         }
-      }
-
-      LaunchedEffect(key1 = state.value?.isError) {
-        scope.launch {
-          if (state.value?.isError?.isNotEmpty() == true) {
-            val error = state.value?.isError
-            showSnackBar(scaffoldState, "$error")
-          }
+        Box(
+          Modifier.fillMaxSize(),
+          contentAlignment = Alignment.BottomCenter
+        ) {
+          DefaultSnackBar(
+            snackbarHostState = scaffoldState.snackbarHostState,
+            onDismiss = {
+              scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            })
         }
+
+
+      }
+    }
+  }
+
+  LaunchedEffect(key1 = state.value?.isSuccess) {
+    scope.launch {
+      if (state.value?.isSuccess?.isNotEmpty() == true) {
+        val success = state.value?.isSuccess
+        Toast.makeText(context, "$success", Toast.LENGTH_SHORT).show()
+        context.finish()
+      }
+    }
+  }
+
+  LaunchedEffect(key1 = state.value?.isError) {
+    scope.launch {
+      if (state.value?.isError?.isNotEmpty() == true) {
+        val error = state.value?.isError
+        showSnackBar(scaffoldState, "$error")
       }
     }
   }
