@@ -1,9 +1,12 @@
 package br.com.gabrielmorais.autocare.data.models
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 data class Maintenance(
-  val description: String,
-  val date: LocalDateTime,
-  val mileage: String
+  val description: String? = null,
+  val date: LocalDate? = null,
+  val currentMileage: Int? = null,
+  val forecastNextExchangeMileage: Int? = null,
+  val forecastNextExchangeDate: LocalDate? = null,
+  val comments: String? = null
 )

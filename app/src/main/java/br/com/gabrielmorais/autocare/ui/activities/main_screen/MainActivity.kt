@@ -32,7 +32,7 @@ import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.sampleData.userSample
-import br.com.gabrielmorais.autocare.ui.activities.my_account_activity.MyAccountActivity
+import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme

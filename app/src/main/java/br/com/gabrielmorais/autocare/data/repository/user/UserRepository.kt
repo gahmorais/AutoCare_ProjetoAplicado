@@ -11,4 +11,5 @@ interface UserRepository {
   fun getVehicles(userId: String, callback: (List<Vehicle>) -> Unit)
   fun saveVehicle(userId: String, vehicle: Vehicle, callback: (String) -> Unit)
   fun deleteVehicle(userId: String, vehicleId: String, callback: (String) -> Unit)
+
 }

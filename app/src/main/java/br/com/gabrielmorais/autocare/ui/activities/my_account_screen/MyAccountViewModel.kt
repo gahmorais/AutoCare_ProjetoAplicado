@@ -1,10 +1,13 @@
-package br.com.gabrielmorais.autocare.ui.activities.my_account_activity
+package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +32,17 @@ class MyAccountViewModel(
     try {
       userRepository.getUser(userId) {
         viewModelScope.launch { _user.emit(it) }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
+  fun changePassword(email: String) {
+    try {
+      val authRepository = AuthRepositoryImpl(Firebase.auth)
+      authRepository.changePassword(email) {
+        _message.value = it
       }
     } catch (e: Exception) {
       e.printStackTrace()

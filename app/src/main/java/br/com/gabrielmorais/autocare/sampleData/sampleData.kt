@@ -1,7 +1,10 @@
 package br.com.gabrielmorais.autocare.sampleData
 
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import java.time.LocalDate
+import java.time.Month
 
 private const val URL_VEHICLE_SAMPLE =
   "https://quatrorodas.abril.com.br/wp-content/uploads/2022/10/stepway10_001-1-e1665169601442.jpg?quality=70&strip=info&w=1280&h=720&crop=1"
@@ -22,4 +25,16 @@ val userSample = User(
   email = "teste@teste.com.br",
   name = "Gabriel Morais",
   vehicles = listOf(vehicleSample)
+)
+
+
+val maintenanceListSample = listOf(
+  Maintenance(
+    description = "Troca de óleo",
+    date = LocalDate.of(2023, Month.FEBRUARY, 30),
+    currentMileage = 75000,
+    forecastNextExchangeMileage = 82000,
+    forecastNextExchangeDate = LocalDate.of(2023, Month.SEPTEMBER, 30),
+    comments = "Óleo ELF 10W40 Semisintético"
+  )
 )

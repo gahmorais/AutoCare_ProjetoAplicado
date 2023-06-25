@@ -11,18 +11,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +26,8 @@ import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterActivity
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
+import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
+import br.com.gabrielmorais.autocare.ui.components.PasswordTextFieldState
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.viewmodels.factory.LoginViewModelFactory
 import com.google.firebase.auth.ktx.auth
@@ -65,8 +62,6 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(viewModel: LoginViewModel) {
   var email by remember { mutableStateOf("") }
-  var password by remember { mutableStateOf("") }
-  var showPassword by remember { mutableStateOf(false) }
   val scaffoldState = rememberScaffoldState()
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
@@ -97,24 +92,14 @@ fun LoginScreen(viewModel: LoginViewModel) {
             placeholder = { Text(text = "email@email.com.br") },
             onValueChange = { email = it },
           )
-          OutlinedTextField(
+          val passwordState = PasswordTextFieldState()
+          PasswordTextField(
             modifier = Modifier
               .fillMaxWidth()
               .padding(bottom = 32.dp),
-            value = password,
-            label = { Text(text = "Senha") },
-            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-            trailingIcon = {
-              IconButton(onClick = { showPassword = !showPassword }) {
-                Icon(
-                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                  contentDescription = null
-                )
-              }
-            },
-            onValueChange = { password = it },
+            state = passwordState
           )
+
           Row(modifier = Modifier.fillMaxWidth()) {
             TextButton(
               modifier = Modifier.fillMaxWidth(0.5f),
@@ -127,7 +112,7 @@ fun LoginScreen(viewModel: LoginViewModel) {
             TextButton(
               modifier = Modifier.fillMaxWidth(),
               onClick = {
-                viewModel.loginUser(email, password)
+                viewModel.loginUser(email, passwordState.password)
               }) {
               Text(text = "Login", style = TextStyle(fontSize = 24.sp))
             }

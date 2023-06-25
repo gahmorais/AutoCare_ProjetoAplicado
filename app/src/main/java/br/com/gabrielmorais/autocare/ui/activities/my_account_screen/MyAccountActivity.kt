@@ -1,5 +1,6 @@
-package br.com.gabrielmorais.autocare.ui.activities.my_account_activity
+package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -17,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
@@ -65,10 +68,12 @@ class MyAccountActivity : ComponentActivity() {
 fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
 
   val user = viewModel?.user?.collectAsState(initial = null)
-  var email by remember { mutableStateOf("") }
-  var name by remember { mutableStateOf(user?.value?.name ?: "") }
+  var email by remember(user?.value?.email) { mutableStateOf(user?.value?.email) }
+  var name by remember(user?.value?.name) { mutableStateOf(user?.value?.name) }
   val addVehicleDialogState = remember { AddVehicleDialogState() }
   var showDialogAddVehicle by remember { mutableStateOf(false) }
+
+  val context = LocalContext.current
   Log.i("MyAccountActivity", "MyAccountScreen: $user")
   AutoCareTheme {
     Scaffold(
@@ -85,7 +90,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = "Email") },
           enabled = false,
-          value = user?.value?.email ?: "",
+          value = email ?: "",
           onValueChange = { email = it }
         )
 
@@ -93,7 +98,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = "Nome") },
           placeholder = { Text(text = "John Doe") },
-          value = name,
+          value = name ?: "",
           onValueChange = { name = it }
         )
 
@@ -101,7 +106,9 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.Center
         ) {
-          TextButton(onClick = { /*TODO*/ }) {
+          TextButton(onClick = {
+            viewModel?.changePassword(user?.value?.email ?: "")
+          }) {
             Text(
               text = "Trocar senha",
               style = Typography.subtitle1,
@@ -133,7 +140,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
         LazyColumn(
           modifier = Modifier.padding(vertical = 8.dp),
           verticalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
+        ) {
           itemsIndexed(items = user?.value?.vehicles ?: listOf(), key = { _, item ->
             item.id ?: 0
           }) { _, vehicle ->
@@ -182,6 +189,10 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
               CardVehicle(
                 modifier = Modifier.fillMaxWidth(),
                 vehicle = vehicle,
+                onCardClick = {
+                  val intent = Intent(context, VehicleDetailsActivity::class.java)
+                  context.startActivity(intent)
+                }
               )
             }
 

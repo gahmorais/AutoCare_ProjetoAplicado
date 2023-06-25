@@ -61,12 +61,24 @@ fun CardVehicle(
           .padding(horizontal = 10.dp),
       ) {
         Text(text = vehicle.nickName ?: "")
-        Row() {
-          Text(text = vehicle.brand ?: "", style = TextStyle(fontSize = 25.sp))
-          Spacer(modifier = Modifier.padding(horizontal = 5.dp))
-          Text(text = vehicle.model ?: "", style = TextStyle(fontSize = 25.sp))
+        Row {
+          Text(
+            text = vehicle.brand ?: "",
+            style = TextStyle(fontSize = 20.sp),
+          )
+          Spacer(
+            modifier = Modifier
+              .padding(horizontal = 5.dp),
+          )
+          Text(
+            text = vehicle.model ?: "",
+            style = TextStyle(fontSize = 20.sp),
+          )
         }
-        Text(text = vehicle.plate ?: "", style = TextStyle(fontSize = 25.sp))
+        Text(
+          text = vehicle.plate ?: "",
+          style = TextStyle(fontSize = 25.sp),
+        )
       }
     }
   }

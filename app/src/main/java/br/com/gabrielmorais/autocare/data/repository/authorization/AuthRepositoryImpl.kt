@@ -39,6 +39,16 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
       callback(it)
     }
 
+  override fun changePassword(email: String, callback: (String) -> Unit) {
+    firebaseAuth.sendPasswordResetEmail(email)
+      .addOnSuccessListener {
+        callback("Email enviado")
+      }
+      .addOnFailureListener { error ->
+        throw error
+      }
+  }
+
 
   override fun logout() {
     firebaseAuth.signOut()
