@@ -31,7 +31,7 @@ val userSample = User(
 val maintenanceListSample = listOf(
   Maintenance(
     description = "Troca de óleo",
-    date = LocalDate.of(2023, Month.FEBRUARY, 30),
+    date = LocalDate.of(2023, Month.FEBRUARY, 25),
     currentMileage = 75000,
     forecastNextExchangeMileage = 82000,
     forecastNextExchangeDate = LocalDate.of(2023, Month.SEPTEMBER, 30),

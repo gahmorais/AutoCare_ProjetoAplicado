@@ -117,8 +117,12 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           TextButton(onClick = {
             user?.value?.let {
               val updatedUser = it.copy(
-                name = name
+                id = it.id,
+                name = name,
+                email = email,
+                vehicles = null
               )
+
               viewModel.updateUser(updatedUser)
             }
           }) {
