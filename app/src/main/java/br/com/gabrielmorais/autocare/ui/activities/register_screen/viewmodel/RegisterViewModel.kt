@@ -27,9 +27,11 @@ class RegisterViewModel(
             createUser(User(id = this, email = email))
           }
         }
+
         Status.LOADING -> {
           _registerState.send(RegisterState(isLoading = true))
         }
+
         Status.ERROR -> {
           _registerState.send(RegisterState(isError = resource.message))
         }
@@ -38,18 +40,14 @@ class RegisterViewModel(
   }
 
   private fun createUser(user: User) {
-    userRepository.createUser(user) { task ->
-      if (task.isSuccessful) {
+    try {
+      userRepository.createUser(user) {
         viewModelScope.launch(Dispatchers.IO) {
           _registerState.send(RegisterState(isSuccess = "Usuário cadastrado com sucesso"))
         }
-      } else {
-        try {
-          task.exception?.let { throw it }
-        } catch (e: Exception) {
-          viewModelScope.launch(Dispatchers.IO) { _registerState.send(RegisterState(isError = e.message)) }
-        }
       }
+    } catch (e: Exception) {
+      viewModelScope.launch(Dispatchers.IO) { _registerState.send(RegisterState(isError = e.message)) }
     }
   }
 }

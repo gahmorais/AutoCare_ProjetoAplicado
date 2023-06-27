@@ -2,7 +2,6 @@ package br.com.gabrielmorais.autocare.data.repository.user
 
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -13,12 +12,17 @@ private const val USER_CHILD = "Usuarios"
 private const val VEHICLE_CHILD = "vehicles"
 
 class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepository {
-  override fun createUser(user: User, callback: (task: Task<Void>) -> Unit) {
+  override fun createUser(user: User, callback: () -> Unit) {
     database.reference
       .child(USER_CHILD)
       .child(user.id ?: "")
       .setValue(user)
-      .addOnCompleteListener { callback(it) }
+      .addOnSuccessListener {
+        callback()
+      }
+      .addOnFailureListener { error ->
+        throw error
+      }
   }
 
   override fun getUser(userId: String, callback: (User?) -> Unit) {

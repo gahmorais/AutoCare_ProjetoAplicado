@@ -25,7 +25,7 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
   override fun register(email: String, password: String): Flow<Resource<AuthResult>> {
     return flow {
       emit(Resource.loading(null))
-      val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+      val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
       emit(Resource.success(result))
     }.catch { error ->
       emit(Resource.error(null, error.message ?: "Ocorreu um erro"))
