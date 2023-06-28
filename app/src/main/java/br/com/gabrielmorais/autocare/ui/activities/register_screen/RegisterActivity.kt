@@ -147,8 +147,6 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
               scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
             })
         }
-
-
       }
     }
   }

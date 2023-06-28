@@ -7,27 +7,42 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterActivity
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
-import br.com.gabrielmorais.autocare.ui.components.PasswordTextFieldState
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.viewmodels.factory.LoginViewModelFactory
 import com.google.firebase.auth.ktx.auth
@@ -44,30 +59,29 @@ class LoginActivity : ComponentActivity() {
     setContent {
       LoginScreen(viewModel)
     }
-  }
 
-  override fun onStart() {
-    super.onStart()
-
-    viewModel.getCurrentUserListener()
-    viewModel.currentUser?.let { user ->
-      Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
-      val openActivity = Intent(this, MainActivity::class.java)
-      openActivity.putExtra("user_id", user.uid)
-      startActivity(openActivity)
+    lifecycleScope.launch {
+      viewModel.currentUser.collect { user ->
+        user?.let {
+          Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
+          val openActivity = Intent(this@LoginActivity, MainActivity::class.java)
+          openActivity.putExtra("user_id", it.uid)
+          startActivity(openActivity)
+        }
+      }
     }
   }
 }
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel) {
-  var email by remember { mutableStateOf("") }
   val scaffoldState = rememberScaffoldState()
   val context = LocalContext.current
-  val scope = rememberCoroutineScope()
+  val stateUi = remember { viewModel.loginUiState }
+  val passwordState = stateUi.passwordState
   val state = viewModel.loginState.collectAsState(initial = null)
   if (state.value?.isLoading == true) {
-    LoadingPage("Efetuando login")
+    LoadingPage(stringResource(id = R.string.text_loading_login))
   } else {
     AutoCareTheme {
       Scaffold(
@@ -85,14 +99,21 @@ fun LoginScreen(viewModel: LoginViewModel) {
             modifier = Modifier
               .fillMaxWidth()
               .padding(vertical = 32.dp),
-            value = email,
+            value = stateUi.email,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            label = { Text(text = "Email") },
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
-            placeholder = { Text(text = "email@email.com.br") },
-            onValueChange = { email = it },
+            label = { Text(text = stringResource(id = R.string.text_email)) },
+            leadingIcon = {
+              Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null
+              )
+            },
+            placeholder = {
+              Text(text = stringResource(id = R.string.email_placeholder))
+            },
+            onValueChange = stateUi.onEmailChange,
           )
-          val passwordState = PasswordTextFieldState()
+
           PasswordTextField(
             modifier = Modifier
               .fillMaxWidth()
@@ -107,14 +128,20 @@ fun LoginScreen(viewModel: LoginViewModel) {
                 val intent = Intent(context, RegisterActivity::class.java)
                 context.startActivity(intent)
               }) {
-              Text(text = "Cadastrar", style = TextStyle(fontSize = 24.sp))
+              Text(
+                text = stringResource(id = R.string.text_register),
+                style = TextStyle(fontSize = 24.sp)
+              )
             }
             TextButton(
               modifier = Modifier.fillMaxWidth(),
               onClick = {
-                viewModel.loginUser(email, passwordState.password)
+                viewModel.loginUser(stateUi.email, passwordState.password)
               }) {
-              Text(text = "Login", style = TextStyle(fontSize = 24.sp))
+              Text(
+                text = stringResource(id = R.string.text_login),
+                style = TextStyle(fontSize = 24.sp)
+              )
             }
           }
         }
@@ -131,19 +158,9 @@ fun LoginScreen(viewModel: LoginViewModel) {
       }
     }
   }
-  LaunchedEffect(key1 = state.value?.isSuccess) {
-    scope.launch {
-      if (state.value?.isSuccess?.isNotEmpty() == true) {
-        val openActivity = Intent(context, MainActivity::class.java)
-        val userId = state.value?.data ?: ""
-        openActivity.putExtra("user_id", userId)
-        context.startActivity(openActivity)
-      }
-    }
-  }
 
   LaunchedEffect(key1 = state.value?.isError) {
-    scope.launch {
+    launch {
       if (state.value?.isError?.isNotEmpty() == true) {
         val error = state.value?.isError
         Toast.makeText(context, "$error", Toast.LENGTH_SHORT).show()

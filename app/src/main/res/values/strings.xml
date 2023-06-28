@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AutoCare</string>
+    <string name="email_placeholder">"email@email.com.br"</string>
+    <string name="text_email">Email</string>
+    <string name="text_login">Login</string>
+    <string name="text_loading_login">Efetuando Login</string>
+    <string name="text_register">Cadastrar</string>
+    <string name="user_id_extra">user_id</string>
 </resources>
