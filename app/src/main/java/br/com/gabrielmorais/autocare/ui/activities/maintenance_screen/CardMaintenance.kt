@@ -15,9 +15,8 @@ import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.sampleData.maintenanceListSample
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import java.time.LocalDate
-import java.time.Period
-import java.time.format.DateTimeFormatter
+import br.com.gabrielmorais.autocare.utils.Utils.Companion.diffBetweenMaintenance
+import br.com.gabrielmorais.autocare.utils.Utils.Companion.formatDate
 
 @Composable
 fun CardMaintenance(
@@ -31,35 +30,35 @@ fun CardMaintenance(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "Descrição:", style = Typography.h6)
+          Text(text = "Descrição:", style = Typography.h5)
           Text(text = maintenance.description ?: "")
         }
         Row(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "Data:", style = Typography.h6)
+          Text(text = "Data:", style = Typography.h5)
           Text(text = formatDate(maintenance.date!!))
         }
         Row(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "Km Atual:", style = Typography.h6)
+          Text(text = "Km Atual:", style = Typography.h5)
           Text(text = maintenance.currentMileage.toString())
         }
         Row(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "Próxima Man. em Km:", style = Typography.h6)
+          Text(text = "Próxima Man. em Km:", style = Typography.h5)
           Text(text = maintenance.forecastNextExchangeMileage.toString())
         }
         Row(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "Próxima Man. em Meses:", style = Typography.h6)
+          Text(text = "Próxima Man. em Meses:", style = Typography.h5)
           Text(
             text = diffBetweenMaintenance(
               maintenance.date!!,
@@ -71,21 +70,12 @@ fun CardMaintenance(
           horizontalArrangement = Arrangement.spacedBy(5.dp),
           verticalAlignment = Alignment.Bottom,
         ) {
-          Text(text = "OBS:", style = Typography.h6)
+          Text(text = "OBS:", style = Typography.h5)
           Text(text = maintenance.comments!!)
         }
       }
     }
   }
-}
-
-private fun diffBetweenMaintenance(currentDate: LocalDate, futureDate: LocalDate): Period {
-  return Period.between(currentDate, futureDate)
-}
-
-private fun formatDate(date: LocalDate): String {
-  val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-  return date.format(dateTimeFormatter)
 }
 
 @Preview(showBackground = true)
