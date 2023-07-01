@@ -1,23 +1,22 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
+import android.Manifest
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -27,10 +26,10 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,29 +37,81 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
+import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import coil.compose.AsyncImage
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class VehicleDetailsActivity : ComponentActivity() {
+
+  private val viewModel: VehicleDetailsViewModel by viewModel()
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
       AutoCareTheme {
-        VehicleDetailsScreen(vehicleSample)
+        VehicleDetailsScreen(vehicleSample, viewModel)
+      }
+    }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    val extras = intent.extras
+    extras?.let { bundle ->
+      val userId = bundle.getString("user_id")
+      val vehicleId = bundle.getString("vehicle_id")
+      if (userId != null && vehicleId != null) {
+        viewModel.getVehicle(userId, vehicleId)
       }
     }
   }
 }
 
 @Composable
-fun VehicleDetailsScreen(vehicle: Vehicle) {
-  val context = LocalContext.current
+fun VehicleDetailsScreen(vehicle: Vehicle, viewModel: VehicleDetailsViewModel) {
+  val vehicleUpdated = viewModel.vehicle.collectAsState()
+  var imageUri: Uri?
+  val takePicture = rememberLauncherForActivityResult(
+    contract = CropImageContract(),
+    onResult = { result ->
+      imageUri = result.uriContent
+      Log.i("VehicleDetailsScreen", "VehicleDetailsScreen: ${imageUri.toString()}")
+    }
+  )
+
+  val launcherRequestCameraPermisison = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestPermission(),
+    onResult = { isGranted ->
+      if (isGranted) {
+        val options = CropImageContractOptions(
+          null,
+          CropImageOptions(
+            imageSourceIncludeGallery = true,
+            imageSourceIncludeCamera = true,
+            guidelines = CropImageView.Guidelines.ON,
+            aspectRatioX = 2,
+            aspectRatioY = 1
+          )
+        )
+        takePicture.launch(options)
+      }
+    }
+  )
+
   Scaffold(
-    topBar = { TopAppBar(title = { Text(text = "Detalhes do veículo") }) },
+    topBar = {
+      TopAppBar(
+        title = {
+          Text(text = stringResource(R.string.vehicle_details_text))
+        })
+    },
     floatingActionButton = {
       FloatingActionButton(onClick = {
-        Toast.makeText(context, "Adicionar manutenção", Toast.LENGTH_SHORT).show()
+
       }) {
         Icon(imageVector = Icons.Default.Add, contentDescription = null)
       }
@@ -72,35 +123,17 @@ fun VehicleDetailsScreen(vehicle: Vehicle) {
         .padding(contentPadding)
         .padding(16.dp)
     ) {
-      Card(shape = RoundedCornerShape(8.dp)) {
-        Column {
-          AsyncImage(
-            modifier = Modifier
-              .fillMaxHeight(0.3F)
-              .fillMaxWidth()
-              .clickable(
-                onClick = {
-                  Toast
-                    .makeText(context, "Clicou", Toast.LENGTH_SHORT)
-                    .show()
-                }
-              ),
-            model = vehicle.photo,
-            contentDescription = "",
-            placeholder = painterResource(id = R.drawable.car_repair_placeholder)
-          )
-          Row(Modifier.padding(bottom = 16.dp)) {
-            Text(text = vehicle.brand ?: "", style = Typography.h5)
-            Spacer(modifier = Modifier.padding(horizontal = 5.dp))
-            Text(text = vehicle.model ?: "", style = Typography.h5)
-          }
-          Text(text = vehicle.plate ?: "", style = Typography.h5)
+      CardVehicleDetails(
+        vehicle = vehicleUpdated.value ?: vehicle,
+        onClick = {
+          launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
         }
-      }
+      )
       Divider(modifier = Modifier.padding(vertical = 16.dp))
       Text(
         modifier = Modifier.padding(bottom = 8.dp),
-        text = "Manutenções", style = Typography.h5
+        text = stringResource(R.string.maintenance_text),
+        style = Typography.h5
       )
       vehicle.maintenanceRecord?.let { maintenanceList ->
         LazyColumn {
@@ -122,7 +155,7 @@ fun VehicleDetailsScreen(vehicle: Vehicle) {
       ) {
         Text(
           modifier = Modifier.fillMaxWidth(),
-          text = "Nenhuma manutenção foi realizada",
+          text = stringResource(R.string.does_not_have_maintenance),
           style = Typography.h5,
           textAlign = TextAlign.Center
         )
@@ -137,5 +170,5 @@ fun VehicleDetailsScreen(vehicle: Vehicle) {
 )
 @Composable
 fun VehicleDetailsScreenPreview() {
-  VehicleDetailsScreen(vehicleSample)
+//  VehicleDetailsScreen(vehicleSample, viewModel)
 }

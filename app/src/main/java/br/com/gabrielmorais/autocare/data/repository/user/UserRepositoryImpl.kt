@@ -2,14 +2,13 @@ package br.com.gabrielmorais.autocare.data.repository.user
 
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.USER_CHILD
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.VEHICLE_CHILD
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.getValue
-
-private const val USER_CHILD = "Usuarios"
-private const val VEHICLE_CHILD = "vehicles"
 
 class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepository {
   override fun createUser(user: User, callback: () -> Unit) {

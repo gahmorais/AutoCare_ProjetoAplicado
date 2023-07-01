@@ -104,7 +104,11 @@ fun MainScreen(viewModel: MainViewModel? = null) {
               .padding(5.dp)
               .clip(shape = RoundedCornerShape(15.dp)),
             onCardClick = {
+              val userId = user.value?.id
+              val vehicleId = vehicle.id
               val intent = Intent(context, VehicleDetailsActivity::class.java)
+              intent.putExtra("user_id", userId)
+              intent.putExtra("vehicle_id", vehicleId)
               context.startActivity(intent)
             }
           )

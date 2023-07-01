@@ -6,4 +6,8 @@
     <string name="text_loading_login">Efetuando Login</string>
     <string name="text_register">Cadastrar</string>
     <string name="user_id_extra">user_id</string>
+    <string name="does_not_have_maintenance">Nenhuma manutenção foi realizada</string>
+    <string name="maintenance_text">Manutenções</string>
+    <string name="add_maintenance">Adicionar manutenção</string>
+    <string name="vehicle_details_text">Detalhes do veículo</string>
 </resources>
