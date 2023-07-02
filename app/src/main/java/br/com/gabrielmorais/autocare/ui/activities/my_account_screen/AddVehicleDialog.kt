@@ -13,9 +13,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 
 class AddVehicleDialogState {
@@ -67,32 +69,32 @@ fun AddVehicleDialog(
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           textStyle = Typography.h6,
-          label = { Text(text = "Apelido") },
-          placeholder = { Text(text = "Meu carro") },
+          label = { Text(text = stringResource(R.string.text_nickname)) },
+          placeholder = { Text(text = stringResource(R.string.placeholder_nickname)) },
           value = state.nickName,
           onValueChange = state.onNickNameChange,
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           textStyle = Typography.h6,
-          label = { Text(text = "Marca") },
-          placeholder = { Text(text = "Honda") },
+          label = { Text(text = stringResource(R.string.text_brand)) },
+          placeholder = { Text(text = stringResource(R.string.placeholder_brand)) },
           value = state.brand,
           onValueChange = state.onBrandChange
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           textStyle = Typography.h6,
-          label = { Text(text = "Modelo") },
-          placeholder = { Text(text = "Fit") },
+          label = { Text(text = stringResource(R.string.text_model)) },
+          placeholder = { Text(text = stringResource(R.string.placeholder_model)) },
           value = state.model,
           onValueChange = state.onModelChange
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           textStyle = Typography.h6,
-          label = { Text(text = "Placa") },
-          placeholder = { Text(text = "abc1234") },
+          label = { Text(text = stringResource(R.string.text_plate)) },
+          placeholder = { Text(text = stringResource(R.string.placeholder_plate)) },
           value = state.plate,
           onValueChange = state.onPlateChange
         )
@@ -101,7 +103,7 @@ fun AddVehicleDialog(
           modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
           onClick = { onConfirm() }
         ) {
-          Text(text = "Salvar", style = Typography.h5)
+          Text(text = stringResource(R.string.text_save), style = Typography.h5)
         }
       }
     }

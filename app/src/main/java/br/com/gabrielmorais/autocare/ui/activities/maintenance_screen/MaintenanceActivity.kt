@@ -10,7 +10,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 
 class MaintenanceActivity : ComponentActivity() {
@@ -27,7 +29,7 @@ class MaintenanceActivity : ComponentActivity() {
 @Composable
 fun MaintenanceScreen() {
   Scaffold(topBar = {
-    TopAppBar(title = { Text(text = "Minhas manutenções") })
+    TopAppBar(title = { Text(text = stringResource(R.string.text_my_maintenance)) })
   }
 
   ) { contentPadding ->

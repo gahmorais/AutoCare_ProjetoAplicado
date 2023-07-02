@@ -13,14 +13,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import br.com.gabrielmorais.autocare.R
 
 @Composable
 fun PasswordTextField(
   modifier: Modifier = Modifier,
-  label: String = "Senha",
+  label: String = stringResource(id = R.string.text_password),
   state: PasswordTextFieldState = PasswordTextFieldState()
 ) {
 

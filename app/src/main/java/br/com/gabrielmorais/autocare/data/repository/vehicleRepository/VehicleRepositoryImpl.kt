@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.data.repository.vehicleRepository
 
+import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.utils.Constants
 import com.google.firebase.database.DataSnapshot
@@ -17,13 +18,13 @@ class VehicleRepositoryImpl(
   override suspend fun saveVehicleImage(
     userId: String,
     vehicleId: String,
-    image: ByteArray,
+    image: Uri,
     callback: (String) -> Unit
   ) {
     val uploadTask = storage.reference
       .child(userId)
       .child(vehicleId)
-      .putBytes(image)
+      .putFile(image)
       .await()
     if (uploadTask.task.isSuccessful) {
       val imageUrl = uploadTask.storage.downloadUrl.await()
@@ -38,7 +39,7 @@ class VehicleRepositoryImpl(
   override fun getVehicleDetails(
     userId: String,
     vehicleId: String,
-    onSucess: (Vehicle) -> Unit,
+    onSuccess: (Vehicle) -> Unit,
     onError: (Throwable) -> Unit
   ) {
     database.reference
@@ -49,7 +50,7 @@ class VehicleRepositoryImpl(
         override fun onDataChange(snapshot: DataSnapshot) {
           if (snapshot.exists()) {
             val vehicle = snapshot.getValue<Vehicle>()
-            vehicle?.let(onSucess)
+            vehicle?.let(onSuccess)
           }
         }
 
@@ -57,5 +58,25 @@ class VehicleRepositoryImpl(
           onError(error.toException())
         }
       })
+  }
+
+  override fun updateVehicle(
+    userId: String,
+    vehicleId: String,
+    vehicle: Vehicle,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) {
+    database.reference
+      .child(Constants.VEHICLE_CHILD)
+      .child(userId)
+      .child(vehicleId)
+      .setValue(vehicle)
+      .addOnSuccessListener {
+        onSuccess("Veiculo atualizado")
+      }
+      .addOnFailureListener {
+        onError(it)
+      }
   }
 }

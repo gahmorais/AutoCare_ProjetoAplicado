@@ -2,7 +2,6 @@ package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.Manifest
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -34,12 +33,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
-import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -53,7 +53,7 @@ class VehicleDetailsActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContent {
       AutoCareTheme {
-        VehicleDetailsScreen(vehicleSample, viewModel)
+        VehicleDetailsScreen(viewModel)
       }
     }
   }
@@ -62,9 +62,10 @@ class VehicleDetailsActivity : ComponentActivity() {
     super.onStart()
     val extras = intent.extras
     extras?.let { bundle ->
-      val userId = bundle.getString("user_id")
-      val vehicleId = bundle.getString("vehicle_id")
+      val userId = bundle.getString(INTENT_USER_ID)
+      val vehicleId = bundle.getString(INTENT_VEHICLE_ID)
       if (userId != null && vehicleId != null) {
+        viewModel.setUserid(userId)
         viewModel.getVehicle(userId, vehicleId)
       }
     }
@@ -72,14 +73,23 @@ class VehicleDetailsActivity : ComponentActivity() {
 }
 
 @Composable
-fun VehicleDetailsScreen(vehicle: Vehicle, viewModel: VehicleDetailsViewModel) {
-  val vehicleUpdated = viewModel.vehicle.collectAsState()
-  var imageUri: Uri?
+fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
+
+  val vehicle = viewModel.vehicle.collectAsState()
+  val userId = viewModel.userId.collectAsState()
+
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
-      imageUri = result.uriContent
-      Log.i("VehicleDetailsScreen", "VehicleDetailsScreen: ${imageUri.toString()}")
+      val imageUri = result.uriContent
+      imageUri?.let { image ->
+        viewModel.uploadVehiclePhoto(
+          userId.value,
+          vehicle.value?.id!!,
+          image
+        )
+        Log.i("VehicleDetailsScreen", "VehicleDetailsScreen: $image")
+      }
     }
   )
 
@@ -124,7 +134,7 @@ fun VehicleDetailsScreen(vehicle: Vehicle, viewModel: VehicleDetailsViewModel) {
         .padding(16.dp)
     ) {
       CardVehicleDetails(
-        vehicle = vehicleUpdated.value ?: vehicle,
+        vehicle = vehicle.value ?: vehicleSample,
         onClick = {
           launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
         }
@@ -135,7 +145,7 @@ fun VehicleDetailsScreen(vehicle: Vehicle, viewModel: VehicleDetailsViewModel) {
         text = stringResource(R.string.maintenance_text),
         style = Typography.h5
       )
-      vehicle.maintenanceRecord?.let { maintenanceList ->
+      vehicle.value?.maintenanceRecord?.let { maintenanceList ->
         LazyColumn {
           items(maintenanceList) { maintenance ->
             SimpleCardMaintenance(

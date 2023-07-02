@@ -19,17 +19,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.collectLatest
@@ -42,8 +46,8 @@ class MyAccountActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val userId = intent.getStringExtra("user_id")
-    Log.i("MyAccountActivity", "onCreate: $userId")
+    val userId = intent.getStringExtra(INTENT_USER_ID)
+
     userId?.let {
       viewModel.getUser(it)
     }
@@ -77,7 +81,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
   Log.i("MyAccountActivity", "MyAccountScreen: $user")
   AutoCareTheme {
     Scaffold(
-      topBar = { TopAppBar(title = { Text(text = "Minha Conta") }) }
+      topBar = { TopAppBar(title = { Text(text = stringResource(R.string.text_my_account)) }) }
     ) { contentPadding ->
       Column(
         Modifier
@@ -88,7 +92,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
 
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          label = { Text(text = "Email") },
+          label = { Text(text = stringResource(R.string.text_email)) },
           enabled = false,
           value = email ?: "",
           onValueChange = { email = it }
@@ -96,8 +100,8 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
 
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          label = { Text(text = "Nome") },
-          placeholder = { Text(text = "John Doe") },
+          label = { Text(text = stringResource(R.string.text_name)) },
+          placeholder = { Text(text = stringResource(R.string.name_placeholder)) },
           value = name ?: "",
           onValueChange = { name = it }
         )
@@ -110,7 +114,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
             viewModel?.changePassword(user?.value?.email ?: "")
           }) {
             Text(
-              text = "Trocar senha",
+              text = stringResource(R.string.text_change_password),
               style = Typography.subtitle1,
             )
           }
@@ -127,14 +131,14 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
             }
           }) {
             Text(
-              text = "Atualizar dados",
+              text = stringResource(R.string.text_update_user_data),
               style = Typography.subtitle1,
             )
           }
         }
 
         Text(
-          text = "Veículos",
+          text = stringResource(R.string.text_vehicles),
           style = TextStyle(
             textDecoration = TextDecoration.Underline,
           ).merge(Typography.h6)
@@ -195,6 +199,10 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 vehicle = vehicle,
                 onCardClick = {
                   val intent = Intent(context, VehicleDetailsActivity::class.java)
+                  val userId = user?.value?.id ?: ""
+                  val vehicleId = vehicle.id ?: ""
+                  intent.putExtra(INTENT_USER_ID, userId)
+                  intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
                   context.startActivity(intent)
                 }
               )
@@ -206,7 +214,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.fillMaxWidth(),
           onClick = { showDialogAddVehicle = showDialogAddVehicle.not() },
         ) {
-          Text(text = "Adicionar veículo", style = Typography.h5)
+          Text(text = stringResource(R.string.text_add_vehicle), style = Typography.h5)
         }
 
         if (showDialogAddVehicle) {

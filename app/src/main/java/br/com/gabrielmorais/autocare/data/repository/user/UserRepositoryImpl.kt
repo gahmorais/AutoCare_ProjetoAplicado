@@ -79,6 +79,7 @@ class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepositor
             val brand = i.child("brand").getValue<String>()
             val model = i.child("model").getValue<String>()
             val plate = i.child("plate").getValue<String>()
+            val photo = i.child("photo").getValue<String?>()
             val id = i.child("id").getValue<String>()
             val nickName = i.child("nickName").getValue<String>()
 
@@ -87,6 +88,7 @@ class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepositor
               brand = brand,
               model = model,
               plate = plate,
+              photo = photo,
               nickName = nickName
             )
 

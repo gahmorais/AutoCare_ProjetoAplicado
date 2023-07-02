@@ -5,53 +5,67 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-  private val viewModel by viewModels<MainViewModel> {
-    MainViewModelFactory(
-      AuthRepositoryImpl(Firebase.auth),
-      UserRepositoryImpl(FirebaseDatabase.getInstance())
-    )
-  }
+  private val viewModel by viewModel<MainViewModel>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -64,7 +78,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onResume() {
     super.onResume()
-    val userId = intent.getStringExtra("user_id")
+    val userId = intent.getStringExtra(INTENT_USER_ID)
     Log.i("MainActivity", "onCreate: $userId")
     userId?.let { id ->
       viewModel.getUser(userId = id)
@@ -107,8 +121,8 @@ fun MainScreen(viewModel: MainViewModel? = null) {
               val userId = user.value?.id
               val vehicleId = vehicle.id
               val intent = Intent(context, VehicleDetailsActivity::class.java)
-              intent.putExtra("user_id", userId)
-              intent.putExtra("vehicle_id", vehicleId)
+              intent.putExtra(INTENT_USER_ID, userId)
+              intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
               context.startActivity(intent)
             }
           )
@@ -129,7 +143,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
         ) {
           Text(
             modifier = Modifier.fillMaxWidth(),
-            text = "Nenhum veículo cadastrado",
+            text = stringResource(R.string.text_any_car_registered),
             textAlign = TextAlign.Center,
             style = Typography.h4
           )
@@ -142,7 +156,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
 fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
   val scope = rememberCoroutineScope()
   TopAppBar(
-    title = { Text(text = "AutoCare") },
+    title = { Text(text = stringResource(id = R.string.app_name)) },
     navigationIcon = {
       IconButton(onClick = {
         scope.launch {
@@ -181,20 +195,20 @@ fun DrawerContent(user: User? = null) {
         .crossfade(true)
         .transformations(CircleCropTransformation())
         .build(),
-      contentDescription = "Profile Image"
+      contentDescription = stringResource(R.string.profile_image_description)
     )
-    Text(text = user?.name ?: "Desconhecido", style = TextStyle(fontSize = 25.sp))
+    Text(text = user?.name ?: stringResource(R.string.text_unknow), style = TextStyle(fontSize = 25.sp))
   }
 
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
     val intent = Intent(context, MyAccountActivity::class.java)
-    intent.putExtra("user_id", user?.id)
+    intent.putExtra(INTENT_USER_ID, user?.id)
     context.startActivity(intent)
   }) {
-    Text(text = "Minha conta", style = Typography.h6)
+    Text(text = stringResource(id = R.string.text_my_account), style = Typography.h6)
   }
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = { }) {
-    Text(text = "Manutenções", style = Typography.h6)
+    Text(text = stringResource(id = R.string.text_maintenance), style = Typography.h6)
   }
 }
 
@@ -212,7 +226,7 @@ fun TopAppBarActions(viewModel: MainViewModel?) {
       viewModel?.logout()
       context.finish()
     }) {
-      Text(text = "Sair")
+      Text(text = stringResource(R.string.text_exit))
     }
   }
 }
