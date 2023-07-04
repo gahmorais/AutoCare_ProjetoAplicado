@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MyAccountViewModel(
-  private val userRepository: UserRepository
+  private val userRepository: UserRepositoryImpl
 ) : ViewModel() {
 
   private val _user = MutableStateFlow<User?>(null)

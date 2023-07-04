@@ -7,5 +7,7 @@ class Constants private constructor() {
     val MAINTENANCE_CHILD = "maintenance"
     val INTENT_USER_ID = "user_id"
     val INTENT_VEHICLE_ID = "vehicle_id"
+    val PROFILE_PHOTO_PATH = "profile"
+    val CARS_PHOTO_PATH = "cars"
   }
 }

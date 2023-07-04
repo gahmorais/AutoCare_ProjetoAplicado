@@ -9,6 +9,6 @@ import org.koin.dsl.module
 val mainModule = module {
   single { VehicleRepositoryImpl(get(), get()) }
   single { AuthRepositoryImpl(get()) }
-  single { UserRepositoryImpl(get()) }
+  single { UserRepositoryImpl(get(), get()) }
   single { MaintenanceRepositoryImpl(get()) }
 }

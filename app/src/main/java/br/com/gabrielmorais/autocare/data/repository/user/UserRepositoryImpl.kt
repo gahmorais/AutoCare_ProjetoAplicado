@@ -1,7 +1,9 @@
 package br.com.gabrielmorais.autocare.data.repository.user
 
+import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.utils.Constants
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.USER_CHILD
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.VEHICLE_CHILD
 import com.google.firebase.database.DataSnapshot
@@ -9,8 +11,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.getValue
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
 
-class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepository {
+class UserRepositoryImpl(
+  private val database: FirebaseDatabase,
+  private val storage: FirebaseStorage
+) : UserRepository {
   override fun createUser(user: User, callback: () -> Unit) {
     database.reference
       .child(USER_CHILD)
@@ -34,9 +41,7 @@ class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepositor
           try {
             val user = snapshot.getValue<User>()
             getVehicles(user?.id!!) { vehicles ->
-              val updatedUser = user.copy(
-                vehicles = vehicles
-              )
+              val updatedUser = user.copy(vehicles = vehicles)
               callback(updatedUser)
             }
           } catch (e: Exception) {
@@ -131,5 +136,28 @@ class UserRepositoryImpl(private val database: FirebaseDatabase) : UserRepositor
       .addOnFailureListener { error ->
         throw error
       }
+  }
+
+  override suspend fun saveUserPhoto(
+    userId: String,
+    image: Uri,
+    callback: (String) -> Unit
+  ) {
+    val uploadTask = storage.reference
+      .child(userId)
+      .child(Constants.PROFILE_PHOTO_PATH)
+      .child(userId)
+      .putFile(image)
+      .await()
+
+    if (uploadTask.task.isSuccessful) {
+      val imageUrl = uploadTask.storage.downloadUrl.await()
+      callback(imageUrl.toString())
+    } else {
+      uploadTask.task.exception?.let { error ->
+        throw error
+      }
+    }
+
   }
 }

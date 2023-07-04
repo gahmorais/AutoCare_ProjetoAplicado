@@ -1,10 +1,14 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +65,10 @@ import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -94,6 +102,39 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   val user = viewModel?.user?.collectAsState(initial = null)
   val vehicleList = user?.value?.vehicles
 
+  val takePicture = rememberLauncherForActivityResult(
+    contract = CropImageContract(),
+    onResult = { result ->
+      val imageUri = result.uriContent
+      val userId = user?.value?.id!!
+      imageUri?.let { image ->
+        viewModel.updateUserPhoto(
+          userId,
+          image
+        )
+      }
+    }
+  )
+
+  val launcherRequestCameraPermisison = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestPermission(),
+    onResult = { isGranted ->
+      if (isGranted) {
+        val options = CropImageContractOptions(
+          null,
+          CropImageOptions(
+            imageSourceIncludeGallery = true,
+            imageSourceIncludeCamera = true,
+            guidelines = CropImageView.Guidelines.ON,
+            aspectRatioX = 1,
+            aspectRatioY = 1
+          )
+        )
+        takePicture.launch(options)
+      }
+    }
+  )
+
   Log.i("Lista de veículos'", "MainScreen: $vehicleList")
 
   Scaffold(
@@ -102,7 +143,11 @@ fun MainScreen(viewModel: MainViewModel? = null) {
       TopBar(scaffoldState = scaffoldState, viewModel = viewModel)
     },
     drawerGesturesEnabled = true,
-    drawerContent = { DrawerContent(user?.value) }
+    drawerContent = {
+      DrawerContent(user?.value){
+        launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
+      }
+    }
   ) { contentPadding ->
     if (!vehicleList.isNullOrEmpty()) {
       LazyColumn(
@@ -176,8 +221,9 @@ fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
 }
 
 @Composable
-fun DrawerContent(user: User? = null) {
+fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   val context = LocalContext.current
+
   Log.i("MainScreen", "MainScreen: DrawerContent ${user?.name}")
   Column(
     modifier = Modifier.fillMaxWidth(),
@@ -186,7 +232,8 @@ fun DrawerContent(user: User? = null) {
   ) {
     AsyncImage(
       modifier = Modifier
-        .padding(vertical = 5.dp),
+        .padding(vertical = 5.dp)
+        .clickable(onClick = updateUserPhoto),
       contentScale = ContentScale.Fit,
       alignment = Alignment.Center,
       model = ImageRequest
@@ -197,7 +244,10 @@ fun DrawerContent(user: User? = null) {
         .build(),
       contentDescription = stringResource(R.string.profile_image_description)
     )
-    Text(text = user?.name ?: stringResource(R.string.text_unknow), style = TextStyle(fontSize = 25.sp))
+    Text(
+      text = user?.name ?: stringResource(R.string.text_unknow),
+      style = TextStyle(fontSize = 25.sp)
+    )
   }
 
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = {

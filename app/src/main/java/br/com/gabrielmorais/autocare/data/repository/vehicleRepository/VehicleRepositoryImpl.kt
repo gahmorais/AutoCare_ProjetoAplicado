@@ -23,6 +23,7 @@ class VehicleRepositoryImpl(
   ) {
     val uploadTask = storage.reference
       .child(userId)
+      .child(Constants.CARS_PHOTO_PATH)
       .child(vehicleId)
       .putFile(image)
       .await()
