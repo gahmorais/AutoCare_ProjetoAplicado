@@ -4,16 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.Status
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
-  private val authRepository: AuthRepository,
-  private val userRepository: UserRepository
+  private val authRepository: AuthRepositoryImpl,
+  private val userRepository: UserRepositoryImpl
 ) : ViewModel() {
   private val _registerState = Channel<RegisterState>()
   val registerState = _registerState.receiveAsFlow()
