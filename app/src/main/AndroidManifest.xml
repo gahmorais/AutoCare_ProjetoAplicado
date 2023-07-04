@@ -25,7 +25,7 @@
         <activity android:name=".ui.activities.vehicle_details_screen.VehicleDetailsActivity" />
         <activity android:name=".ui.activities.my_account_screen.MyAccountActivity" />
         <activity android:name=".ui.activities.maintenance_screen.MaintenanceActivity" />
-
+        <activity android:name=".ui.activities.add_maintenance_screen.AddMaintenanceActivity"/>
         <activity
             android:name=".ui.activities.login_screen.LoginActivity"
             android:exported="true"

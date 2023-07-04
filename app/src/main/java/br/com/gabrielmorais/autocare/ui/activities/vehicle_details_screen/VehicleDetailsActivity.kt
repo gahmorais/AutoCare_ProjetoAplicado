@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.Manifest
+import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import android.util.Log
@@ -28,12 +29,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
+import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
@@ -77,7 +80,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
 
   val vehicle = viewModel.vehicle.collectAsState()
   val userId = viewModel.userId.collectAsState()
-
+  val context = LocalContext.current
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
@@ -121,7 +124,8 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
     },
     floatingActionButton = {
       FloatingActionButton(onClick = {
-
+        val intent = Intent(context, AddMaintenanceActivity::class.java)
+        context.startActivity(intent)
       }) {
         Icon(imageVector = Icons.Default.Add, contentDescription = null)
       }
