@@ -27,8 +27,7 @@ val vehicleSample = Vehicle(
   nickName = "Meu Carro",
   brand = "Renault",
   model = "Sandero",
-  plate = "XXX1234",
-  photo = URL_VEHICLE_SAMPLE,
+  plate = "XXX1234", //URL_VEHICLE_SAMPLE,
   maintenanceRecord = maintenanceListSample
 )
 

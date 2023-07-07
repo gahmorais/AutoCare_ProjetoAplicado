@@ -35,9 +35,9 @@ fun CardVehicleDetails(
           .fillMaxHeight(0.3F)
           .fillMaxWidth()
           .clickable(onClick = onClick),
-        model = vehicle.photo,
+        model = vehicle.photo ?: R.drawable.car_photo,
         contentDescription = "",
-        placeholder = painterResource(id = R.drawable.car_repair_placeholder)
+        error = painterResource(id = R.drawable.error)
       )
       Row(Modifier.padding(bottom = 16.dp)) {
         Text(text = vehicle.brand ?: "", style = Typography.h5)

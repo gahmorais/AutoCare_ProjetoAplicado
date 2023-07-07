@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -29,6 +31,8 @@ class AddVehicleDialogState {
   var model by mutableStateOf("")
     private set
   var plate by mutableStateOf("")
+    private set
+  var averageDistanceTraveled by mutableStateOf("")
     private set
   var photo: String? by mutableStateOf(null)
 
@@ -46,6 +50,10 @@ class AddVehicleDialogState {
 
   val onPlateChange: (String) -> Unit = { newText ->
     plate = newText
+  }
+
+  val onAverageDistanceChange: (String) -> Unit = { newText ->
+    averageDistanceTraveled = newText
   }
 }
 
@@ -97,6 +105,16 @@ fun AddVehicleDialog(
           placeholder = { Text(text = stringResource(R.string.placeholder_plate)) },
           value = state.plate,
           onValueChange = state.onPlateChange
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          textStyle = Typography.h6,
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          label = { Text(text = stringResource(R.string.text_average_distace_traveled_per_month)) },
+          placeholder = { Text(text = stringResource(R.string.placeholder_average_distance_traveled)) },
+          value = state.averageDistanceTraveled,
+          onValueChange = state.onAverageDistanceChange
         )
 
         TextButton(

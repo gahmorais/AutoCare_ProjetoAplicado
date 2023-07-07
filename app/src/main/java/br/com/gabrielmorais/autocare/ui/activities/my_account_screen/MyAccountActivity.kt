@@ -228,7 +228,6 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 }
               )
             }
-
           }
         }
         Button(
@@ -251,7 +250,8 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                   brand = addVehicleDialogState.brand,
                   model = addVehicleDialogState.model,
                   plate = addVehicleDialogState.plate,
-                  photo = addVehicleDialogState.photo
+                  photo = addVehicleDialogState.photo,
+                  averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
                 )
                 user?.value?.id?.let {
                   Log.d("MyAccountScreen", "MyAccountScreen: $it")

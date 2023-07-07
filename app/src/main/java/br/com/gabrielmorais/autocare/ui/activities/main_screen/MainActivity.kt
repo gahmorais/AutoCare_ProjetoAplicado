@@ -2,12 +2,15 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -75,12 +78,25 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : ComponentActivity() {
   private val viewModel by viewModel<MainViewModel>()
 
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
+      val notificationPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+          if (isGranted) {
+            Toast.makeText(this@MainActivity, "Permissão aceita", Toast.LENGTH_SHORT).show()
+          }
+        }
+      )
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
       AutoCareTheme {
         MainScreen(viewModel)
       }
+
     }
   }
 
@@ -144,7 +160,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
     },
     drawerGesturesEnabled = true,
     drawerContent = {
-      DrawerContent(user?.value){
+      DrawerContent(user?.value) {
         launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
       }
     }

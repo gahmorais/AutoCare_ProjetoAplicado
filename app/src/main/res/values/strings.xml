@@ -45,4 +45,6 @@
     <string name="text_register_user">Cadastrar</string>
     <string name="text_close">Fechar</string>
     <string name="text_placeholder_loading_page">Carregando</string>
+    <string name="text_average_distace_traveled_per_month">Média de distância viajada por mês</string>
+    <string name="placeholder_average_distance_traveled">1000</string>
 </resources>

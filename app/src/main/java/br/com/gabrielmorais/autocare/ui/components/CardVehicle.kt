@@ -51,11 +51,11 @@ fun CardVehicle(
         modifier = Modifier.height(100.dp),
         model = ImageRequest
           .Builder(LocalContext.current)
-          .data(vehicle.photo ?: vehicleSample.photo)
+          .data(vehicle.photo ?: R.drawable.icon_car)
           .transformations(CircleCropTransformation())
           .crossfade(true)
           .build(),
-        placeholder = painterResource(id = R.drawable.car_repair_placeholder),
+        error = painterResource(id = R.drawable.error),
         contentDescription = null,
         contentScale = ContentScale.Fit
       )

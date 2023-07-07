@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.di
 
+import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceViewModel
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountViewModel
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterViewModel
@@ -12,5 +13,5 @@ val viewModelModule = module {
   viewModel { MainViewModel(get(), get()) }
   viewModel { RegisterViewModel(get(), get()) }
   viewModel { MyAccountViewModel(get()) }
-
+  viewModel { AddMaintenanceViewModel(get()) }
 }

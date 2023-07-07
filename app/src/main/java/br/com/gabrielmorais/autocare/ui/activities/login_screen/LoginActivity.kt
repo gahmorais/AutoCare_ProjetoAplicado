@@ -67,6 +67,7 @@ class LoginActivity : ComponentActivity() {
           val openActivity = Intent(this@LoginActivity, MainActivity::class.java)
           openActivity.putExtra("user_id", it.uid)
           startActivity(openActivity)
+          finish()
         }
       }
     }
