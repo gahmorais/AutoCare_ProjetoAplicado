@@ -26,7 +26,7 @@
     <string name="text_date">Data:</string>
     <string name="text_current_mileage">Km Atual:</string>
     <string name="text_next_maintenance_mileage">Próxima Man. em Km:</string>
-    <string name="text_next_maintenance_months">Próxima Man. em Meses:</string>
+    <string name="text_next_date_maintenance">Data próxima Manuntenção:</string>
     <string name="text_comments">OBS:</string>
     <string name="text_my_maintenance">Minhas manutenções</string>
     <string name="text_nickname">Apelido</string>
@@ -47,4 +47,6 @@
     <string name="text_placeholder_loading_page">Carregando</string>
     <string name="text_average_distace_traveled_per_month">Média de distância viajada por mês</string>
     <string name="placeholder_average_distance_traveled">1000</string>
+    <string name="text_service_type">Tipo de serviço</string>
+    <string name="mileage_placeholder">KM:</string>
 </resources>

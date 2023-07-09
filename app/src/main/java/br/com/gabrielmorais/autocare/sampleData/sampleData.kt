@@ -15,10 +15,10 @@ private const val URL_USER_PROFILE_SAMPLE =
 val maintenanceListSample = MutableList(10) {
   Maintenance(
     description = "Troca de óleo",
-    date = LocalDate.of(2023, Month.FEBRUARY, 25),
+    date = LocalDate.of(2023, Month.FEBRUARY, 25).toEpochDay(),
     currentMileage = 75000,
     forecastNextExchangeMileage = 82000,
-    forecastNextExchangeDate = LocalDate.of(2023, Month.SEPTEMBER, 30),
+    forecastNextExchangeDate = LocalDate.of(2023, Month.SEPTEMBER, 30).toEpochDay(),
     comments = "Óleo ELF 10W40 Semisintético"
   )
 }.toList()
@@ -28,7 +28,7 @@ val vehicleSample = Vehicle(
   brand = "Renault",
   model = "Sandero",
   plate = "XXX1234", //URL_VEHICLE_SAMPLE,
-  maintenanceRecord = maintenanceListSample
+  maintenances = maintenanceListSample
 )
 
 

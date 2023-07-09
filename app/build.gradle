@@ -64,7 +64,10 @@ dependencies {
     //Koin
     implementation "io.insert-koin:koin-android:$koin_version"
 
-    
+    //MAterial Dialog Compose
+    implementation "io.github.vanpra.compose-material-dialogs:core:$material_dialog_version"
+    implementation "io.github.vanpra.compose-material-dialogs:datetime:$material_dialog_version"
+
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.activity:activity-compose:1.7.2'

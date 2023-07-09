@@ -1,12 +1,13 @@
 package br.com.gabrielmorais.autocare.data.repository.maintenance
 
-import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Vehicle
 
 interface MaintenanceRepository {
   fun create(
     userId: String,
     vehicleId: String,
-    maintenance: Maintenance,
-    callback: (String) -> Unit
+    updatedVehicle: Vehicle,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
   )
 }

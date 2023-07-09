@@ -10,5 +10,5 @@ data class Vehicle(
   val plate: String? = null,
   val photo: String? = null,
   val averageDistanceTraveledPerMonth: Int? = null,
-  val maintenanceRecord: List<Maintenance>? = null
+  val maintenances: List<Maintenance>? = null
 )

@@ -1,6 +1,8 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -8,15 +10,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,12 +26,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.ui.components.SelectMenu
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
+import br.com.gabrielmorais.autocare.utils.Constants
+import br.com.gabrielmorais.autocare.utils.Utils
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AddMaintenanceActivity : ComponentActivity() {
@@ -42,14 +56,36 @@ class AddMaintenanceActivity : ComponentActivity() {
         AddMaintenanceScreen(viewModel)
       }
     }
+
+    lifecycleScope.launch {
+      viewModel.message.collectLatest { message ->
+        message?.let { Toast.makeText(this@AddMaintenanceActivity, it, Toast.LENGTH_SHORT).show() }
+      }
+    }
+
+  }
+
+  override fun onStart() {
+    super.onStart()
+    val extras = intent.extras
+    extras?.let { bundle ->
+      val userId = bundle.getString(Constants.INTENT_USER_ID)
+      val vehicleId = bundle.getString(Constants.INTENT_VEHICLE_ID)
+      if (userId != null && vehicleId != null) {
+        viewModel.setUserId(userId)
+        viewModel.getVehicle(userId, vehicleId)
+      }
+    }
   }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
   val state = AddMaintenanceUiState()
   val services = viewModel.services.collectAsState()
+  val userId = viewModel.userId.collectAsState()
+  val vehicle = viewModel.vehicle.collectAsState()
+  val context = LocalContext.current as ComponentActivity
   Scaffold { paddingValues ->
     Column(
       Modifier
@@ -59,74 +95,118 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
     ) {
       Spacer(modifier = Modifier.padding(top = 20.dp))
       if (services.value.isNotEmpty()) {
+        val servicesName = services.value.map { it?.name!! }
+        val servicesMileage = services.value.map { it?.mileageChange!! }
         var expanded by remember { mutableStateOf(false) }
-        var selectItem by remember { mutableStateOf(services.value[0]?.name) }
-        ExposedDropdownMenuBox(
-          expanded = expanded,
-          onExpandedChange = { expanded = !expanded },
+        var selectItem by remember { mutableStateOf(servicesName[0]) }
+        var serviceSelected by remember { mutableStateOf(servicesMileage[0]) }
+        val averageTraveledDistance = vehicle.value?.averageDistanceTraveledPerMonth
+        val datepickerDialog = rememberMaterialDialogState()
+        MaterialDialog(
+          dialogState = datepickerDialog,
+          buttons = {
+            positiveButton("OK")
+            negativeButton("Cancel")
+          }
         ) {
-          TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = selectItem.toString(),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(text = "Tipo de serviço") },
-            trailingIcon = {
-              ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            }
-          )
-          ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }) {
-            services.value.forEach { item ->
-              DropdownMenuItem(onClick = {
-                selectItem = item?.name
-                expanded = false
-              }) {
-                Text(text = item?.name.toString())
-              }
-            }
+          datepicker() {
+            state.onDateChange(it)
           }
         }
-      }
 
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = state.description,
-        label = { Text(stringResource(id = R.string.text_description)) },
-        onValueChange = state.onDescriptionChange
-      )
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = state.date.toString(),
-        label = { Text(stringResource(id = R.string.text_date)) },
-        onValueChange = {}
-      )
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = "",
-        label = { Text(stringResource(id = R.string.text_current_mileage)) },
-        onValueChange = {})
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = "",
-        label = { Text(stringResource(id = R.string.text_next_maintenance_mileage)) },
-        onValueChange = {})
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = "",
-        label = { Text(stringResource(id = R.string.text_next_maintenance_months)) },
-        onValueChange = {})
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = "",
-        label = { Text(stringResource(id = R.string.text_comments)) },
-        onValueChange = {}
-      )
-      OutlinedButton(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { /*TODO*/ }) {
-        Text(text = "Gravar", style = Typography.h5)
+        if (state.currentMileage.isEmpty()) {
+          state.onForecastNextExchangeMileageChange(serviceSelected.toString())
+        } else {
+          val mileageToNextMaintenance = serviceSelected + state.currentMileage.toInt()
+          state.onForecastNextExchangeMileageChange(mileageToNextMaintenance.toString())
+        }
+
+        SelectMenu(
+          modifier = Modifier.fillMaxWidth(),
+          items = servicesName,
+          expanded = expanded,
+          onExpandedChange = { expanded = !expanded },
+          value = selectItem,
+          label = stringResource(R.string.text_service_type),
+          onDissmis = { expanded = false },
+          onClick = { itemSelected, i ->
+            selectItem = itemSelected
+            serviceSelected = servicesMileage[i]
+            expanded = false
+            val monthsToNextMaintenance = serviceSelected.div(averageTraveledDistance!!)
+            val dateNextMaintenance = Utils.futureDateMonth(state.date, monthsToNextMaintenance)
+            dateNextMaintenance?.let { state.onForecastNextExchangeDateChange(it) }
+          }
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          value = Utils.formatDate(state.date.toEpochDay()),
+          label = { Text(stringResource(id = R.string.text_date)) },
+          trailingIcon = {
+            IconButton(onClick = { datepickerDialog.show() }) {
+              Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+            }
+          },
+          onValueChange = {}
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          value = state.currentMileage,
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          label = { Text(stringResource(id = R.string.text_current_mileage)) },
+          onValueChange = state.onCurrentMilageChange
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          value = state.forecastNextExchangeMileage,
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          label = { Text(stringResource(id = R.string.text_next_maintenance_mileage)) },
+          onValueChange = state.onForecastNextExchangeMileageChange
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          value = Utils.formatDate(state.forecastNextExchangeDate.toEpochDay()),
+          label = { Text(stringResource(id = R.string.text_next_date_maintenance)) },
+          onValueChange = {}
+        )
+
+        OutlinedTextField(
+          modifier = Modifier.fillMaxWidth(),
+          value = state.comments,
+          label = { Text(stringResource(id = R.string.text_comments)) },
+          onValueChange = state.onCommentsChange
+        )
+
+        OutlinedButton(
+          modifier = Modifier.fillMaxWidth(),
+          onClick = {
+
+            val maintenance = Maintenance(
+              selectItem,
+              state.date.toEpochDay(),
+              state.currentMileage.toInt(),
+              state.forecastNextExchangeMileage.toInt(),
+              state.forecastNextExchangeDate.toEpochDay(),
+              state.comments
+            )
+
+            vehicle.value?.let {
+              val maintenances = vehicle.value
+                ?.maintenances
+                ?.toMutableList() ?: mutableListOf()
+              maintenances.add(maintenance)
+              val updatedVehicle = it.copy(maintenances = maintenances)
+              Log.i("AddMaintenanceActivity", "AddMaintenanceScreen: ${vehicle.value}")
+              viewModel.saveMaintenance(userId.value, it.id!!, updatedVehicle)
+              context.finish()
+            }
+          }) {
+          Text(text = "Gravar", style = Typography.h5)
+        }
       }
     }
   }

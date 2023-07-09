@@ -6,32 +6,26 @@ import androidx.compose.runtime.setValue
 import java.time.LocalDate
 
 class AddMaintenanceUiState {
-  var description by mutableStateOf("")
-    private set
   var date: LocalDate by mutableStateOf(LocalDate.now())
     private set
-  var currentMileage: Int by mutableStateOf(0)
+  var currentMileage: String by mutableStateOf("0")
     private set
-  var forecastNextExchangeMileage: Int by mutableStateOf(0)
+  var forecastNextExchangeMileage: String by mutableStateOf("0")
     private set
   var forecastNextExchangeDate: LocalDate by mutableStateOf(LocalDate.now())
     private set
   var comments: String by mutableStateOf("")
     private set
 
-  val onDescriptionChange: (String) -> Unit = {
-    description = it
-  }
-
   val onDateChange: (LocalDate) -> Unit = {
     date = it
   }
 
-  val onCurrentMilageChange: (Int) -> Unit = {
+  val onCurrentMilageChange: (String) -> Unit = {
     currentMileage = it
   }
 
-  val onForecastNextExchangeMileageChange: (Int) -> Unit = {
+  val onForecastNextExchangeMileageChange: (String) -> Unit = {
     forecastNextExchangeMileage = it
   }
 

@@ -125,6 +125,8 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
     floatingActionButton = {
       FloatingActionButton(onClick = {
         val intent = Intent(context, AddMaintenanceActivity::class.java)
+        intent.putExtra(INTENT_USER_ID, userId.value)
+        intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
         context.startActivity(intent)
       }) {
         Icon(imageVector = Icons.Default.Add, contentDescription = null)
@@ -149,7 +151,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
         text = stringResource(R.string.maintenance_text),
         style = Typography.h5
       )
-      vehicle.value?.maintenanceRecord?.let { maintenanceList ->
+      vehicle.value?.maintenances?.let { maintenanceList ->
         LazyColumn {
           items(maintenanceList) { maintenance ->
             SimpleCardMaintenance(

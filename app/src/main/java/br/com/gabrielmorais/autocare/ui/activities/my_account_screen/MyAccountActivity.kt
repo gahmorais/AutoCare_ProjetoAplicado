@@ -68,10 +68,7 @@ class MyAccountActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val userId = intent.getStringExtra(INTENT_USER_ID)
-
-    userId?.let {
-      viewModel.getUser(it)
-    }
+    userId?.let { viewModel.getUser(it) }
     setContent {
       MyAccountScreen(viewModel)
     }
