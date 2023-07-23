@@ -87,6 +87,7 @@ class UserRepositoryImpl(
             val photo = i.child("photo").getValue<String?>()
             val id = i.child("id").getValue<String>()
             val nickName = i.child("nickName").getValue<String>()
+            val averageDistanceTraveledPerMonth = i.child("averageDistanceTraveledPerMonth").getValue<Int>()
 
             val vehicle = Vehicle(
               id = id,
@@ -94,7 +95,8 @@ class UserRepositoryImpl(
               model = model,
               plate = plate,
               photo = photo,
-              nickName = nickName
+              nickName = nickName,
+              averageDistanceTraveledPerMonth = averageDistanceTraveledPerMonth
             )
 
             vehicleList.add(vehicle)

@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -57,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
+import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
@@ -78,7 +78,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : ComponentActivity() {
   private val viewModel by viewModel<MainViewModel>()
 
-  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
@@ -93,6 +92,7 @@ class MainActivity : ComponentActivity() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
       }
+      NotificationUtils.createNotificationChannel(applicationContext)
       AutoCareTheme {
         MainScreen(viewModel)
       }
@@ -109,6 +109,7 @@ class MainActivity : ComponentActivity() {
     }
   }
 }
+
 
 @Composable
 fun MainScreen(viewModel: MainViewModel? = null) {

@@ -29,7 +29,8 @@ class MaintenanceActivity : ComponentActivity() {
 @Composable
 fun MaintenanceScreen() {
   Scaffold(topBar = {
-    TopAppBar(title = { Text(text = stringResource(R.string.text_my_maintenance)) })
+    TopAppBar(
+      title = { Text(text = stringResource(R.string.text_my_maintenance)) })
   }
 
   ) { contentPadding ->

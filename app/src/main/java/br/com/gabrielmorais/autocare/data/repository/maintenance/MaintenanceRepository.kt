@@ -10,4 +10,10 @@ interface MaintenanceRepository {
     onSuccess: (String) -> Unit,
     onError: (Throwable) -> Unit
   )
+
+  fun delete(
+    userId: String,
+    vehicleId: String,
+    maintenanceId: Int
+  )
 }

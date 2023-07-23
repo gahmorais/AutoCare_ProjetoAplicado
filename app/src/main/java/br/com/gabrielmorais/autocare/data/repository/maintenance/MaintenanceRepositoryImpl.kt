@@ -24,4 +24,9 @@ class MaintenanceRepositoryImpl(private val database: FirebaseDatabase) : Mainte
       }
   }
 
+  override fun delete(userId: String, vehicleId: String, maintenanceId: Int) {
+    database.reference
+      .child("$VEHICLE_CHILD/$userId/$vehicleId")
+  }
+
 }

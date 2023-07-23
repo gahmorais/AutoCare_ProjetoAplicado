@@ -6,37 +6,32 @@
         android:name="android.hardware.camera"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-
-
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".AutoCareApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_autocare_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AutoCare"
         tools:targetApi="31">
-        <service
-            android:name=".services.FirebaseMessageService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
+        <receiver
+            android:name=".data.notifications.NotificationReceiver"
+            android:enabled="true" />
 
         <activity android:name=".ui.activities.main_screen.MainActivity" />
         <activity android:name=".ui.activities.register_screen.RegisterActivity" />
         <activity android:name=".ui.activities.vehicle_details_screen.VehicleDetailsActivity" />
         <activity android:name=".ui.activities.my_account_screen.MyAccountActivity" />
         <activity android:name=".ui.activities.maintenance_screen.MaintenanceActivity" />
-        <activity android:name=".ui.activities.add_maintenance_screen.AddMaintenanceActivity" />
+        <activity
+            android:name=".ui.activities.add_maintenance_screen.AddMaintenanceActivity"
+            android:exported="true" />
         <activity
             android:name=".ui.activities.login_screen.LoginActivity"
             android:exported="true"

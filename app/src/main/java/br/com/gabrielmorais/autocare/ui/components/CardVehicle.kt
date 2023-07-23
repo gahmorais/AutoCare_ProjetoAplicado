@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +23,8 @@ import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import java.text.NumberFormat
+import java.util.Locale
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -82,6 +85,17 @@ fun CardVehicle(
           text = vehicle.plate ?: "",
           style = TextStyle(fontSize = 25.sp),
         )
+        Divider(thickness = 2.dp)
+        Text(text = "Distância por mês: ")
+        Row {
+          Text(
+            text = NumberFormat
+              .getNumberInstance(Locale("pt", "BR"))
+              .format(vehicle.averageDistanceTraveledPerMonth),
+            style = TextStyle(fontSize = 25.sp)
+          )
+          Text(text = " Km", style = TextStyle(fontSize = 25.sp))
+        }
       }
     }
   }

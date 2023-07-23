@@ -1,7 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
@@ -79,6 +79,7 @@ class AddMaintenanceActivity : ComponentActivity() {
   }
 }
 
+
 @Composable
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
   val state = AddMaintenanceUiState()
@@ -86,6 +87,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
   val userId = viewModel.userId.collectAsState()
   val vehicle = viewModel.vehicle.collectAsState()
   val context = LocalContext.current as ComponentActivity
+//  val applicationContext = LocalContext.current.applicationContext
   Scaffold { paddingValues ->
     Column(
       Modifier
@@ -97,11 +99,15 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
       if (services.value.isNotEmpty()) {
         val servicesName = services.value.map { it?.name!! }
         val servicesMileage = services.value.map { it?.mileageChange!! }
+        val servicesTime = services.value.map { it?.mustBeDoneBefore!! }
         var expanded by remember { mutableStateOf(false) }
         var selectItem by remember { mutableStateOf(servicesName[0]) }
         var serviceSelected by remember { mutableStateOf(servicesMileage[0]) }
         val averageTraveledDistance = vehicle.value?.averageDistanceTraveledPerMonth
+
         val datepickerDialog = rememberMaterialDialogState()
+        val datepickerNextMaintenance = rememberMaterialDialogState()
+
         MaterialDialog(
           dialogState = datepickerDialog,
           buttons = {
@@ -111,6 +117,18 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
         ) {
           datepicker() {
             state.onDateChange(it)
+          }
+        }
+
+        MaterialDialog(
+          dialogState = datepickerNextMaintenance,
+          buttons = {
+            positiveButton("OK")
+            negativeButton("Cancel")
+          }
+        ) {
+          datepicker {
+            state.onForecastNextExchangeDateChange(it)
           }
         }
 
@@ -134,7 +152,13 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
             serviceSelected = servicesMileage[i]
             expanded = false
             val monthsToNextMaintenance = serviceSelected.div(averageTraveledDistance!!)
-            val dateNextMaintenance = Utils.futureDateMonth(state.date, monthsToNextMaintenance)
+            val months = if (monthsToNextMaintenance > servicesTime[i]) {
+              monthsToNextMaintenance
+            } else {
+              servicesTime[i]
+            }
+
+            val dateNextMaintenance = Utils.futureDateMonth(state.date, months)
             dateNextMaintenance?.let { state.onForecastNextExchangeDateChange(it) }
           }
         )
@@ -171,6 +195,11 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
           modifier = Modifier.fillMaxWidth(),
           value = Utils.formatDate(state.forecastNextExchangeDate.toEpochDay()),
           label = { Text(stringResource(id = R.string.text_next_date_maintenance)) },
+          trailingIcon = {
+            IconButton(onClick = { datepickerNextMaintenance.show() }) {
+              Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+            }
+          },
           onValueChange = {}
         )
 
@@ -184,26 +213,36 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
         OutlinedButton(
           modifier = Modifier.fillMaxWidth(),
           onClick = {
+            val maintenances = vehicle
+              .value
+              ?.maintenances
+              ?.toMutableList() ?: mutableListOf()
 
             val maintenance = Maintenance(
-              selectItem,
-              state.date.toEpochDay(),
-              state.currentMileage.toInt(),
-              state.forecastNextExchangeMileage.toInt(),
-              state.forecastNextExchangeDate.toEpochDay(),
-              state.comments
+              description = selectItem,
+              date = state.date.toEpochDay(),
+              currentMileage = state.currentMileage.toInt(),
+              forecastNextExchangeMileage = state.forecastNextExchangeMileage.toInt(),
+              forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
+              comments = state.comments
             )
 
-            vehicle.value?.let {
-              val maintenances = vehicle.value
-                ?.maintenances
-                ?.toMutableList() ?: mutableListOf()
-              maintenances.add(maintenance)
-              val updatedVehicle = it.copy(maintenances = maintenances)
-              Log.i("AddMaintenanceActivity", "AddMaintenanceScreen: ${vehicle.value}")
-              viewModel.saveMaintenance(userId.value, it.id!!, updatedVehicle)
-              context.finish()
-            }
+            maintenances.add(maintenance)
+            val updatedVehicle = vehicle.value?.copy(maintenances = maintenances)
+
+            viewModel.saveMaintenance(
+              userId = userId.value,
+              vehicleId = updatedVehicle?.id!!,
+              updatedVehicle = updatedVehicle,
+            )
+
+            NotificationUtils.scheduleNotification(
+              context = context,
+              maintenance = maintenance,
+              localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
+            )
+
+            context.finish()
           }) {
           Text(text = "Gravar", style = Typography.h5)
         }

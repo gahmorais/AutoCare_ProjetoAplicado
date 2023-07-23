@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -120,18 +120,18 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
       TopAppBar(
         title = {
           Text(text = stringResource(R.string.vehicle_details_text))
+        },
+        actions = {
+          IconButton(onClick = {
+            val intent = Intent(context, AddMaintenanceActivity::class.java)
+            intent.putExtra(INTENT_USER_ID, userId.value)
+            intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
+            context.startActivity(intent)
+          }) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+          }
         })
     },
-    floatingActionButton = {
-      FloatingActionButton(onClick = {
-        val intent = Intent(context, AddMaintenanceActivity::class.java)
-        intent.putExtra(INTENT_USER_ID, userId.value)
-        intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
-        context.startActivity(intent)
-      }) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = null)
-      }
-    }
   ) { contentPadding ->
     Column(
       Modifier
