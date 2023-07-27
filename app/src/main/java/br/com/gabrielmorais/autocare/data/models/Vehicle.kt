@@ -12,3 +12,4 @@ data class Vehicle(
   val averageDistanceTraveledPerMonth: Int? = null,
   val maintenances: List<Maintenance>? = null
 )
+

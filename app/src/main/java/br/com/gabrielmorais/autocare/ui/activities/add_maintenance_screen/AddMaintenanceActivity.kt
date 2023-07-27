@@ -239,7 +239,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
             NotificationUtils.scheduleNotification(
               context = context,
               maintenance = maintenance,
-              localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
+              localDateTime = state.forecastNextExchangeDate.minusDays(5).atTime(20,14)//Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
             )
 
             context.finish()

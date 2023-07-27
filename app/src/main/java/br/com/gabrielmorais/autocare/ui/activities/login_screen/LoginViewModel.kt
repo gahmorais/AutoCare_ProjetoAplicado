@@ -43,5 +43,4 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
       viewModelScope.launch { _currentUser.emit(it.currentUser) }
     }
   }
-
 }
