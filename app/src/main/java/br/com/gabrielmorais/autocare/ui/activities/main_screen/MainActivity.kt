@@ -16,6 +16,7 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +59,6 @@ import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
-import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
@@ -90,7 +91,9 @@ class MainActivity : ComponentActivity() {
         }
       )
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        SideEffect {
+          notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
       }
       NotificationUtils.createNotificationChannel(applicationContext)
       AutoCareTheme {
@@ -143,8 +146,9 @@ fun MainScreen(viewModel: MainViewModel? = null) {
             imageSourceIncludeGallery = true,
             imageSourceIncludeCamera = true,
             guidelines = CropImageView.Guidelines.ON,
+            fixAspectRatio = true,
             aspectRatioX = 1,
-            aspectRatioY = 1
+            aspectRatioY = 1,
           )
         )
         takePicture.launch(options)
@@ -250,12 +254,14 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
     AsyncImage(
       modifier = Modifier
         .padding(vertical = 5.dp)
+        .fillMaxHeight(0.25F)
         .clickable(onClick = updateUserPhoto),
       contentScale = ContentScale.Fit,
       alignment = Alignment.Center,
       model = ImageRequest
         .Builder(LocalContext.current)
-        .data(user?.photo ?: userSample.photo)
+        .data(user?.photo)
+        .error(R.drawable.profile)
         .crossfade(true)
         .transformations(CircleCropTransformation())
         .build(),
