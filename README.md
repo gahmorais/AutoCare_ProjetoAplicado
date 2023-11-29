@@ -1,4 +1,4 @@
-## Aplicavo AutoCare
+## Aplicativo AutoCare
 ### Uma maneira simples de fazer o controle de manutenção do seu veículo
 
 ![image](./imgs/profile.png)
