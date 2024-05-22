@@ -1,6 +1,5 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import android.opengl.Visibility
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField

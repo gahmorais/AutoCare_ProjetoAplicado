@@ -1,21 +1,13 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryFirebase
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryFirebase
 import br.com.gabrielmorais.autocare.utils.ImageUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import org.koin.androidx.compose.inject
 import timber.log.Timber
 
 class MainViewModel(

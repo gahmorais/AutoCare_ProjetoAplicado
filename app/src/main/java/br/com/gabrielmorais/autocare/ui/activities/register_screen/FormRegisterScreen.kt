@@ -36,7 +36,6 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
-import br.com.gabrielmorais.autocare.ui.components.PasswordTextFieldState
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import org.koin.androidx.compose.koinViewModel
 
