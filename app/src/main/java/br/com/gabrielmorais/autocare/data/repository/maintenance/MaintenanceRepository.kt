@@ -1,19 +1,31 @@
 package br.com.gabrielmorais.autocare.data.repository.maintenance
 
-import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.AppDatabase
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 
-interface MaintenanceRepository {
-  fun create(
-    userId: String,
-    vehicleId: String,
-    updatedVehicle: Vehicle,
-    onSuccess: (String) -> Unit,
-    onError: (Throwable) -> Unit
-  )
+class MaintenanceRepository(private val database: AppDatabase) {
+  suspend fun create(maintenance: Maintenance) = try {
+    database.maintenanceDao().create(maintenance)
+  } catch (e: Exception) {
+    throw e
+  }
 
-  fun delete(
-    userId: String,
-    vehicleId: String,
-    maintenanceId: Int
-  )
+  suspend fun getById(id: String) = try {
+    database.maintenanceDao().getById(id)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  suspend fun update(maintenance: Maintenance) = try {
+    database.maintenanceDao().update(maintenance)
+  } catch (e: Exception) {
+    throw e
+  }
+
+
+  suspend fun delete(maintenance: Maintenance) = try {
+    database.maintenanceDao().delete(maintenance)
+  } catch (e: Exception) {
+    throw e
+  }
 }

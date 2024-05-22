@@ -1,11 +1,11 @@
 package br.com.gabrielmorais.autocare.data.repository.maintenance
 
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.VEHICLE_CHILD
+import br.com.gabrielmorais.autocare.utils.Constants.VEHICLE_CHILD
 import com.google.firebase.database.FirebaseDatabase
 
 
-class MaintenanceRepositoryImpl(private val database: FirebaseDatabase) : MaintenanceRepository {
+class MaintenanceRepositoryFirebase(private val database: FirebaseDatabase) : IMaintenanceRepository {
   override fun create(
     userId: String,
     vehicleId: String,

@@ -5,40 +5,45 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryFirebase
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryFirebase
+import br.com.gabrielmorais.autocare.utils.ImageUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.inject
+import timber.log.Timber
 
 class MainViewModel(
-  private val authRepository: AuthRepositoryImpl,
-  private val userRepository: UserRepositoryImpl
+  private val authRepository: AuthRepository,
+  private val userRepository: UserRepository,
+  private val imageUtils: ImageUtils
 ) : ViewModel() {
   private val _user = MutableStateFlow<User?>(null)
-  val user: Flow<User?> = _user
-  fun logout() = authRepository.logout()
-
-  fun getUser(userId: String) {
-    try {
-      userRepository.getUser(userId) {
-        viewModelScope.launch { _user.emit(it) }
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
+  val user = _user.asStateFlow()
+  fun logout() {
+    authRepository.logout()
   }
 
-  fun updateUserPhoto(userId: String, image: Uri) {
-    viewModelScope.launch(Dispatchers.IO) {
-      userRepository.saveUserPhoto(userId, image) { imageUrl ->
-        _user.value?.apply {
-          userRepository.updateUser(copy(photo = imageUrl)) {
-            Log.i("MainViewModel", "updateUserPhoto: $it")
-          }
-        }
-      }
-    }
+  suspend fun getUser(userId: String) = try {
+    val currentUser = userRepository.getById(userId)
+    Timber.tag("MainViewModel").i("Usuário: $currentUser")
+    currentUser?.let { _user.emit(currentUser) }
+  } catch (e: Exception) {
+    e.printStackTrace()
   }
+
+  suspend fun updateUserPhoto(userId: String, image: Uri) = try {
+    val imagePath = imageUtils.saveImage(userId, image)
+    val userUpdated = _user.value?.copy(photo = imagePath) ?: throw Exception("Usuário nulo")
+    userRepository.update(userUpdated)
+    _user.emit(userUpdated)
+  } catch (e: Exception) {
+    e.printStackTrace()
+  }
+
 }

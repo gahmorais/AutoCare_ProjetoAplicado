@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.time.LocalDate
+import java.time.LocalTime
 
 class AddMaintenanceUiState {
   var date: LocalDate by mutableStateOf(LocalDate.now())
@@ -16,6 +17,13 @@ class AddMaintenanceUiState {
     private set
   var comments: String by mutableStateOf("")
     private set
+
+  var forecastNextExchangeTime: LocalTime by mutableStateOf(LocalTime.now())
+    private set
+
+  val onForecastTimeExchangeTimeChange: (LocalTime) -> Unit = {
+    forecastNextExchangeTime = it
+  }
 
   val onDateChange: (LocalDate) -> Unit = {
     date = it

@@ -28,15 +28,14 @@ val vehicleSample = Vehicle(
   brand = "Renault",
   model = "Sandero",
   plate = "XXX1234", //URL_VEHICLE_SAMPLE,
-  maintenances = maintenanceListSample
 )
 
 
 val userSample = User(
   photo = URL_USER_PROFILE_SAMPLE,
-  email = "teste@teste.com.br",
+  nickname = "teste@teste.com.br",
   name = "Gabriel Morais",
-  vehicles = listOf(vehicleSample)
+  password = ""
 )
 
 

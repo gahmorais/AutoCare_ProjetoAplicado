@@ -3,7 +3,7 @@ package br.com.gabrielmorais.autocare.data.repository.vehicleRepository
 import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 
-interface VehicleRepository {
+interface IVehicleRepository {
   suspend fun saveVehicleImage(
     userId: String,
     vehicleId: String,

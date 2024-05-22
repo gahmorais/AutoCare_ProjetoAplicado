@@ -12,10 +12,10 @@ import com.google.firebase.database.ktx.getValue
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
-class VehicleRepositoryImpl(
+class VehicleRepositoryFirebase(
   private val storage: FirebaseStorage,
   private val database: FirebaseDatabase
-) : VehicleRepository {
+) : IVehicleRepository {
   override suspend fun saveVehicleImage(
     userId: String,
     vehicleId: String,

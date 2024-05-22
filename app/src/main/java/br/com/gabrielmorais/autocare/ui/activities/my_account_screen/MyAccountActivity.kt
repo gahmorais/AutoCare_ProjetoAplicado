@@ -56,8 +56,8 @@ import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.Vehicl
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
+import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
+import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -90,7 +90,7 @@ class MyAccountActivity : ComponentActivity() {
 fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
 
   val user = viewModel?.user?.collectAsState(initial = null)
-  var email by remember(user?.value?.email) { mutableStateOf(user?.value?.email) }
+  var email by remember(user?.value?.nickname) { mutableStateOf(user?.value?.nickname) }
   var name by remember(user?.value?.name) { mutableStateOf(user?.value?.name) }
   val addVehicleDialogState = remember { AddVehicleDialogState() }
   var showDialogAddVehicle by remember { mutableStateOf(false) }
@@ -129,7 +129,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           horizontalArrangement = Arrangement.Center
         ) {
           TextButton(onClick = {
-            viewModel?.changePassword(user?.value?.email ?: "")
+            viewModel?.changePassword(user?.value?.nickname ?: "")
           }) {
             Text(
               text = stringResource(R.string.text_change_password),
@@ -138,14 +138,14 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           }
           TextButton(onClick = {
             user?.value?.let {
-              val updatedUser = it.copy(
-                id = it.id,
-                name = name,
-                email = email,
-                vehicles = null
-              )
-
-              viewModel.updateUser(updatedUser)
+//              val updatedUser = it.copy(
+//                id = it.id,
+//                name = name,
+//                username = usernam,
+////                vehicles = null
+//              )
+//
+//              viewModel.updateUser(updatedUser)
             }
           }) {
             Text(
@@ -167,7 +167,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.padding(vertical = 8.dp),
           verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-          itemsIndexed(items = user?.value?.vehicles ?: listOf(), key = { _, item ->
+          itemsIndexed(items = listOf<Vehicle>(), key = { _, item ->
             item.id ?: 0
           }) { _, vehicle ->
             val state = rememberDismissState(

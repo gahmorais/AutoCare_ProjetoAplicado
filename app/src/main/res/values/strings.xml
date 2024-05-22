@@ -56,4 +56,7 @@
     <string name="channel_description">channel_autocare</string>
     <string name="maintenance_coming">Faltam cinco dias para a manutenção</string>
     <string name="notify_again">Avisar novamente?</string>
+    <string name="text_username">Nickname</string>
+    <string name="placeholder_username">neo</string>
+    <string name="placeholder_name">Thomas A. Anderson</string>
 </resources>

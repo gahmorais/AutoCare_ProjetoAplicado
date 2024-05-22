@@ -41,6 +41,7 @@ import br.com.gabrielmorais.autocare.utils.Constants
 import br.com.gabrielmorais.autocare.utils.Utils
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -108,6 +109,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
         val datepickerDialog = rememberMaterialDialogState()
         val datepickerNextMaintenance = rememberMaterialDialogState()
 
+        val timePicker = rememberMaterialDialogState()
         MaterialDialog(
           dialogState = datepickerDialog,
           buttons = {
@@ -213,36 +215,37 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
         OutlinedButton(
           modifier = Modifier.fillMaxWidth(),
           onClick = {
-            val maintenances = vehicle
-              .value
-              ?.maintenances
-              ?.toMutableList() ?: mutableListOf()
-
-            val maintenance = Maintenance(
-              description = selectItem,
-              date = state.date.toEpochDay(),
-              currentMileage = state.currentMileage.toInt(),
-              forecastNextExchangeMileage = state.forecastNextExchangeMileage.toInt(),
-              forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
-              comments = state.comments
-            )
-
-            maintenances.add(maintenance)
-            val updatedVehicle = vehicle.value?.copy(maintenances = maintenances)
-
-            viewModel.saveMaintenance(
-              userId = userId.value,
-              vehicleId = updatedVehicle?.id!!,
-              updatedVehicle = updatedVehicle,
-            )
-
-            NotificationUtils.scheduleNotification(
-              context = context,
-              maintenance = maintenance,
-              localDateTime = state.forecastNextExchangeDate.minusDays(5).atTime(20,14)//Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
-            )
-
-            context.finish()
+//            val maintenances = vehicle
+//              .value
+//              ?.maintenances
+//              ?.toMutableList() ?: mutableListOf()
+//
+//            val maintenance = Maintenance(
+//              description = selectItem,
+//              date = state.date.toEpochDay(),
+//              currentMileage = state.currentMileage.toInt(),
+//              forecastNextExchangeMileage = state.forecastNextExchangeMileage.toInt(),
+//              forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
+//              comments = state.comments
+//            )
+//
+//            maintenances.add(maintenance)
+//            val updatedVehicle = vehicle.value?.copy(maintenances = maintenances)
+//
+//            viewModel.saveMaintenance(
+//              userId = userId.value,
+//              vehicleId = updatedVehicle?.id!!,
+//              updatedVehicle = updatedVehicle,
+//            )
+//
+//            NotificationUtils.scheduleNotification(
+//              context = context,
+//              maintenance = maintenance,
+//              localDateTime = state.forecastNextExchangeDate.minusDays(5)
+//                .atTime(0, 7)//Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
+//            )
+//
+//            context.finish()
           }) {
           Text(text = "Gravar", style = Typography.h5)
         }

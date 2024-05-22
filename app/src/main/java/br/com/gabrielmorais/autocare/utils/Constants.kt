@@ -1,13 +1,11 @@
 package br.com.gabrielmorais.autocare.utils
 
-class Constants private constructor() {
-  companion object{
-    val VEHICLE_CHILD = "vehicles"
-    val USER_CHILD = "Usuarios"
-    val MAINTENANCE_CHILD = "maintenances"
-    val INTENT_USER_ID = "user_id"
-    val INTENT_VEHICLE_ID = "vehicle_id"
-    val PROFILE_PHOTO_PATH = "profile"
-    val CARS_PHOTO_PATH = "cars"
-  }
+object Constants {
+  const val VEHICLE_CHILD = "vehicles"
+  const val USER_CHILD = "Usuarios"
+  const val MAINTENANCE_CHILD = "maintenances"
+  const val INTENT_USER_ID = "user_id"
+  const val INTENT_VEHICLE_ID = "vehicle_id"
+  const val PROFILE_PHOTO_PATH = "profile"
+  const val CARS_PHOTO_PATH = "cars"
 }

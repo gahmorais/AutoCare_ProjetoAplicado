@@ -2,14 +2,14 @@ package br.com.gabrielmorais.autocare.ui.activities.login_screen
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,63 +25,48 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
+import androidx.core.content.ContextCompat.startActivity
 import br.com.gabrielmorais.autocare.R
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.ui.activities.register_screen.RegisterActivity
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.viewmodels.factory.LoginViewModelFactory
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import timber.log.Timber
 
 class LoginActivity : ComponentActivity() {
-  private val viewModel by viewModels<LoginViewModel> {
-    LoginViewModelFactory(AuthRepositoryImpl(Firebase.auth))
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      LoginScreen(viewModel)
-    }
-
-    lifecycleScope.launch {
-      viewModel.currentUser.collect { user ->
-        user?.let {
-          Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
-          val openActivity = Intent(this@LoginActivity, MainActivity::class.java)
-          openActivity.putExtra("user_id", it.uid)
-          startActivity(openActivity)
-          finish()
-        }
-      }
+      LoginScreen()
     }
   }
 }
 
 @Composable
-fun LoginScreen(viewModel: LoginViewModel) {
+fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
   val scaffoldState = rememberScaffoldState()
-  val context = LocalContext.current
-  val stateUi = remember { viewModel.loginUiState }
+  val context = LocalContext.current as LoginActivity
+  val stateUi by viewModel.loginUiState.collectAsState()
   val passwordState = stateUi.passwordState
-  val state = viewModel.loginState.collectAsState(initial = null)
-  if (state.value?.isLoading == true) {
+  val state by viewModel.loginState.collectAsState(initial = null)
+  val scope = rememberCoroutineScope()
+  if (state?.isLoading == true) {
     LoadingPage(stringResource(id = R.string.text_loading_login))
   } else {
     AutoCareTheme {
@@ -96,13 +81,20 @@ fun LoginScreen(viewModel: LoginViewModel) {
             .padding(contentPadding)
             .padding(horizontal = 16.dp)
         ) {
+          Image(
+            painter = painterResource(id = R.drawable.logo_autocare),
+            modifier = Modifier
+              .fillMaxWidth()
+              .fillMaxHeight(0.4F),
+            contentDescription = null
+          )
           OutlinedTextField(
             modifier = Modifier
               .fillMaxWidth()
               .padding(vertical = 32.dp),
             value = stateUi.email,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            label = { Text(text = stringResource(id = R.string.text_email)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            label = { Text(text = stringResource(id = R.string.text_nickname)) },
             leadingIcon = {
               Icon(
                 imageVector = Icons.Outlined.Person,
@@ -137,7 +129,9 @@ fun LoginScreen(viewModel: LoginViewModel) {
             TextButton(
               modifier = Modifier.fillMaxWidth(),
               onClick = {
-                viewModel.loginUser(stateUi.email, passwordState.password)
+                scope.launch {
+                  viewModel.loginUser(stateUi.email, passwordState.value)
+                }
               }) {
               Text(
                 text = stringResource(id = R.string.text_login),
@@ -160,18 +154,21 @@ fun LoginScreen(viewModel: LoginViewModel) {
     }
   }
 
-  LaunchedEffect(key1 = state.value?.isError) {
-    launch {
-      if (state.value?.isError?.isNotEmpty() == true) {
-        val error = state.value?.isError
-        Toast.makeText(context, "$error", Toast.LENGTH_SHORT).show()
-      }
+  LaunchedEffect(key1 = state?.isError) {
+    if (state?.isError?.isNotEmpty() == true) {
+      val error = state?.isError
+      Toast.makeText(context, "$error", Toast.LENGTH_SHORT).show()
     }
   }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-//  LoginScreen()
+  LaunchedEffect(key1 = viewModel.currentUser) {
+    val user = viewModel.currentUser
+    Timber.tag("LoginActivity").i("onResume: ${viewModel.currentUser.value}")
+    val openActivity = Intent(context, MainActivity::class.java)
+    openActivity.putExtra(INTENT_USER_ID, user.value?.id)
+    val bundle = Bundle()
+    bundle.putString(INTENT_USER_ID, user.value?.id)
+    startActivity(context, openActivity, bundle)
+    context.finish()
+  }
 }

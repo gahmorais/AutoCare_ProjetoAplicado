@@ -5,14 +5,14 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryFirebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
-  private val vehicleRepository: VehicleRepositoryImpl
+  private val vehicleRepository: VehicleRepositoryFirebase
 ) : ViewModel() {
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)

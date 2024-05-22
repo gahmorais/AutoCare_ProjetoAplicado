@@ -4,49 +4,41 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.Status
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryFirebase
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryFirebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
-class RegisterViewModel(
-  private val authRepository: AuthRepositoryImpl,
-  private val userRepository: UserRepositoryImpl
-) : ViewModel() {
-  private val _registerState = Channel<RegisterState>()
+class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
+  private val _registerState = Channel<RegisterState<User>>()
   val registerState = _registerState.receiveAsFlow()
 
-  fun registerUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
-    authRepository.register(email, password).collect { resource ->
+  fun registerUser(user: User) = viewModelScope.launch(Dispatchers.IO) {
+    userRepository.create(user).collect { resource ->
+      Timber.tag("RegisterViewModel").i("Resource: $resource")
       when (resource.status) {
         Status.SUCCESS -> {
-          resource.data?.user?.uid?.apply {
-            createUser(User(id = this, email = email))
-          }
+          Timber.tag("RegisterViewModel").i("Usuário: ${resource.data}")
+          _registerState.send(
+            RegisterState(
+              isSuccess = "Usuário criado",
+              data = resource.data
+            )
+          )
         }
 
-        Status.LOADING -> {
-          _registerState.send(RegisterState(isLoading = true))
-        }
-
-        Status.ERROR -> {
-          _registerState.send(RegisterState(isError = resource.message))
-        }
+        Status.LOADING -> _registerState.send(RegisterState(isLoading = true))
+        Status.ERROR -> _registerState.send(
+          RegisterState(
+            isError = resource.message ?: "Ocorreu um erro"
+          )
+        )
       }
-    }
-  }
-
-  private fun createUser(user: User) {
-    try {
-      userRepository.createUser(user) {
-        viewModelScope.launch(Dispatchers.IO) {
-          _registerState.send(RegisterState(isSuccess = "Usuário cadastrado com sucesso"))
-        }
-      }
-    } catch (e: Exception) {
-      viewModelScope.launch(Dispatchers.IO) { _registerState.send(RegisterState(isError = e.message)) }
     }
   }
 }

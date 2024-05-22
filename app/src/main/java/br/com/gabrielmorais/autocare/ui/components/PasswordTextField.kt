@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.components
 
+import android.opengl.Visibility
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,7 +30,7 @@ fun PasswordTextField(
 
   OutlinedTextField(
     modifier = modifier,
-    value = state.password,
+    value = state.value,
     leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
     onValueChange = { state.onPasswordChange(it) },
     label = { Text(text = label) },
@@ -48,18 +50,52 @@ fun PasswordTextField(
   )
 }
 
+@Composable
+fun PasswordTextField(
+  modifier: Modifier = Modifier,
+  label: String = stringResource(id = R.string.text_password),
+  value: String,
+  onChangePassword: (String) -> Unit
+) {
+
+  var visibility by remember {
+    mutableStateOf(false)
+  }
+
+  OutlinedTextField(
+    modifier = modifier,
+    value = value,
+    leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+    onValueChange = { onChangePassword(it) },
+    label = { Text(text = label) },
+    visualTransformation = if (visibility) {
+      VisualTransformation.None
+    } else PasswordVisualTransformation(),
+    trailingIcon = {
+      IconButton(onClick = { visibility = visibility.not() }) {
+        Icon(
+          imageVector = if (visibility) {
+            Icons.Outlined.Visibility
+          } else Icons.Outlined.VisibilityOff,
+          contentDescription = null
+        )
+      }
+    }
+  )
+}
+
 @Preview
 @Composable
-private fun PasswordTextFieldPreview(){
+private fun PasswordTextFieldPreview() {
   PasswordTextField()
 }
 
 
 class PasswordTextFieldState {
-  var password by mutableStateOf("")
+  var value by mutableStateOf("")
   var showPassword by mutableStateOf(false)
   val onPasswordChange: (String) -> Unit = {
-    password = it
+    value = it
   }
   val changePasswordVisibility: (Boolean) -> Unit = {
     showPassword = it

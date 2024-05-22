@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepositoryFirebase
 import br.com.gabrielmorais.autocare.data.repository.services.ServicesRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryFirebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 
 class AddMaintenanceViewModel(
   private val servicesRepository: ServicesRepositoryImpl,
-  private val maintenanceRepository: MaintenanceRepositoryImpl,
-  private val vehicleRepository: VehicleRepositoryImpl
+  private val maintenanceRepository: MaintenanceRepositoryFirebase,
+  private val vehicleRepository: VehicleRepositoryFirebase
 ) :
   ViewModel() {
   private val _services = MutableStateFlow<List<Service?>>(listOf())

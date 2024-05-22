@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
-class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepository {
+class AuthRepositoryFirebase(private val firebaseAuth: FirebaseAuth) : IAuthRepository {
 
 
   override fun login(email: String, password: String): Flow<Resource<AuthResult?>> {

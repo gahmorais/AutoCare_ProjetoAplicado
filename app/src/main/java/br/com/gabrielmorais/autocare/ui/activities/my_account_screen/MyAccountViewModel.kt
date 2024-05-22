@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryImpl
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryImpl
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositoryFirebase
+import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryFirebase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MyAccountViewModel(
-  private val userRepository: UserRepositoryImpl
+  private val userRepository: UserRepositoryFirebase
 ) : ViewModel() {
 
   private val _user = MutableStateFlow<User?>(null)
@@ -40,7 +40,7 @@ class MyAccountViewModel(
 
   fun changePassword(email: String) {
     try {
-      val authRepository = AuthRepositoryImpl(Firebase.auth)
+      val authRepository = AuthRepositoryFirebase(Firebase.auth)
       authRepository.changePassword(email) {
         _message.value = it
       }

@@ -1,17 +1,24 @@
 package br.com.gabrielmorais.autocare.data.models
 
-data class User(
-  val id: String? = null,
-  val photo: String? = null,
-  val email: String? = null,
-  val name: String? = null,
-  val vehicles: List<Vehicle>? = null
-)
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import java.util.UUID
 
-data class UserFirebase(
-  val id: String? = null,
+@Entity(
+  tableName = "usuarios", primaryKeys = [
+    "id", "nickname"
+  ]
+)
+data class User(
+  @ColumnInfo(name = "id")
+  val id: String = UUID.randomUUID().toString(),
+  @ColumnInfo(name = "foto")
   val photo: String? = null,
-  val email: String? = null,
-  val name: String? = null,
-  val vehicles: HashMap<String, Any>? = null
+  @ColumnInfo(name = "nickname")
+  val nickname: String,
+  @ColumnInfo(name = "nome")
+  val name: String,
+  @ColumnInfo(name = "senha")
+  val password: String,
 )
