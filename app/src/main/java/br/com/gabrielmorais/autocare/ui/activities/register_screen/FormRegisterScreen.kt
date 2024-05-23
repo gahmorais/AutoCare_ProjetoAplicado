@@ -19,7 +19,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.Status
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import org.koin.androidx.compose.koinViewModel
-import timber.log.Timber
 
 @Composable
 fun FormRegisterScreen(viewModel: RegisterViewModel = koinViewModel()) {

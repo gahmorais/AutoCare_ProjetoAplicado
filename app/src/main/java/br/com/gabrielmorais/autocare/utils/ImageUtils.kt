@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Environment
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
