@@ -2,14 +2,16 @@ package br.com.gabrielmorais.autocare.data.models
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
 import java.util.UUID
 
 @Entity(
-  tableName = "usuarios", primaryKeys = [
-    "id", "nickname"
-  ]
+  tableName = "usuarios",
+  indices = [Index("nickname", unique = true)],
 )
 data class User(
+  @PrimaryKey
   @ColumnInfo(name = "id")
   val id: String = UUID.randomUUID().toString(),
   @ColumnInfo(name = "foto")

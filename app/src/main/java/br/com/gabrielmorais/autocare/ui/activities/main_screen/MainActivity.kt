@@ -55,6 +55,7 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.userSample
+import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
@@ -304,6 +305,8 @@ fun TopAppBarActions(viewModel: MainViewModel = koinViewModel()) {
     onDismissRequest = { showDropDownMenu = false }) {
     TextButton(onClick = {
       viewModel.logout()
+      val intent = Intent(context, LoginActivity::class.java)
+      context.startActivity(intent)
       context.finish()
     }) {
       Text(text = stringResource(R.string.text_exit))

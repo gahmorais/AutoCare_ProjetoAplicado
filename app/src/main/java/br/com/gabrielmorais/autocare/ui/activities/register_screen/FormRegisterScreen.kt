@@ -34,16 +34,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
+import br.com.gabrielmorais.autocare.data.repository.Status
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import org.koin.androidx.compose.koinViewModel
+import timber.log.Timber
 
 @Composable
 fun FormRegisterScreen(viewModel: RegisterViewModel = koinViewModel()) {
   val scaffoldState = rememberScaffoldState()
   val uiState = RegisterUiState()
-  val state = viewModel.registerState.collectAsState(initial = null)
   val context = LocalContext.current as ComponentActivity
   var message by remember { mutableStateOf("") }
   AutoCareTheme {
@@ -135,21 +136,6 @@ fun FormRegisterScreen(viewModel: RegisterViewModel = koinViewModel()) {
       if (message.isNotEmpty()) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         message = ""
-      }
-    }
-
-    LaunchedEffect(key1 = state.value?.isSuccess) {
-      if (state.value?.isSuccess?.isNotEmpty() == true) {
-        val success = state.value?.isSuccess
-        Toast.makeText(context, "$success", Toast.LENGTH_SHORT).show()
-        context.finish()
-      }
-    }
-
-    LaunchedEffect(key1 = state.value?.isError) {
-      if (state.value?.isError?.isNotEmpty() == true) {
-        val error = state.value?.isError ?: "Ocorreu um erro"
-        scaffoldState.snackbarHostState.showSnackbar(error)
       }
     }
   }

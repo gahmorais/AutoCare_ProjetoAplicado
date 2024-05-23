@@ -10,6 +10,7 @@ import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepositoryFirebase
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryFirebase
 import br.com.gabrielmorais.autocare.utils.ImageUtils
+import br.com.gabrielmorais.autocare.utils.ResourceProvider
 import org.koin.dsl.module
 
 val mainModule = module {
@@ -26,6 +27,7 @@ val mainModule = module {
   single { MaintenanceRepositoryFirebase(get()) }
   single { ServicesRepositoryImpl(get()) }
 
+  single{ResourceProvider(get())}
   single { AuthRepository(get(), get()) }
   single { UserRepository(get()) }
   single { ImageUtils(get()) }

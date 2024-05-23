@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.data.repository.user
 
+import android.database.sqlite.SQLiteConstraintException
 import br.com.gabrielmorais.autocare.data.AppDatabase
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.Resource
@@ -19,7 +20,12 @@ class UserRepository(private val database: AppDatabase) {
       Timber.tag("UserRepository").i("Usuário Criado: $user")
       emit(Resource.success(user))
     }.catch { error ->
-      emit(Resource.error(null, error.message ?: "Ocorreu um erro ao criar usuário"))
+      val message = when (error) {
+        is SQLiteConstraintException -> "O nome de usuário não pode ser utilizado"
+        else -> error.message
+      }
+
+      emit(Resource.error(null, message ?: "Ocorreu um erro ao criar usuário"))
     }
   }
 

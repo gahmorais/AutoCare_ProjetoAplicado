@@ -1,8 +1,9 @@
 package br.com.gabrielmorais.autocare.ui.activities.register_screen
 
+import br.com.gabrielmorais.autocare.data.repository.Status
+
 data class RegisterState<out T>(
-  val isLoading: Boolean = false,
-  val isSuccess: String = "",
-  val isError: String = "",
+  val status: Status,
+  val message: String?,
   val data: T? = null
 )

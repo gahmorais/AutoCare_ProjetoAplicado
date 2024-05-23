@@ -24,8 +24,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     viewModelScope.launch { getCurrentUserListener() }
   }
 
-  suspend fun loginUser(email: String, password: String) {
-    authRepository.login(email, password).collect { resource ->
+  suspend fun loginUser(nickname: String, password: String) {
+    authRepository.login(nickname, password).collect { resource ->
       when (resource.status) {
         Status.SUCCESS -> {
           _loginState.send(

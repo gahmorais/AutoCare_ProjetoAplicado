@@ -14,6 +14,7 @@ class ImageUtils(private val context: Context) {
   fun saveImage(userId: String, uri: Uri): String {
     val source = ImageDecoder.createSource(context.contentResolver, uri)
     val bitmap = ImageDecoder.decodeBitmap(source)
+
     val file = createImageFile(userId)
     Timber.tag("ImageUtils").i("Caminho do arquivo: ${file.absolutePath}")
     val outputStream = FileOutputStream(file, false)
@@ -25,14 +26,13 @@ class ImageUtils(private val context: Context) {
   }
 
   private fun createImageFile(userFolder: String): File {
-    val timestamp = System.currentTimeMillis()
-    val extension = ".JPG"
     val rootDir = context.getExternalFilesDir("")
     val folder = "$rootDir/$userFolder"
     val fileFolder = File(folder)
     if (!fileFolder.exists()) fileFolder.mkdir()
+    val timestamp = System.currentTimeMillis()
+    val extension = ".JPG"
     val filename = "$timestamp$extension"
-    Environment.getDataDirectory()
     return File(fileFolder, filename)
   }
 }

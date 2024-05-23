@@ -11,7 +11,7 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
   viewModel { VehicleDetailsViewModel(get()) }
-  viewModel { MainViewModel(get(), get(),get()) }
+  viewModel { MainViewModel(get(), get(),get(),get()) }
   viewModel { RegisterViewModel(get()) }
   viewModel { MyAccountViewModel(get()) }
   viewModel { AddMaintenanceViewModel(get(), get(), get()) }

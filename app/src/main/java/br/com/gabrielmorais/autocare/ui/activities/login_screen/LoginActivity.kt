@@ -92,7 +92,7 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
             modifier = Modifier
               .fillMaxWidth()
               .padding(vertical = 32.dp),
-            value = stateUi.email,
+            value = stateUi.nickname,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             label = { Text(text = stringResource(id = R.string.text_nickname)) },
             leadingIcon = {
@@ -104,7 +104,7 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
             placeholder = {
               Text(text = stringResource(id = R.string.email_placeholder))
             },
-            onValueChange = stateUi.onEmailChange,
+            onValueChange = stateUi.onNickNameChange,
           )
 
           PasswordTextField(
@@ -130,7 +130,7 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
               modifier = Modifier.fillMaxWidth(),
               onClick = {
                 scope.launch {
-                  viewModel.loginUser(stateUi.email, passwordState.value)
+                  viewModel.loginUser(stateUi.nickname, passwordState.value)
                 }
               }) {
               Text(
@@ -157,18 +157,21 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
   LaunchedEffect(key1 = state?.isError) {
     if (state?.isError?.isNotEmpty() == true) {
       val error = state?.isError
+      Timber.tag("LoginActivity").i("Ocorreu um erro $error")
       Toast.makeText(context, "$error", Toast.LENGTH_SHORT).show()
     }
   }
 
-  LaunchedEffect(key1 = viewModel.currentUser) {
-    val user = viewModel.currentUser
-    Timber.tag("LoginActivity").i("onResume: ${viewModel.currentUser.value}")
-    val openActivity = Intent(context, MainActivity::class.java)
-    openActivity.putExtra(INTENT_USER_ID, user.value?.id)
-    val bundle = Bundle()
-    bundle.putString(INTENT_USER_ID, user.value?.id)
-    startActivity(context, openActivity, bundle)
-    context.finish()
+  val currentUser by viewModel.currentUser.collectAsState()
+  LaunchedEffect(key1 = currentUser) {
+    if (currentUser != null) {
+      Timber.tag("LoginActivity").i("onResume: ${viewModel.currentUser.value}")
+      val openActivity = Intent(context, MainActivity::class.java)
+      openActivity.putExtra(INTENT_USER_ID, currentUser?.id)
+      val bundle = Bundle()
+      bundle.putString(INTENT_USER_ID, currentUser?.id)
+      startActivity(context, openActivity, bundle)
+      context.finish()
+    }
   }
 }

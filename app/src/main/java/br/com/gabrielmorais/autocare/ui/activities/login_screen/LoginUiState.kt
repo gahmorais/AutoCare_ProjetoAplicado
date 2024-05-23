@@ -6,11 +6,11 @@ import androidx.compose.runtime.setValue
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextFieldState
 
 class LoginUiState {
-  var email by mutableStateOf("")
+  var nickname by mutableStateOf("")
     private set
   var passwordState = PasswordTextFieldState()
     private set
-  val onEmailChange: (String) -> Unit = {
-    email = it
+  val onNickNameChange: (String) -> Unit = {
+    nickname = it
   }
 }

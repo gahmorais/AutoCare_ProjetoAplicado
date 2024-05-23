@@ -23,16 +23,24 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
           Timber.tag("RegisterViewModel").i("Usuário: ${resource.data}")
           _registerState.send(
             RegisterState(
-              isSuccess = "Usuário criado",
+              resource.status,
+              message = "Usuário criado",
               data = resource.data
             )
           )
         }
 
-        Status.LOADING -> _registerState.send(RegisterState(isLoading = true))
+        Status.LOADING -> _registerState.send(
+          RegisterState(
+            status = resource.status,
+            message = null,
+          )
+        )
+
         Status.ERROR -> _registerState.send(
           RegisterState(
-            isError = resource.message ?: "Ocorreu um erro"
+            status = resource.status,
+            message = resource.message ?: "Ocorreu um erro",
           )
         )
       }

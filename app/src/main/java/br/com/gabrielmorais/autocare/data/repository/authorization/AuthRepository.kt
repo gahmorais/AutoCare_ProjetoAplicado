@@ -21,10 +21,10 @@ class AuthRepository(
     return Gson().fromJson(currentUser, User::class.java)
   }
 
-  suspend fun login(email: String, password: String): Flow<Resource<User?>> {
+  suspend fun login(nickname: String, password: String): Flow<Resource<User?>> {
     return flow {
       emit(Resource.loading(null))
-      val user = database.userDao().getUserByNickname(email)
+      val user = database.userDao().getUserByNickname(nickname)
         ?: throw Exception("Usuário ou senha incorretos")
       val isNotCorrect = user.password != password
       if (isNotCorrect) throw Exception("Usuário ou senha incorretos")
