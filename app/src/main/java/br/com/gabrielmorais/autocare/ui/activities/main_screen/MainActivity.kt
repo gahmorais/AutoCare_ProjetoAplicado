@@ -1,9 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.Manifest
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -59,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity

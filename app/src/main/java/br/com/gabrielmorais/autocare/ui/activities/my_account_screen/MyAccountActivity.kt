@@ -1,11 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,7 +60,6 @@ import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
 import br.com.gabrielmorais.autocare.utils.findActivity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
@@ -128,7 +123,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = stringResource(R.string.text_email)) },
           enabled = false,
-          value = nickname ?: "",
+          value = nickname,
           onValueChange = { nickname = it }
         )
 
@@ -136,7 +131,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = stringResource(R.string.text_name)) },
           placeholder = { Text(text = stringResource(R.string.name_placeholder)) },
-          value = name ?: "",
+          value = name,
           onValueChange = { name = it }
         )
 

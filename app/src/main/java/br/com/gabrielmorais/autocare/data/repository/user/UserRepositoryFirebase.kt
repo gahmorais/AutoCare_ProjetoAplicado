@@ -21,7 +21,7 @@ class UserRepositoryFirebase(
   override fun createUser(user: User, callback: () -> Unit) {
     database.reference
       .child(USER_CHILD)
-      .child(user.id ?: "")
+      .child(user.id)
       .setValue(user)
       .addOnSuccessListener {
         callback()
@@ -59,7 +59,7 @@ class UserRepositoryFirebase(
     database
       .reference
       .child(USER_CHILD)
-      .child(user.id ?: "")
+      .child(user.id)
       .setValue(user)
       .addOnSuccessListener {
         callback("Usuário atualizado com sucesso")
@@ -116,7 +116,7 @@ class UserRepositoryFirebase(
       .reference
       .child(VEHICLE_CHILD)
       .child(userId)
-      .child(vehicle.id!!)
+      .child(vehicle.id)
       .setValue(vehicle)
       .addOnSuccessListener {
         callback("Veiculo salvo com sucesso")

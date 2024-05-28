@@ -9,7 +9,6 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.models.UserVehicles
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import kotlinx.coroutines.flow.Flow
 

@@ -1,22 +1,18 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryFirebase
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.handleException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 class VehicleDetailsViewModel(
   private val userRepository: UserRepository,
@@ -49,8 +45,4 @@ class VehicleDetailsViewModel(
   private fun emitMessage(text: String) = viewModelScope.launch {
     _message.emit(text)
   }
-
-  private fun updateVehicle(userId: String, vehicle: Vehicle) {
-  }
-
 }

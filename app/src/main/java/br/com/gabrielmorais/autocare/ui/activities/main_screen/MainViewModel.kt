@@ -1,7 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.net.Uri
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User

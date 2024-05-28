@@ -34,7 +34,6 @@ import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMai
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
 import br.com.gabrielmorais.autocare.utils.findActivity
 import com.canhub.cropper.CropImageContract
@@ -45,7 +44,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import timber.log.Timber
 
 class VehicleDetailsActivity : ComponentActivity() {
