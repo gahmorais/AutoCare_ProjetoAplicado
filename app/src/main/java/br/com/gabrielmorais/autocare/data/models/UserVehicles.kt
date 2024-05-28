@@ -6,8 +6,8 @@ import androidx.room.Relation
 data class UserVehicles(
   @Embedded val user: User,
   @Relation(
-    parentColumn = "id",
-    entityColumn = "id"
+    parentColumn = "user_id",
+    entityColumn = "vehicle_id"
   )
   val vehicles: List<Vehicle>
 )

@@ -1,5 +1,8 @@
 package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -35,10 +38,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +54,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
@@ -58,45 +62,57 @@ import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
-import kotlinx.coroutines.flow.collectLatest
+import br.com.gabrielmorais.autocare.utils.findActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
+import timber.log.Timber
 
 class MyAccountActivity : ComponentActivity() {
-  private val viewModel: MyAccountViewModel by inject()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val userId = intent.getStringExtra(INTENT_USER_ID)
-    userId?.let { viewModel.getUser(it) }
     setContent {
-      MyAccountScreen(viewModel)
-    }
-
-    lifecycleScope.launch {
-      viewModel.message.collectLatest { message ->
-        if (message.isNotBlank())
-          Toast.makeText(this@MyAccountActivity, message, Toast.LENGTH_SHORT).show()
-      }
+      MyAccountScreen()
     }
   }
-
-
 }
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
+fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
 
-  val user = viewModel?.user?.collectAsState(initial = null)
-  var email by remember(user?.value?.nickname) { mutableStateOf(user?.value?.nickname) }
-  var name by remember(user?.value?.name) { mutableStateOf(user?.value?.name) }
+  val user by viewModel.user.collectAsState()
+  var nickname by remember(user?.nickname) { mutableStateOf(user?.nickname ?: "") }
+  var name by remember(user?.name) { mutableStateOf(user?.name ?: "") }
   val addVehicleDialogState = remember { AddVehicleDialogState() }
   var showDialogAddVehicle by remember { mutableStateOf(false) }
-
+  val scope = rememberCoroutineScope()
   val context = LocalContext.current
-  Log.i("MyAccountActivity", "MyAccountScreen: $user")
+
+  val activity = context.findActivity()
+  val intent = activity?.intent
+
+  LaunchedEffect(key1 = intent?.getStringExtra(INTENT_USER_ID)) {
+    val userId = intent?.getStringExtra(INTENT_USER_ID)
+    Timber.tag("MainActivity").i("User Id: $userId")
+    if (userId != null) {
+      withContext(Dispatchers.IO) { viewModel.getUser(userId = userId) }
+    }
+  }
+
+  val message by viewModel.message.collectAsState()
+  LaunchedEffect(key1 = message) {
+    if (message.isNotEmpty()) {
+      Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+  }
+
+
+  Timber.tag("MyAccountActivity").i("MyAccountScreen: $user")
   AutoCareTheme {
     Scaffold(
       topBar = { TopAppBar(title = { Text(text = stringResource(R.string.text_my_account)) }) }
@@ -112,8 +128,8 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           modifier = Modifier.fillMaxWidth(),
           label = { Text(text = stringResource(R.string.text_email)) },
           enabled = false,
-          value = email ?: "",
-          onValueChange = { email = it }
+          value = nickname ?: "",
+          onValueChange = { nickname = it }
         )
 
         OutlinedTextField(
@@ -129,7 +145,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
           horizontalArrangement = Arrangement.Center
         ) {
           TextButton(onClick = {
-            viewModel?.changePassword(user?.value?.nickname ?: "")
+            viewModel.changePassword(user?.nickname ?: "")
           }) {
             Text(
               text = stringResource(R.string.text_change_password),
@@ -137,15 +153,14 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
             )
           }
           TextButton(onClick = {
-            user?.value?.let {
-//              val updatedUser = it.copy(
-//                id = it.id,
-//                name = name,
-//                username = usernam,
-////                vehicles = null
-//              )
-//
-//              viewModel.updateUser(updatedUser)
+            user?.let {
+              val updatedUser = it.copy(
+                id = it.id,
+                name = name,
+                nickname = nickname,
+              )
+
+              scope.launch { viewModel.updateUser(updatedUser) }
             }
           }) {
             Text(
@@ -163,19 +178,20 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
         )
 
         Spacer(modifier = Modifier.padding(vertical = 16.dp))
+
+        val vehicles by viewModel.vehicleList.collectAsState()
+
         LazyColumn(
           modifier = Modifier.padding(vertical = 8.dp),
           verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-          itemsIndexed(items = listOf<Vehicle>(), key = { _, item ->
-            item.id ?: 0
+          itemsIndexed(items = vehicles, key = { _, item ->
+            item.id
           }) { _, vehicle ->
             val state = rememberDismissState(
               confirmStateChange = {
                 if (it == DismissValue.DismissedToStart) {
-                  val userId = user?.value?.id ?: ""
-                  val vehicleId = vehicle.id ?: ""
-                  viewModel?.deleteVehicle(userId, vehicleId)
+                  scope.launch { viewModel.deleteVehicle(vehicle) }
                 }
                 true
               }
@@ -216,11 +232,9 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 modifier = Modifier.fillMaxWidth(),
                 vehicle = vehicle,
                 onCardClick = {
-                  val intent = Intent(context, VehicleDetailsActivity::class.java)
-                  val userId = user?.value?.id ?: ""
-                  val vehicleId = vehicle.id ?: ""
-                  intent.putExtra(INTENT_USER_ID, userId)
-                  intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
+                  val openVehicleDetails = Intent(context, VehicleDetailsActivity::class.java)
+                  val vehicleId = vehicle.id
+                  openVehicleDetails.putExtra(INTENT_VEHICLE_ID, vehicleId)
                   context.startActivity(intent)
                 }
               )
@@ -242,17 +256,19 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 showDialogAddVehicle = false
               },
               onConfirm = {
+                val userId = user?.id ?: throw Exception("Usuário não atribuido")
                 val newVehicle = Vehicle(
                   nickName = addVehicleDialogState.nickName,
                   brand = addVehicleDialogState.brand,
                   model = addVehicleDialogState.model,
                   plate = addVehicleDialogState.plate,
                   photo = addVehicleDialogState.photo,
+                  userId = userId,
                   averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
                 )
-                user?.value?.id?.let {
-                  Log.d("MyAccountScreen", "MyAccountScreen: $it")
-                  viewModel.saveVehicle(it, newVehicle)
+                user?.id?.let {
+                  Timber.tag("MyAccountScreen").d("MyAccountScreen: $it")
+                  scope.launch { viewModel.saveVehicle(newVehicle) }
                   showDialogAddVehicle = false
                 }
               })

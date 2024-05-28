@@ -4,6 +4,8 @@ import android.content.Context
 import br.com.gabrielmorais.autocare.data.AppDatabase
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.Resource
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -16,6 +18,7 @@ class AuthRepository(
   private val preferences = context.getSharedPreferences("authorization", Context.MODE_PRIVATE)
   private val editor = preferences.edit()
   private val CURRENT_USER = "user"
+
   fun getCurrentUser(): User? {
     val currentUser = preferences.getString(CURRENT_USER, "")
     return Gson().fromJson(currentUser, User::class.java)

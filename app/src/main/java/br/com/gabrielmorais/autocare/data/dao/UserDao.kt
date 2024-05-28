@@ -7,8 +7,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.UserVehicles
+import br.com.gabrielmorais.autocare.data.models.Vehicle
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
@@ -26,10 +29,10 @@ interface UserDao {
    * @param id
    * @return user?
    */
-  @Query("SELECT * FROM usuarios WHERE id = :id")
-  suspend fun getById(id: String): User?
+  @Query("SELECT * FROM usuarios WHERE usuario_id = :id")
+  fun getById(id: String): User
 
-  @Query("SELECT * FROM usuarios WHERE nickname = :nickname")
+  @Query("SELECT * FROM usuarios WHERE apelido = :nickname")
   suspend fun getUserByNickname(nickname: String): User?
 
   @Update
@@ -38,7 +41,16 @@ interface UserDao {
   @Delete
   suspend fun delete(user: User)
 
+  @Upsert
+  suspend fun addVehicle(vehicle: Vehicle)
+
+  @Query("SELECT * FROM veiculos WHERE veiculo_id = :id")
+  suspend fun getVehicleById(id: String): Vehicle
+
+  @Delete
+  suspend fun deleteVehicle(vehicle: Vehicle)
+
   @Transaction
-  @Query("SELECT * FROM usuarios WHERE id = :id")
-  suspend fun getVehicles(id: String): UserVehicles
+  @Query("SELECT * FROM veiculos WHERE usuario_id = :id")
+  fun getVehicles(id: String): Flow<List<Vehicle>>
 }

@@ -90,7 +90,8 @@ class UserRepositoryFirebase(
             val averageDistanceTraveledPerMonth = i.child("averageDistanceTraveledPerMonth").getValue<Int>()
 
             val vehicle = Vehicle(
-//              id = id,
+              id = id.toString(),
+              userId = "",
               brand = brand,
               model = model,
               plate = plate,

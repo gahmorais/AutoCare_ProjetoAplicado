@@ -11,6 +11,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +22,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -43,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,9 +63,13 @@ import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
+import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
+import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
+import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
+import br.com.gabrielmorais.autocare.utils.findActivity
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
@@ -108,7 +118,7 @@ fun MainScreen(viewModel: MainViewModel = koinViewModel()) {
   val activity = context.findActivity()
   val intent = activity?.intent
   val user by viewModel.user.collectAsState(initial = null)
-  val vehicleList = listOf<Vehicle>()
+  val vehicleList by viewModel.vehicleList.collectAsState()
 
   LaunchedEffect(key1 = intent?.getStringExtra(INTENT_USER_ID)) {
     val userId = intent?.getStringExtra(INTENT_USER_ID)
@@ -165,41 +175,35 @@ fun MainScreen(viewModel: MainViewModel = koinViewModel()) {
     Column(Modifier.padding(contentPadding)) {
 
     }
-//    if (vehicleList.isNotEmpty()) {
-//      LazyColumn(
-//        modifier = Modifier
-//          .padding(contentPadding)
-//          .scrollable(scrollState, orientation = Orientation.Vertical)
-//      ) {
-//        items(vehicleList) { vehicle ->
-//          CardVehicle(
-//            vehicle = vehicle,
-//            modifier = Modifier
-//              .fillMaxWidth()
-//              .padding(5.dp)
-//              .clip(shape = RoundedCornerShape(15.dp)),
-//            onCardClick = {
-//              val userId = user.value?.id
-//              val vehicleId = vehicle.id
-//              val intent = Intent(context, VehicleDetailsActivity::class.java)
-//              intent.putExtra(INTENT_USER_ID, userId)
-//              intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
-//              context.startActivity(intent)
-//            }
-//          )
-//        }
-//      }
-//    } else {
-//      EmptyCarList(contentPadding)
-//    }
+    if (vehicleList.isNotEmpty()) {
+      LazyColumn(
+        modifier = Modifier
+          .padding(contentPadding)
+          .scrollable(state = scrollState, orientation = Orientation.Vertical)
+      ) {
+        items(vehicleList) { vehicle ->
+          CardVehicle(
+            vehicle = vehicle,
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(5.dp)
+              .clip(shape = RoundedCornerShape(15.dp)),
+            onCardClick = {
+              val userId = user?.id
+              val vehicleId = vehicle.id
+              val openVehicleDetails = Intent(context, VehicleDetailsActivity::class.java)
+              openVehicleDetails.putExtra(INTENT_USER_ID, userId)
+              openVehicleDetails.putExtra(INTENT_VEHICLE_ID, vehicleId)
+              context.startActivity(openVehicleDetails)
+            }
+          )
+        }
+      }
+    } else {
+      EmptyCarList(contentPadding)
+    }
 
   }
-}
-
-private fun Context.findActivity(): Activity? = when (this) {
-  is Activity -> this
-  is ContextWrapper -> baseContext.findActivity()
-  else -> null
 }
 
 @Composable

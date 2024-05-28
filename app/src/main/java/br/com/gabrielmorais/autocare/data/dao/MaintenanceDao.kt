@@ -12,7 +12,7 @@ interface MaintenanceDao {
   @Insert
   suspend fun create(maintenance: Maintenance)
 
-  @Query("SELECT * FROM manutencoes WHERE id = :id")
+  @Query("SELECT * FROM manutencoes WHERE manutencao_id = :id")
   suspend fun getById(id: String) : Maintenance
 
   @Update

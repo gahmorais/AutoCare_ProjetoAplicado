@@ -4,15 +4,27 @@ import android.os.Parcelable
 import android.os.SystemClock
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-@Entity(tableName = "manutencoes")
+@Entity(
+  tableName = "manutencoes",
+  foreignKeys = [ForeignKey(
+    entity = Vehicle::class,
+    parentColumns = ["veiculo_id"],
+    childColumns = ["veiculo_id"],
+    onDelete = ForeignKey.CASCADE,
+    onUpdate = ForeignKey.CASCADE
+  )]
+)
 data class Maintenance(
   @PrimaryKey
-  @ColumnInfo(name = "id")
+  @ColumnInfo(name = "manutencao_id")
   val id: Int = SystemClock.uptimeMillis().toInt(),
+  @ColumnInfo(name = "veiculo_id")
+  val vehicleId : String,
   @ColumnInfo(name = "descricao")
   val description: String? = null,
   @ColumnInfo("data")

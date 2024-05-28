@@ -3,6 +3,7 @@ package br.com.gabrielmorais.autocare.data.repository.user
 import android.database.sqlite.SQLiteConstraintException
 import br.com.gabrielmorais.autocare.data.AppDatabase
 import br.com.gabrielmorais.autocare.data.models.User
+import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -29,14 +30,38 @@ class UserRepository(private val database: AppDatabase) {
     }
   }
 
-  suspend fun getById(id: String): User? = try {
-    database.userDao().getById(id) ?: throw Exception("Nenhum usuário encontrado")
+  fun getById(id: String): User = try {
+    database.userDao().getById(id)
   } catch (e: Exception) {
     throw e
   }
 
   suspend fun update(user: User) = try {
     database.userDao().update(user)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  fun getVehicles(id: String): Flow<List<Vehicle>> = try {
+    database.userDao().getVehicles(id)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  suspend fun getVehicleById(id: String) = try {
+    database.userDao().getVehicleById(id)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  suspend fun addVehicle(vehicle: Vehicle) = try {
+    database.userDao().addVehicle(vehicle)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  suspend fun deleteVehicle(vehicle: Vehicle) = try {
+    database.userDao().deleteVehicle(vehicle)
   } catch (e: Exception) {
     throw e
   }

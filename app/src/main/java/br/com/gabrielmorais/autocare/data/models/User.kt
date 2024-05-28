@@ -8,15 +8,15 @@ import java.util.UUID
 
 @Entity(
   tableName = "usuarios",
-  indices = [Index("nickname", unique = true)],
+  indices = [Index("apelido", unique = true)],
 )
 data class User(
   @PrimaryKey
-  @ColumnInfo(name = "id")
+  @ColumnInfo(name = "usuario_id")
   val id: String = UUID.randomUUID().toString(),
   @ColumnInfo(name = "foto")
   val photo: String? = null,
-  @ColumnInfo(name = "nickname")
+  @ColumnInfo(name = "apelido")
   val nickname: String,
   @ColumnInfo(name = "nome")
   val name: String,

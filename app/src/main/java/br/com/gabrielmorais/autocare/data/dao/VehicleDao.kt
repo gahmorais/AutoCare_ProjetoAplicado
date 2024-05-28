@@ -7,7 +7,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.models.VehicleMaintenances
 
 @Dao
 interface VehicleDao {
@@ -15,7 +14,7 @@ interface VehicleDao {
   @Insert
   suspend fun create(vehicle: Vehicle)
 
-  @Query("SELECT * FROM veiculos WHERE id = :id")
+  @Query("SELECT * FROM veiculos WHERE usuario_id = :id")
   suspend fun getById(id: String) : Vehicle
 
   @Update
@@ -24,8 +23,8 @@ interface VehicleDao {
   @Delete
   suspend fun delete(vehicle: Vehicle)
 
-  @Transaction
-  @Query("SELECT * FROM  veiculos WHERE id = :id")
-  suspend fun getVehicleMaintenances(id: String): VehicleMaintenances
+//  @Transaction
+//  @Query("SELECT * FROM  veiculos WHERE user_id = :id")
+//  suspend fun getVehicleMaintenances(id: String)
 
 }

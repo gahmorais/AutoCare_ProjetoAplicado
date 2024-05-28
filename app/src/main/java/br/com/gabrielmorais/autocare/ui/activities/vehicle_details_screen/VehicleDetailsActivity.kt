@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -21,7 +20,9 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -35,55 +36,61 @@ import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_VEHICLE_ID
+import br.com.gabrielmorais.autocare.utils.findActivity
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import timber.log.Timber
 
 class VehicleDetailsActivity : ComponentActivity() {
 
-  private val viewModel: VehicleDetailsViewModel by viewModel()
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
       AutoCareTheme {
-        VehicleDetailsScreen(viewModel)
-      }
-    }
-  }
-
-  override fun onStart() {
-    super.onStart()
-    val extras = intent.extras
-    extras?.let { bundle ->
-      val userId = bundle.getString(INTENT_USER_ID)
-      val vehicleId = bundle.getString(INTENT_VEHICLE_ID)
-      if (userId != null && vehicleId != null) {
-        viewModel.setUserid(userId)
-        viewModel.getVehicle(userId, vehicleId)
+        VehicleDetailsScreen()
       }
     }
   }
 }
 
 @Composable
-fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
+fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
 
   val vehicle = viewModel.vehicle.collectAsState()
-  val userId = viewModel.userId.collectAsState()
   val context = LocalContext.current
+
+  val activity = context.findActivity()
+  val intent = activity?.intent
+
+  val scope = rememberCoroutineScope()
+
+  LaunchedEffect(key1 = intent?.getStringExtra(INTENT_VEHICLE_ID)) {
+    val vehicleId = intent?.getStringExtra(INTENT_VEHICLE_ID)
+    Timber.tag("MainActivity").i("User Id: $vehicleId")
+    if (vehicleId != null) {
+      withContext(Dispatchers.IO) { viewModel.getVehicle(vehicleId = vehicleId) }
+    }
+  }
+
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
       val imageUri = result.uriContent
       imageUri?.let { image ->
-        viewModel.uploadVehiclePhoto(
-          userId.value,
-          vehicle.value?.id!!,
-          image
-        )
-        Log.i("VehicleDetailsScreen", "VehicleDetailsScreen: $image")
+        scope.launch {
+          viewModel.uploadVehiclePhoto(
+            vehicle.value?.id!!,
+            image
+          )
+        }
+        Timber.tag("VehicleDetailsScreen").i("VehicleDetailsScreen: $image")
       }
     }
   )
@@ -115,9 +122,8 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
         },
         actions = {
           IconButton(onClick = {
-            val intent = Intent(context, AddMaintenanceActivity::class.java)
-            intent.putExtra(INTENT_USER_ID, userId.value)
-            intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
+            val openAddMaintenance = Intent(context, AddMaintenanceActivity::class.java)
+            openAddMaintenance.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
             context.startActivity(intent)
           }) {
             Icon(imageVector = Icons.Default.Add, contentDescription = null)
