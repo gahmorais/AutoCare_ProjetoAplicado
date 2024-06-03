@@ -3,21 +3,27 @@ package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
-  private val userRepository: UserRepository,
+  private val vehicleRepository: VehicleRepository,
   private val imageUtils: ImageUtils
 ) : ViewModel() {
+
+  private val _maintenances = MutableStateFlow<List<Maintenance>>(listOf())
+  val maintenances = _maintenances.asStateFlow()
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)
   val vehicle = _vehicle.asStateFlow()
@@ -29,15 +35,22 @@ class VehicleDetailsViewModel(
     val imagePath = imageUtils.saveImage(vehicleId, image)
     val vehicleUpdated = _vehicle.value?.copy(photo = imagePath)
       ?: throw Exception("Veiculo nulo")
-    userRepository.addVehicle(vehicleUpdated)
+    vehicleRepository.update(vehicleUpdated)
     _vehicle.update { vehicleUpdated }
+
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }
 
   suspend fun getVehicle(vehicleId: String) = try {
-    val vehicle = userRepository.getVehicleById(vehicleId)
-    _vehicle.emit(vehicle)
+
+    val vehicle = vehicleRepository.getById(vehicleId)
+    _vehicle.update { vehicle }
+
+    vehicleRepository.getMaintenances(vehicleId).onEach {
+      _maintenances.emit(it)
+    }.launchIn(viewModelScope)
+
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }

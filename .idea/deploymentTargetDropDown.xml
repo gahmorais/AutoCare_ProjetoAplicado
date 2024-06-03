@@ -5,6 +5,21 @@
       <entry key="app">
         <State />
       </entry>
+      <entry key="createUser()">
+        <State />
+      </entry>
+      <entry key="deleteUser()">
+        <State />
+      </entry>
+      <entry key="getById()">
+        <State />
+      </entry>
+      <entry key="getUserByNickname()">
+        <State />
+      </entry>
+      <entry key="updateUser()">
+        <State />
+      </entry>
     </value>
   </component>
 </project>

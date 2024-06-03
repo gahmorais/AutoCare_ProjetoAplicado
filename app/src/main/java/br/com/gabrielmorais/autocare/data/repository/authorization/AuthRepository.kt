@@ -1,7 +1,7 @@
 package br.com.gabrielmorais.autocare.data.repository.authorization
 
 import android.content.Context
-import br.com.gabrielmorais.autocare.data.AppDatabase
+import br.com.gabrielmorais.autocare.data.dao.UserDao
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.Resource
 import com.google.gson.Gson
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.flow
 
 class AuthRepository(
   context: Context,
-  private val database: AppDatabase
+  private val userDao: UserDao
 ) {
   private val preferences = context.getSharedPreferences("authorization", Context.MODE_PRIVATE)
   private val editor = preferences.edit()
@@ -25,7 +25,7 @@ class AuthRepository(
   suspend fun login(nickname: String, password: String): Flow<Resource<User?>> {
     return flow {
       emit(Resource.loading(null))
-      val user = database.userDao().getUserByNickname(nickname)
+      val user = userDao.getUserByNickname(nickname)
         ?: throw Exception("Usuário ou senha incorretos")
       val isNotCorrect = user.password != password
       if (isNotCorrect) throw Exception("Usuário ou senha incorretos")

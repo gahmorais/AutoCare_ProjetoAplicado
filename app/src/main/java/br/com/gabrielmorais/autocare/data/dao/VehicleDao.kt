@@ -4,8 +4,11 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VehicleDao {
@@ -13,8 +16,8 @@ interface VehicleDao {
   @Insert
   suspend fun create(vehicle: Vehicle)
 
-  @Query("SELECT * FROM veiculos WHERE usuario_id = :id")
-  suspend fun getById(id: String) : Vehicle
+  @Query("SELECT * FROM veiculos WHERE veiculo_id = :vehicleId")
+  suspend fun getById(vehicleId: String): Vehicle
 
   @Update
   suspend fun update(vehicle: Vehicle): Int
@@ -22,8 +25,8 @@ interface VehicleDao {
   @Delete
   suspend fun delete(vehicle: Vehicle)
 
-//  @Transaction
-//  @Query("SELECT * FROM  veiculos WHERE user_id = :id")
-//  suspend fun getVehicleMaintenances(id: String)
+  @Transaction
+  @Query("SELECT * FROM manutencoes WHERE veiculo_id = :vehicleId")
+  fun getMaintenances(vehicleId: String): Flow<List<Maintenance>>
 
 }

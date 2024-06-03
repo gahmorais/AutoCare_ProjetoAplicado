@@ -1,16 +1,18 @@
 package br.com.gabrielmorais.autocare.data.models
 
 import android.os.Parcelable
-import android.os.SystemClock
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
+import java.util.UUID
 
 @Parcelize
 @Entity(
   tableName = "manutencoes",
+  indices = [Index("veiculo_id")],
   foreignKeys = [ForeignKey(
     entity = Vehicle::class,
     parentColumns = ["veiculo_id"],
@@ -22,9 +24,9 @@ import kotlinx.parcelize.Parcelize
 data class Maintenance(
   @PrimaryKey
   @ColumnInfo(name = "manutencao_id")
-  val id: Int = SystemClock.uptimeMillis().toInt(),
+  val id: String = UUID.randomUUID().toString(),
   @ColumnInfo(name = "veiculo_id")
-  val vehicleId : String,
+  val vehicleId: String,
   @ColumnInfo(name = "descricao")
   val description: String? = null,
   @ColumnInfo("data")

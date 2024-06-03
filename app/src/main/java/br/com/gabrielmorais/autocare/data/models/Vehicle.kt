@@ -3,13 +3,11 @@ package br.com.gabrielmorais.autocare.data.models
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
 @Entity(
   tableName = "veiculos",
-  indices = [Index("usuario_id", unique = true)],
   foreignKeys = [ForeignKey(
     entity = User::class,
     parentColumns = ["usuario_id"],

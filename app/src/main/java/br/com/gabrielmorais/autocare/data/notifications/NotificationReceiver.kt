@@ -25,6 +25,10 @@ class NotificationReceiver : BroadcastReceiver() {
       .build()
 
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    manager.notify(maintenanceData!!.id, notification)
+    manager.notify(
+      maintenanceData?.id ?: "",
+      System.currentTimeMillis().toInt(),
+      notification
+    )
   }
 }

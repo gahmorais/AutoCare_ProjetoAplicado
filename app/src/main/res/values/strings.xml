@@ -60,4 +60,5 @@
     <string name="placeholder_username">neo</string>
     <string name="placeholder_name">Thomas A. Anderson</string>
     <string name="profile_filename">profile.jpg</string>
+    <string name="edit_maintenance_key">edit_maintenance</string>
 </resources>

@@ -18,3 +18,4 @@ abstract class AppDatabase : RoomDatabase() {
   abstract fun maintenanceDao(): MaintenanceDao
   abstract fun vehicleDao(): VehicleDao
 }
+

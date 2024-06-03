@@ -5,15 +5,18 @@ import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MyAccountViewModel(
-  private val userRepository: UserRepository
+  private val userRepository: UserRepository,
+  private val vehicleRepository: VehicleRepository
 ) : ViewModel() {
 
   private val _user = MutableStateFlow<User?>(null)
@@ -26,7 +29,8 @@ class MyAccountViewModel(
   val vehicleList = _vehicleList.asStateFlow()
 
   suspend fun saveVehicle(vehicle: Vehicle) = try {
-    userRepository.addVehicle(vehicle)
+    Timber.tag("MyAccountViewModel").i("Adicionando veículo $vehicle")
+    vehicleRepository.create(vehicle)
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }
@@ -56,7 +60,7 @@ class MyAccountViewModel(
   }
 
   suspend fun deleteVehicle(vehicle: Vehicle) = try {
-    userRepository.deleteVehicle(vehicle)
+    vehicleRepository.delete(vehicle)
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }

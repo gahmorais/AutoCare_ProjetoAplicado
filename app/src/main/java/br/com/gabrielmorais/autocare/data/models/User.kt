@@ -2,14 +2,10 @@ package br.com.gabrielmorais.autocare.data.models
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-@Entity(
-  tableName = "usuarios",
-  indices = [Index("apelido", unique = true)],
-)
+@Entity(tableName = "usuarios")
 data class User(
   @PrimaryKey
   @ColumnInfo(name = "usuario_id")

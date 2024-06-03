@@ -1,7 +1,7 @@
 package br.com.gabrielmorais.autocare.data.repository.user
 
 import android.database.sqlite.SQLiteConstraintException
-import br.com.gabrielmorais.autocare.data.AppDatabase
+import br.com.gabrielmorais.autocare.data.dao.UserDao
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.Resource
@@ -11,13 +11,19 @@ import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 
 
-class UserRepository(private val database: AppDatabase) {
+class UserRepository(private val userDao: UserDao) {
 
-  suspend fun create(user: User): Flow<Resource<User?>> {
+  suspend fun createUser(user: User) = try {
+    userDao.create(user)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  fun create(user: User): Flow<Resource<User?>> {
     return flow {
       emit(Resource.loading(null))
       Timber.tag("UserRepository").i("Criando Usuário: $user")
-      database.userDao().create(user)
+      createUser(user)
       Timber.tag("UserRepository").i("Usuário Criado: $user")
       emit(Resource.success(user))
     }.catch { error ->
@@ -30,43 +36,33 @@ class UserRepository(private val database: AppDatabase) {
     }
   }
 
-  fun getById(id: String): User = try {
-    database.userDao().getById(id)
+  fun getById(userId: String): User = try {
+    userDao.getById(userId)
+  } catch (e: Exception) {
+    throw e
+  }
+
+  suspend fun getByNickName(nickname: String) = try {
+    userDao.getUserByNickname(nickname)
   } catch (e: Exception) {
     throw e
   }
 
   suspend fun update(user: User) = try {
-    database.userDao().update(user)
+    userDao.update(user)
   } catch (e: Exception) {
     throw e
   }
 
-  fun getVehicles(id: String): Flow<List<Vehicle>> = try {
-    database.userDao().getVehicles(id)
+  suspend fun delete(user: User) = try {
+    userDao.delete(user)
   } catch (e: Exception) {
     throw e
   }
 
-  suspend fun getVehicleById(id: String) = try {
-    database.userDao().getVehicleById(id)
+  fun getVehicles(userId: String): Flow<List<Vehicle>> = try {
+    userDao.getVehicles(userId)
   } catch (e: Exception) {
     throw e
-  }
-
-  suspend fun addVehicle(vehicle: Vehicle) = try {
-    database.userDao().addVehicle(vehicle)
-  } catch (e: Exception) {
-    throw e
-  }
-
-  suspend fun deleteVehicle(vehicle: Vehicle) = try {
-    database.userDao().deleteVehicle(vehicle)
-  } catch (e: Exception) {
-    throw e
-  }
-
-  fun changePassword(email: String, callback: (String) -> Unit) {
-    TODO("Not yet implemented")
   }
 }

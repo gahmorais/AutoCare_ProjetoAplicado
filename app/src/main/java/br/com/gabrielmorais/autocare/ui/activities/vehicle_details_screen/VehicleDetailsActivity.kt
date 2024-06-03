@@ -8,9 +8,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -22,15 +27,19 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
+import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
@@ -61,7 +70,7 @@ class VehicleDetailsActivity : ComponentActivity() {
 @Composable
 fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
 
-  val vehicle = viewModel.vehicle.collectAsState()
+  val vehicle by viewModel.vehicle.collectAsState()
   val context = LocalContext.current
 
   val activity = context.findActivity()
@@ -84,7 +93,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
       imageUri?.let { image ->
         scope.launch {
           viewModel.uploadVehiclePhoto(
-            vehicle.value?.id!!,
+            vehicle?.id!!,
             image
           )
         }
@@ -121,8 +130,8 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
         actions = {
           IconButton(onClick = {
             val openAddMaintenance = Intent(context, AddMaintenanceActivity::class.java)
-            openAddMaintenance.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
-            context.startActivity(intent)
+            openAddMaintenance.putExtra(INTENT_VEHICLE_ID, vehicle?.id)
+            context.startActivity(openAddMaintenance)
           }) {
             Icon(imageVector = Icons.Default.Add, contentDescription = null)
           }
@@ -136,7 +145,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
         .padding(16.dp)
     ) {
       CardVehicleDetails(
-        vehicle = vehicle.value ?: vehicleSample,
+        vehicle = vehicle ?: vehicleSample,
         onClick = {
           launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
         }
@@ -147,31 +156,44 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
         text = stringResource(R.string.maintenance_text),
         style = Typography.h5
       )
-//      vehicle.value?.maintenances?.let { maintenanceList ->
-//        LazyColumn {
-//          items(maintenanceList) { maintenance ->
-//            SimpleCardMaintenance(
-//              modifier = Modifier
-//                .fillMaxWidth(),
-//              maintenance = maintenance
-//            )
-//            Spacer(modifier = Modifier.padding(bottom = 8.dp))
-//          }
-//        }
-//      } ?: Column(
-//        modifier = Modifier
-//          .padding(top = 5.dp)
-//          .fillMaxSize(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//      ) {
-//        Text(
-//          modifier = Modifier.fillMaxWidth(),
-//          text = stringResource(R.string.does_not_have_maintenance),
-//          style = Typography.h5,
-//          textAlign = TextAlign.Center
-//        )
-//      }
+
+      val maintenances by viewModel.maintenances.collectAsState()
+
+      if (maintenances.isNotEmpty()) {
+        LazyColumn {
+          items(maintenances) { maintenance ->
+            SimpleCardMaintenance(
+              modifier = Modifier
+                .fillMaxWidth(),
+              maintenance = maintenance,
+              onClick = {
+                val openEditMaintenance = Intent(activity, AddMaintenanceActivity::class.java)
+                openEditMaintenance.putExtra(
+                  context.getString(R.string.edit_maintenance_key),
+                  maintenance
+                )
+                activity?.startActivity(openEditMaintenance)
+              }
+            )
+            Spacer(modifier = Modifier.padding(bottom = 8.dp))
+          }
+        }
+      } else {
+        Column(
+          modifier = Modifier
+            .padding(top = 5.dp)
+            .fillMaxSize(),
+          verticalArrangement = Arrangement.Center,
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.does_not_have_maintenance),
+            style = Typography.h5,
+            textAlign = TextAlign.Center
+          )
+        }
+      }
     }
   }
 }

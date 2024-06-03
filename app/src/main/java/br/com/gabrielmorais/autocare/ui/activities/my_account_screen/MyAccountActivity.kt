@@ -83,7 +83,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
   val user by viewModel.user.collectAsState()
   var nickname by remember(user?.nickname) { mutableStateOf(user?.nickname ?: "") }
   var name by remember(user?.name) { mutableStateOf(user?.name ?: "") }
-  val addVehicleDialogState = remember { AddVehicleDialogState() }
+  var addVehicleDialogState = remember { AddVehicleDialogState() }
   var showDialogAddVehicle by remember { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
@@ -257,16 +257,16 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                   brand = addVehicleDialogState.brand,
                   model = addVehicleDialogState.model,
                   plate = addVehicleDialogState.plate,
-                  photo = addVehicleDialogState.photo,
                   userId = userId,
                   averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
                 )
-                user?.id?.let {
-                  Timber.tag("MyAccountScreen").d("MyAccountScreen: $it")
-                  scope.launch { viewModel.saveVehicle(newVehicle) }
-                  showDialogAddVehicle = false
-                }
-              })
+                Timber.tag("MyAccountActivity").i("Carro: $newVehicle")
+                Timber.tag("MyAccountScreen").d("MyAccountScreen: $userId")
+                scope.launch { viewModel.saveVehicle(newVehicle) }
+                showDialogAddVehicle = false
+                addVehicleDialogState = AddVehicleDialogState()
+              }
+            )
           }
         }
       }

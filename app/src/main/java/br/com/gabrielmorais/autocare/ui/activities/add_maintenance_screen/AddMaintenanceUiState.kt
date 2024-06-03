@@ -7,6 +7,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 class AddMaintenanceUiState {
+  var service: String by mutableStateOf("")
+    private set
   var date: LocalDate by mutableStateOf(LocalDate.now())
     private set
   var currentMileage: String by mutableStateOf("0")
@@ -20,6 +22,10 @@ class AddMaintenanceUiState {
 
   var forecastNextExchangeTime: LocalTime by mutableStateOf(LocalTime.now())
     private set
+
+  val onServiceChange: (String) -> Unit = {
+    service = it
+  }
 
   val onForecastTimeExchangeTimeChange: (LocalTime) -> Unit = {
     forecastNextExchangeTime = it

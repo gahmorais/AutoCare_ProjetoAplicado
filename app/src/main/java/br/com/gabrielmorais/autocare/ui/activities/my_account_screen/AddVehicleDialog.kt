@@ -1,6 +1,10 @@
 package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
@@ -34,7 +38,6 @@ class AddVehicleDialogState {
     private set
   var averageDistanceTraveled by mutableStateOf("")
     private set
-  var photo: String? by mutableStateOf(null)
 
   val onNickNameChange: (String) -> Unit = { newText ->
     nickName = newText
@@ -55,6 +58,7 @@ class AddVehicleDialogState {
   val onAverageDistanceChange: (String) -> Unit = { newText ->
     averageDistanceTraveled = newText
   }
+
 }
 
 @Composable
