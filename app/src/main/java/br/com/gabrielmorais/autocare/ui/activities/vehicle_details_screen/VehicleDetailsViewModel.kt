@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.handleException
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
   private val vehicleRepository: VehicleRepository,
+  private val maintenanceRepository: MaintenanceRepository,
   private val imageUtils: ImageUtils
 ) : ViewModel() {
 
@@ -40,6 +42,12 @@ class VehicleDetailsViewModel(
 
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
+  }
+
+  suspend fun deleteMaintenance(maintenance: Maintenance) = try {
+    maintenanceRepository.delete(maintenance)
+  } catch (e: Exception) {
+    e.printStackTrace()
   }
 
   suspend fun getVehicle(vehicleId: String) = try {

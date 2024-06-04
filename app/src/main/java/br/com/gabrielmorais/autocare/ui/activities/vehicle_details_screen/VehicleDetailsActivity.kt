@@ -1,6 +1,8 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
@@ -89,15 +92,11 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
-      val imageUri = result.uriContent
-      imageUri?.let { image ->
-        scope.launch {
-          viewModel.uploadVehiclePhoto(
-            vehicle?.id!!,
-            image
-          )
-        }
-        Timber.tag("VehicleDetailsScreen").i("VehicleDetailsScreen: $image")
+      val imageUri = result.uriContent ?: return@rememberLauncherForActivityResult
+      val vehicleId = vehicle?.id ?: return@rememberLauncherForActivityResult
+      scope.launch {
+        viewModel.uploadVehiclePhoto(vehicleId, imageUri)
+        Timber.tag("VehicleDetailsScreen").i("VehicleDetailsScreen: $imageUri")
       }
     }
   )
@@ -142,7 +141,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
       Modifier
         .fillMaxSize()
         .padding(contentPadding)
-        .padding(16.dp)
+        .padding(bottom = 16.dp)
     ) {
       CardVehicleDetails(
         vehicle = vehicle ?: vehicleSample,
@@ -160,24 +159,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
       val maintenances by viewModel.maintenances.collectAsState()
 
       if (maintenances.isNotEmpty()) {
-        LazyColumn {
-          items(maintenances) { maintenance ->
-            SimpleCardMaintenance(
-              modifier = Modifier
-                .fillMaxWidth(),
-              maintenance = maintenance,
-              onClick = {
-                val openEditMaintenance = Intent(activity, AddMaintenanceActivity::class.java)
-                openEditMaintenance.putExtra(
-                  context.getString(R.string.edit_maintenance_key),
-                  maintenance
-                )
-                activity?.startActivity(openEditMaintenance)
-              }
-            )
-            Spacer(modifier = Modifier.padding(bottom = 8.dp))
-          }
-        }
+        MaintenanceListComponent(maintenances, activity, context)
       } else {
         Column(
           modifier = Modifier
@@ -198,11 +180,46 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel = koinViewModel()) {
   }
 }
 
+@Composable
+private fun MaintenanceListComponent(
+  maintenances: List<Maintenance>,
+  activity: Activity?,
+  context: Context,
+  viewModel: VehicleDetailsViewModel = koinViewModel()
+) {
+  
+  val scope = rememberCoroutineScope()
+  LazyColumn {
+    items(maintenances) { maintenance ->
+      SimpleCardMaintenance(
+        modifier = Modifier.fillMaxWidth(),
+        maintenance = maintenance,
+        onClick = {
+          val openEditMaintenance = Intent(activity, AddMaintenanceActivity::class.java)
+          openEditMaintenance.putExtra(
+            context.getString(R.string.edit_maintenance_key),
+            maintenance
+          )
+          activity?.startActivity(openEditMaintenance)
+        },
+        onLongClick = {
+          scope.launch { viewModel.deleteMaintenance(it) }
+        }
+      )
+      Spacer(modifier = Modifier.padding(bottom = 8.dp))
+
+    }
+  }
+
+
+}
+
+@Composable
+
 @Preview(
   showBackground = true,
   uiMode = UI_MODE_NIGHT_YES
 )
-@Composable
 fun VehicleDetailsScreenPreview() {
 //  VehicleDetailsScreen(vehicleSample, viewModel)
 }
