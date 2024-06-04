@@ -150,7 +150,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel = koinViewModel()) {
       OutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
         value = state.service,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         label = { Text(stringResource(id = R.string.text_service_type)) },
         onValueChange = state.onServiceChange
       )
