@@ -187,7 +187,7 @@ private fun MaintenanceListComponent(
   context: Context,
   viewModel: VehicleDetailsViewModel = koinViewModel()
 ) {
-  
+
   val scope = rememberCoroutineScope()
   LazyColumn {
     items(maintenances) { maintenance ->

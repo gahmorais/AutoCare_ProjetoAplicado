@@ -230,7 +230,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                   val openVehicleDetails = Intent(context, VehicleDetailsActivity::class.java)
                   val vehicleId = vehicle.id
                   openVehicleDetails.putExtra(INTENT_VEHICLE_ID, vehicleId)
-                  context.startActivity(intent)
+                  context.startActivity(openVehicleDetails)
                 }
               )
             }
