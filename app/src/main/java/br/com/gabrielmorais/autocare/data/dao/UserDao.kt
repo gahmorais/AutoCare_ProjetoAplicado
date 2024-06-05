@@ -35,7 +35,7 @@ interface UserDao {
    * @return user?
    */
   @Query("SELECT * FROM usuarios WHERE apelido = :nickname")
-  suspend fun getUserByNickname(nickname: String): User?
+  suspend fun getUserByNickname(nickname: String): User
 
   /**
    * Atualiza o usuário no sistema

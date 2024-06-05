@@ -25,14 +25,14 @@ data class Vehicle(
   @ColumnInfo(name = "apelido")
   val nickName: String? = null,
   @ColumnInfo(name = "marca")
-  val brand: String? = null,
+  val brand: String,
   @ColumnInfo(name = "modelo")
-  val model: String? = null,
+  val model: String,
   @ColumnInfo(name = "placa")
-  val plate: String? = null,
+  val plate: String,
   @ColumnInfo(name = "foto")
   val photo: String? = null,
   @ColumnInfo("media_distancia_percorrida_mes")
-  val averageDistanceTraveledPerMonth: Int? = null
+  val averageDistanceTraveledPerMonth: Int
 )
 

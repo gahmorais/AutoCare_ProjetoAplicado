@@ -1,9 +1,10 @@
-package br.com.gabrielmorais.autocare.data.repository.authorization
+package br.com.gabrielmorais.autocare.data.repositories.authorization
 
 import android.content.Context
+import br.com.gabrielmorais.autocare.crypto.encrypt
 import br.com.gabrielmorais.autocare.data.dao.UserDao
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.Resource
+import br.com.gabrielmorais.autocare.data.repositories.Resource
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -26,9 +27,9 @@ class AuthRepository(
     return flow {
       emit(Resource.loading(null))
       val user = userDao.getUserByNickname(nickname)
-        ?: throw Exception("Usuário ou senha incorretos")
-      val isNotCorrect = user.password != password
-      if (isNotCorrect) throw Exception("Usuário ou senha incorretos")
+      val encryptedPassword = encrypt(password)
+      val isWrongPassword = user.password != encryptedPassword
+      if (isWrongPassword) throw Exception("Usuário ou senha incorretos")
       val jsonUser = Gson().toJson(user)
       editor.putString(CURRENT_USER, jsonUser)
       editor.apply()

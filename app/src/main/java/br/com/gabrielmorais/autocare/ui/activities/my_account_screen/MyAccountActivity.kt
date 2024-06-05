@@ -231,6 +231,15 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                   val vehicleId = vehicle.id
                   openVehicleDetails.putExtra(INTENT_VEHICLE_ID, vehicleId)
                   context.startActivity(openVehicleDetails)
+                },
+                onLongClick = {
+                  showDialogAddVehicle = true
+                  addVehicleDialogState.id = vehicle.id
+                  addVehicleDialogState.onBrandChange(vehicle.brand)
+                  addVehicleDialogState.onPlateChange(vehicle.plate)
+                  addVehicleDialogState.onModelChange(vehicle.model)
+                  addVehicleDialogState.onNickNameChange(vehicle.nickName ?: "")
+                  addVehicleDialogState.onAverageDistanceChange(vehicle.averageDistanceTraveledPerMonth.toString())
                 }
               )
             }
@@ -245,14 +254,14 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
 
         if (showDialogAddVehicle) {
           Box(modifier = Modifier.background(Color.White)) {
-            AddVehicleDialog(
-              addVehicleDialogState,
-              onDismiss = {
-                showDialogAddVehicle = false
-              },
+            AddVehicleDialog(addVehicleDialogState, onDismiss = {
+              showDialogAddVehicle = false
+              addVehicleDialogState = AddVehicleDialogState()
+            },
               onConfirm = {
                 val userId = user?.id ?: throw Exception("Usuário não atribuido")
-                val newVehicle = Vehicle(
+
+                var newVehicle = Vehicle(
                   nickName = addVehicleDialogState.nickName,
                   brand = addVehicleDialogState.brand,
                   model = addVehicleDialogState.model,
@@ -260,6 +269,12 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                   userId = userId,
                   averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
                 )
+
+                val vehicleId = addVehicleDialogState.id
+                if (vehicleId.isNotEmpty()) {
+                  newVehicle = newVehicle.copy(id = vehicleId)
+                }
+
                 Timber.tag("MyAccountActivity").i("Carro: $newVehicle")
                 Timber.tag("MyAccountScreen").d("MyAccountScreen: $userId")
                 scope.launch { viewModel.saveVehicle(newVehicle) }

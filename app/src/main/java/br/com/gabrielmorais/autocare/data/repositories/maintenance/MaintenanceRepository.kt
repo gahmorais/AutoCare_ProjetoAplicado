@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.data.repository.maintenance
+package br.com.gabrielmorais.autocare.data.repositories.maintenance
 
 import br.com.gabrielmorais.autocare.data.dao.MaintenanceDao
 import br.com.gabrielmorais.autocare.data.models.Maintenance

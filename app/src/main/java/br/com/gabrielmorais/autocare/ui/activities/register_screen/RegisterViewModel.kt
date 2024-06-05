@@ -3,8 +3,8 @@ package br.com.gabrielmorais.autocare.ui.activities.register_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.repository.Status
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repositories.Status
+import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow

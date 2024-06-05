@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import br.com.gabrielmorais.autocare.data.repository.Status
+import br.com.gabrielmorais.autocare.data.repositories.Status
 import org.koin.androidx.compose.koinViewModel
 
 class RegisterActivity : ComponentActivity() {

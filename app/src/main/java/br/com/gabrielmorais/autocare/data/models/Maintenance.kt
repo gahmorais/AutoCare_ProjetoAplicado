@@ -28,15 +28,15 @@ data class Maintenance(
   @ColumnInfo(name = "veiculo_id")
   val vehicleId: String,
   @ColumnInfo(name = "descricao")
-  val description: String? = null,
+  val description: String,
   @ColumnInfo("data")
-  val date: Long? = null,
+  val date: Long,
   @ColumnInfo(name = "quilometragem_atual")
-  val currentMileage: Int? = null,
+  val currentMileage: Int,
   @ColumnInfo(name = "quilometragem_proxima_manutencao")
-  val forecastNextExchangeMileage: Int? = null,
+  val forecastNextExchangeMileage: Int,
   @ColumnInfo(name = "data_proxima_manutencao")
-  val forecastNextExchangeDate: Long? = null,
+  val forecastNextExchangeDate: Long,
   @ColumnInfo(name = "observacoes")
   val comments: String? = null,
 ) : Parcelable

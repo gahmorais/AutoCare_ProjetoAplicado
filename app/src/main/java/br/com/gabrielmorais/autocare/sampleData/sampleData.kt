@@ -30,6 +30,7 @@ val vehicleSample = Vehicle(
   model = "Sandero",
   userId = "",
   plate = "XXX1234", //URL_VEHICLE_SAMPLE,
+  averageDistanceTraveledPerMonth = 200
 )
 
 

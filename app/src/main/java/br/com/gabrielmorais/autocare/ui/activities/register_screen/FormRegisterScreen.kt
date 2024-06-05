@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.crypto.encrypt
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.ui.components.DefaultSnackBar
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
@@ -105,7 +106,7 @@ fun FormRegisterScreen(viewModel: RegisterViewModel = koinViewModel()) {
             val user = User(
               nickname = uiState.nickname,
               name = uiState.name,
-              password = uiState.password
+              password = encrypt(uiState.password)
             )
             viewModel.registerUser(user)
 

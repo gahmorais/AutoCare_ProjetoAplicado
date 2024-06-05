@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repositories.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.ResourceProvider
 import br.com.gabrielmorais.autocare.utils.handleException

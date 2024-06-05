@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.data.repository.user
+package br.com.gabrielmorais.autocare.data.repositories.user
 
 import android.content.Context
 import androidx.room.Room

@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.data.repository.vehicleRepository
+package br.com.gabrielmorais.autocare.data.repositories.vehicleRepository
 
 import android.content.Context
 import androidx.room.Room
@@ -7,8 +7,8 @@ import br.com.gabrielmorais.autocare.data.AppDatabase
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repositories.maintenance.MaintenanceRepository
+import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle

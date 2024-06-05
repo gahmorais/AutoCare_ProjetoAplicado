@@ -1,9 +1,12 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
@@ -23,6 +26,7 @@ import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import timber.log.Timber
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -36,7 +40,7 @@ fun CardVehicle(
   onLongClick: () -> Unit = {},
 ) {
 
-  Log.i("CardVehicle", "CardVehicle: ${vehicle}")
+  Timber.tag("CardVehicle").i("CardVehicle: $vehicle")
   Card(
     modifier = modifier,
     elevation = 5.dp,
@@ -69,7 +73,7 @@ fun CardVehicle(
         Text(text = vehicle.nickName ?: "")
         Row {
           Text(
-            text = vehicle.brand ?: "",
+            text = vehicle.brand,
             style = TextStyle(fontSize = 20.sp),
           )
           Spacer(
@@ -77,12 +81,12 @@ fun CardVehicle(
               .padding(horizontal = 5.dp),
           )
           Text(
-            text = vehicle.model ?: "",
+            text = vehicle.model,
             style = TextStyle(fontSize = 20.sp),
           )
         }
         Text(
-          text = vehicle.plate ?: "",
+          text = vehicle.plate,
           style = TextStyle(fontSize = 25.sp),
         )
         Divider(thickness = 2.dp)

@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
+import br.com.gabrielmorais.autocare.data.repositories.maintenance.MaintenanceRepository
+import br.com.gabrielmorais.autocare.data.repositories.vehicleRepository.VehicleRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableSharedFlow

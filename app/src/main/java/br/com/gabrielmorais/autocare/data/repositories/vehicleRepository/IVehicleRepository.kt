@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.data.repository.vehicleRepository
+package br.com.gabrielmorais.autocare.data.repositories.vehicleRepository
 
 import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.Vehicle

@@ -2,10 +2,10 @@ package br.com.gabrielmorais.autocare.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface VehicleDao {
 
-  @Insert
+  @Upsert
   suspend fun create(vehicle: Vehicle)
 
   @Query("SELECT * FROM veiculos WHERE veiculo_id = :vehicleId")

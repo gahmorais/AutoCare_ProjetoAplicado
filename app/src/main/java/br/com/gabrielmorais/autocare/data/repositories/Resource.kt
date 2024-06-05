@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.data.repository
+package br.com.gabrielmorais.autocare.data.repositories
 
 data class Resource<out T>(
   val status: Status,

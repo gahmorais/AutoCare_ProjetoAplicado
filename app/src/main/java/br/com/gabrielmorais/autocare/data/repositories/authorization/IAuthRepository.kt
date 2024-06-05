@@ -1,7 +1,7 @@
-package br.com.gabrielmorais.autocare.data.repository.authorization
+package br.com.gabrielmorais.autocare.data.repositories.authorization
 
 
-import br.com.gabrielmorais.autocare.data.repository.Resource
+import br.com.gabrielmorais.autocare.data.repositories.Resource
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
