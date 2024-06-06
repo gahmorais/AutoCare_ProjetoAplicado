@@ -234,12 +234,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                 },
                 onLongClick = {
                   showDialogAddVehicle = true
-                  addVehicleDialogState.id = vehicle.id
-                  addVehicleDialogState.onBrandChange(vehicle.brand)
-                  addVehicleDialogState.onPlateChange(vehicle.plate)
-                  addVehicleDialogState.onModelChange(vehicle.model)
-                  addVehicleDialogState.onNickNameChange(vehicle.nickName ?: "")
-                  addVehicleDialogState.onAverageDistanceChange(vehicle.averageDistanceTraveledPerMonth.toString())
+                  addVehicleDialogState = AddVehicleDialogState(vehicle)
                 }
               )
             }
@@ -254,10 +249,12 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
 
         if (showDialogAddVehicle) {
           Box(modifier = Modifier.background(Color.White)) {
-            AddVehicleDialog(addVehicleDialogState, onDismiss = {
-              showDialogAddVehicle = false
-              addVehicleDialogState = AddVehicleDialogState()
-            },
+            AddVehicleDialog(
+              addVehicleDialogState,
+              onDismiss = {
+                showDialogAddVehicle = false
+                addVehicleDialogState = AddVehicleDialogState()
+              },
               onConfirm = {
                 val userId = user?.id ?: throw Exception("Usuário não atribuido")
 
@@ -270,9 +267,12 @@ fun MyAccountScreen(viewModel: MyAccountViewModel = koinViewModel()) {
                   averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
                 )
 
-                val vehicleId = addVehicleDialogState.id
-                if (vehicleId.isNotEmpty()) {
-                  newVehicle = newVehicle.copy(id = vehicleId)
+                val oldVehicle = addVehicleDialogState.getVehicle()
+                if (oldVehicle != null) {
+                  newVehicle = newVehicle.copy(
+                    id = oldVehicle.id,
+                    photo = oldVehicle.photo
+                  )
                 }
 
                 Timber.tag("MyAccountActivity").i("Carro: $newVehicle")

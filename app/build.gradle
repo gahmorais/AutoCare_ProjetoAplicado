@@ -72,7 +72,9 @@ dependencies {
     //Image Load Async
     implementation("io.coil-kt:coil-compose:2.4.0")
     //Koin
+    implementation "io.insert-koin:koin-core:$koin_version"
     implementation "io.insert-koin:koin-android:$koin_version"
+    implementation "io.insert-koin:koin-androidx-compose:$koin_version"
     //Gson
     implementation 'com.google.code.gson:gson:2.10.1'
 
@@ -97,5 +99,6 @@ dependencies {
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
-    implementation "io.insert-koin:koin-androidx-compose:$koin_version"
+
+
 }

@@ -1,7 +1,6 @@
 package br.com.gabrielmorais.autocare
 
 import android.app.Application
-import br.com.gabrielmorais.autocare.di.firebaseModule
 import br.com.gabrielmorais.autocare.di.mainModule
 import br.com.gabrielmorais.autocare.di.viewModelModule
 import org.koin.android.ext.koin.androidContext
@@ -17,7 +16,7 @@ class AutoCareApplication : Application() {
     startKoin {
       androidLogger(Level.DEBUG)
       androidContext(this@AutoCareApplication)
-      modules(listOf(mainModule, firebaseModule, viewModelModule))
+      modules(mainModule, viewModelModule)
     }
   }
 }

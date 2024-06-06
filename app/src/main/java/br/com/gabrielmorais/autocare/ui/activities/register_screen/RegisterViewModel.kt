@@ -4,19 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repositories.Status
-import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repositories.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
+class RegisterViewModel(private val userRepository: IUserRepository) : ViewModel() {
   private val _registerState = Channel<RegisterState<User>>()
   val registerState = _registerState.receiveAsFlow()
 
   fun registerUser(user: User) = viewModelScope.launch(Dispatchers.IO) {
-    userRepository.create(user).collect { resource ->
+    userRepository.create(user).onEach { resource ->
       Timber.tag("RegisterViewModel").i("Resource: $resource")
       when (resource.status) {
         Status.SUCCESS -> {
@@ -44,6 +46,8 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
           )
         )
       }
-    }
+
+    }.launchIn(viewModelScope)
+
   }
 }

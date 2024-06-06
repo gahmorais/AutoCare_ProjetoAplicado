@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.ui.activities.maintenance_screen
+package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi

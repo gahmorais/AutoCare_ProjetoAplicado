@@ -1,26 +1,13 @@
 package br.com.gabrielmorais.autocare.data.repositories.vehicleRepository
 
-import android.net.Uri
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import kotlinx.coroutines.flow.Flow
 
 interface IVehicleRepository {
-  suspend fun saveVehicleImage(
-    userId: String,
-    vehicleId: String,
-    image: Uri,
-    callback: (String) -> Unit
-  )
-  fun getVehicleDetails(
-    userId: String,
-    vehicleId: String,
-    onSuccess: (Vehicle) -> Unit,
-    onError: (Throwable) -> Unit
-  )
-  fun updateVehicle(
-    userId:String,
-    vehicleId:String,
-    vehicle: Vehicle,
-    onSuccess: (String) -> Unit,
-    onError: (Throwable) -> Unit
-  )
+  suspend fun create(vehicle: Vehicle)
+  suspend fun update(vehicle: Vehicle): Int
+  suspend fun getById(vehicleId: String): Vehicle
+  suspend fun delete(vehicle: Vehicle)
+  fun getMaintenances(vehicleId: String): Flow<List<Maintenance>>
 }

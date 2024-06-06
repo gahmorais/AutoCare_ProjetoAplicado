@@ -16,7 +16,7 @@ interface MaintenanceDao {
   suspend fun getById(id: String) : Maintenance
 
   @Update
-  suspend fun update(maintenance: Maintenance)
+  suspend fun update(maintenance: Maintenance):Int
 
   @Delete
   suspend fun delete(maintenance: Maintenance)

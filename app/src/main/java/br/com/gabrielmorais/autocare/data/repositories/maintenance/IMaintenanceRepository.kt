@@ -1,19 +1,10 @@
 package br.com.gabrielmorais.autocare.data.repositories.maintenance
 
-import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 
 interface IMaintenanceRepository {
-  fun create(
-    userId: String,
-    vehicleId: String,
-    updatedVehicle: Vehicle,
-    onSuccess: (String) -> Unit,
-    onError: (Throwable) -> Unit
-  )
-
-  fun delete(
-    userId: String,
-    vehicleId: String,
-    maintenanceId: Int
-  )
+  suspend fun create(maintenance: Maintenance)
+  suspend fun getById(id: String): Maintenance
+  suspend fun update(maintenance: Maintenance):Int
+  suspend fun delete(maintenance: Maintenance)
 }

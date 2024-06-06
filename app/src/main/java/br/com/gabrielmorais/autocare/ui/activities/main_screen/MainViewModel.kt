@@ -5,10 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repositories.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
+import br.com.gabrielmorais.autocare.data.repositories.authorization.IAuthRepository
+import br.com.gabrielmorais.autocare.data.repositories.user.IUserRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
-import br.com.gabrielmorais.autocare.utils.ResourceProvider
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,10 +20,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class MainViewModel(
-  private val authRepository: AuthRepository,
-  private val userRepository: UserRepository,
+  private val authRepository: IAuthRepository,
+  private val userRepository: IUserRepository,
   private val imageUtils: ImageUtils,
-  private val resourceProvider: ResourceProvider
 ) : ViewModel() {
   private val _user = MutableStateFlow<User?>(null)
   val user = _user.asStateFlow()
@@ -39,15 +37,13 @@ class MainViewModel(
     authRepository.logout()
   }
 
-  suspend fun getUser(userId: String) = try {
+  fun getUser(userId: String) = try {
     val currentUser = userRepository.getById(userId)
     Timber.tag("MainViewModel").i("Usuário: $currentUser")
-    currentUser?.let {
-      _user.emit(currentUser)
-      userRepository.getVehicles(currentUser.id).onEach { vehicles ->
-        _vehicleList.emit(vehicles)
-      }.launchIn(viewModelScope)
-    }
+    _user.update { currentUser }
+    userRepository.getVehicles(currentUser.id).onEach { vehicles ->
+      _vehicleList.update { vehicles }
+    }.launchIn(viewModelScope)
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }

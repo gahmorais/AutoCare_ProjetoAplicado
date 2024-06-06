@@ -4,14 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repositories.Status
-import br.com.gabrielmorais.autocare.data.repositories.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repositories.authorization.IAuthRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 
-class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class LoginViewModel(private val authRepository: IAuthRepository) : ViewModel() {
   private val _loginState = Channel<LoginState<String?>>()
   val loginState = _loginState.receiveAsFlow()
 
@@ -21,11 +23,11 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
   val loginUiState = MutableStateFlow(LoginUiState())
 
   init {
-    viewModelScope.launch { getCurrentUserListener() }
+    getCurrentUserListener()
   }
 
-  suspend fun loginUser(nickname: String, password: String) {
-    authRepository.login(nickname, password).collect { resource ->
+  fun loginUser(nickname: String, password: String) {
+    authRepository.login(nickname, password).onEach { resource ->
       when (resource.status) {
         Status.SUCCESS -> {
           _loginState.send(
@@ -40,12 +42,13 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         Status.LOADING -> _loginState.send(LoginState(isLoading = true))
         Status.ERROR -> _loginState.send(LoginState(isError = resource.message ?: ""))
       }
-    }
+
+    }.launchIn(viewModelScope)
   }
 
 
-  private suspend fun getCurrentUserListener() {
+  private fun getCurrentUserListener() {
     val user = authRepository.getCurrentUser()
-    if (user != null) _currentUser.emit(user)
+    if (user != null) _currentUser.update { user }
   }
 }

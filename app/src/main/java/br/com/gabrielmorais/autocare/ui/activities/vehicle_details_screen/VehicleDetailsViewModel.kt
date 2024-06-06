@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repositories.maintenance.MaintenanceRepository
-import br.com.gabrielmorais.autocare.data.repositories.vehicleRepository.VehicleRepository
+import br.com.gabrielmorais.autocare.data.repositories.maintenance.IMaintenanceRepository
+import br.com.gabrielmorais.autocare.data.repositories.vehicleRepository.IVehicleRepository
 import br.com.gabrielmorais.autocare.utils.ImageUtils
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
-  private val vehicleRepository: VehicleRepository,
-  private val maintenanceRepository: MaintenanceRepository,
+  private val vehicleRepository: IVehicleRepository,
+  private val maintenanceRepository: IMaintenanceRepository,
   private val imageUtils: ImageUtils
 ) : ViewModel() {
 
@@ -56,7 +56,7 @@ class VehicleDetailsViewModel(
     _vehicle.update { vehicle }
 
     vehicleRepository.getMaintenances(vehicleId).onEach {
-      _maintenances.emit(it)
+      _maintenances.update { it }
     }.launchIn(viewModelScope)
 
   } catch (e: Exception) {

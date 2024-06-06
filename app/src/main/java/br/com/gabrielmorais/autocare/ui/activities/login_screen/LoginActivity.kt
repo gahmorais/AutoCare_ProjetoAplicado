@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,7 +44,6 @@ import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.PasswordTextField
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.utils.Constants.INTENT_USER_ID
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -65,7 +63,6 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
   val stateUi by viewModel.loginUiState.collectAsState()
   val passwordState = stateUi.passwordState
   val state by viewModel.loginState.collectAsState(initial = null)
-  val scope = rememberCoroutineScope()
   if (state?.isLoading == true) {
     LoadingPage(stringResource(id = R.string.text_loading_login))
   } else {
@@ -129,9 +126,7 @@ fun LoginScreen(viewModel: LoginViewModel = koinViewModel()) {
             TextButton(
               modifier = Modifier.fillMaxWidth(),
               onClick = {
-                scope.launch {
-                  viewModel.loginUser(stateUi.nickname, passwordState.value)
-                }
+                viewModel.loginUser(stateUi.nickname, passwordState.value)
               }) {
               Text(
                 text = stringResource(id = R.string.text_login),

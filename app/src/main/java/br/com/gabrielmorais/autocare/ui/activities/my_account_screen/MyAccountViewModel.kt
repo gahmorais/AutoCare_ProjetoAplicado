@@ -4,19 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repositories.user.UserRepository
-import br.com.gabrielmorais.autocare.data.repositories.vehicleRepository.VehicleRepository
+import br.com.gabrielmorais.autocare.data.repositories.user.IUserRepository
+import br.com.gabrielmorais.autocare.data.repositories.vehicleRepository.IVehicleRepository
 import br.com.gabrielmorais.autocare.utils.handleException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class MyAccountViewModel(
-  private val userRepository: UserRepository,
-  private val vehicleRepository: VehicleRepository
+  private val userRepository: IUserRepository,
+  private val vehicleRepository: IVehicleRepository
 ) : ViewModel() {
 
   private val _user = MutableStateFlow<User?>(null)
@@ -39,12 +40,12 @@ class MyAccountViewModel(
     _message.emit(text)
   }
 
-  suspend fun getUser(userId: String) = try {
+  fun getUser(userId: String) = try {
     val currentUser = userRepository.getById(userId)
     userRepository.getVehicles(currentUser.id).onEach { vehicles ->
-      _vehicleList.emit(vehicles)
+      _vehicleList.update { vehicles }
     }.launchIn(viewModelScope)
-    _user.emit(currentUser)
+    _user.update { currentUser }
   } catch (e: Exception) {
     e.handleException { emitMessage(it) }
   }

@@ -13,17 +13,17 @@ import kotlinx.coroutines.flow.flow
 class AuthRepository(
   context: Context,
   private val userDao: UserDao
-) {
+) : IAuthRepository {
   private val preferences = context.getSharedPreferences("authorization", Context.MODE_PRIVATE)
   private val editor = preferences.edit()
   private val CURRENT_USER = "user"
 
-  fun getCurrentUser(): User? {
+  override fun getCurrentUser(): User? {
     val currentUser = preferences.getString(CURRENT_USER, "")
     return Gson().fromJson(currentUser, User::class.java)
   }
 
-  suspend fun login(nickname: String, password: String): Flow<Resource<User?>> {
+  override fun login(nickname: String, password: String): Flow<Resource<User?>> {
     return flow {
       emit(Resource.loading(null))
       val user = userDao.getUserByNickname(nickname)
@@ -39,7 +39,7 @@ class AuthRepository(
     }
   }
 
-  fun logout() {
+  override fun logout() {
     editor.putString(CURRENT_USER, "")
     editor.apply()
   }

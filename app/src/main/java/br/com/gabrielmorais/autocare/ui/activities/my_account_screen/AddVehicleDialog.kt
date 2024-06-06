@@ -25,21 +25,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 
-class AddVehicleDialogState {
+class AddVehicleDialogState(private val vehicle: Vehicle? = null) {
 
-  var id by mutableStateOf("")
-
-  var nickName by mutableStateOf("")
+  var nickName by mutableStateOf(vehicle?.nickName?:"")
     private set
-  var brand by mutableStateOf("")
+  var brand by mutableStateOf(vehicle?.brand?:"")
     private set
-  var model by mutableStateOf("")
+  var model by mutableStateOf(vehicle?.model?:"")
     private set
-  var plate by mutableStateOf("")
+  var plate by mutableStateOf(vehicle?.plate ?:"")
     private set
-  var averageDistanceTraveled by mutableStateOf("")
+  var averageDistanceTraveled by mutableStateOf(vehicle?.averageDistanceTraveledPerMonth.toString())
     private set
 
   val onNickNameChange: (String) -> Unit = { newText ->
@@ -61,6 +60,8 @@ class AddVehicleDialogState {
   val onAverageDistanceChange: (String) -> Unit = { newText ->
     averageDistanceTraveled = newText
   }
+
+  fun getVehicle(): Vehicle? = vehicle
 
 }
 

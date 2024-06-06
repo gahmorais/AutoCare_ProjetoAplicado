@@ -42,7 +42,6 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
-import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
