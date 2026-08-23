@@ -65,6 +65,9 @@ dependencies {
     //Koin
     implementation "io.insert-koin:koin-android:$koin_version"
 
+    //WorkManager - reagendamento das notificacoes apos o reboot
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+
     //MAterial Dialog Compose
     implementation "io.github.vanpra.compose-material-dialogs:core:$material_dialog_version"
     implementation "io.github.vanpra.compose-material-dialogs:datetime:$material_dialog_version"

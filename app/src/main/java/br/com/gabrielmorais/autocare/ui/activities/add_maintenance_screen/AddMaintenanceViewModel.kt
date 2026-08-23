@@ -46,20 +46,26 @@ class AddMaintenanceViewModel(
     )
   }
 
+  /**
+   * [onSaved] so e chamado quando a gravacao confirma. Antes a notificacao era
+   * agendada em paralelo com a escrita e sobrevivia mesmo quando ela falhava.
+   */
   fun saveMaintenance(
     userId: String,
     vehicleId: String,
-    updatedVehicle: Vehicle
+    updatedVehicle: Vehicle,
+    onSaved: () -> Unit
   ) {
     maintenanceRepository.create(
       userId,
       vehicleId,
       updatedVehicle,
       onSuccess = {
-        viewModelScope.launch { _message.emit(it) }
+        _message.value = it
+        onSaved()
       },
       onError = {
-        viewModelScope.launch { _message.emit(it.message) }
+        _message.value = it.message ?: "Não foi possível salvar a manutenção"
       }
     )
   }

@@ -6,7 +6,11 @@
         android:name="android.hardware.camera"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Sem esta permissao declarada, o pedido em runtime e negado pelo sistema
+         sem nem exibir o dialogo, e nenhuma notificacao aparece no Android 13+. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Necessaria para reagendar os alarmes, que o sistema descarta no reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -23,7 +27,20 @@
 
         <receiver
             android:name=".data.notifications.NotificationReceiver"
-            android:enabled="true" />
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- O AlarmManager descarta todos os alarmes no reboot; este receiver
+             reagenda as notificacoes pendentes. Precisa ser exported para
+             receber o broadcast do sistema. -->
+        <receiver
+            android:name=".data.notifications.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <activity android:name=".ui.activities.main_screen.MainActivity" />
         <activity android:name=".ui.activities.register_screen.RegisterActivity" />

@@ -7,11 +7,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.time.ZoneId
 
 object NotificationUtils {
   fun createNotificationChannel(context: Context) {
@@ -21,31 +20,32 @@ object NotificationUtils {
     val channel = NotificationChannel(channelID, name, importance)
     channel.description = desc
     val notificationManager = context
-      .getSystemService(AppCompatActivity.NOTIFICATION_SERVICE) as NotificationManager
+      .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.createNotificationChannel(channel)
   }
 
-  private fun getTime(localDateTime: LocalDateTime): Long {
-    val minute = localDateTime.minute
-    val hour = localDateTime.hour
-    val day = localDateTime.dayOfMonth
-    val month = localDateTime.month.value - 1
-    val year = localDateTime.year
-
-    val calendar = Calendar.getInstance()
-    calendar.set(year, month, day, hour, minute)
-    return calendar.timeInMillis
-  }
+  /**
+   * A versao anterior montava um [java.util.Calendar] com `Calendar.set(year, month, ...)`
+   * usando o mes 1-12 do [LocalDateTime], mas Calendar espera 0-11: todo agendamento
+   * caia um mes adiante.
+   */
+  private fun toEpochMillis(localDateTime: LocalDateTime): Long =
+    localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
   fun scheduleNotification(
     context: Context,
     localDateTime: LocalDateTime,
     maintenance: Maintenance
   ) {
+    val time = toEpochMillis(localDateTime)
+    if (time <= System.currentTimeMillis()) {
+      // Alarme no passado dispara imediatamente; nao ha o que notificar.
+      Log.i("NotificationUtils", "scheduleNotification: data ja passou ($localDateTime)")
+      return
+    }
+
     val intent = Intent(context.applicationContext, NotificationReceiver::class.java)
     intent.putExtra(context.getString(R.string.MAINTENANCE_INTENT), maintenance)
-    Log.i("NotificationUtils", "scheduleNotification: Notificação agendada $localDateTime")
-    Log.i("NotificationUtils", "scheduleNotification: Identificação notificação ${maintenance.id}")
 
     val pendingIntent = PendingIntent.getBroadcast(
       context.applicationContext,
@@ -55,11 +55,27 @@ object NotificationUtils {
     )
 
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    val time = getTime(localDateTime)
-    alarmManager.setExactAndAllowWhileIdle(
+    // Alarme inexato de proposito: com targetSdk 34 o SCHEDULE_EXACT_ALARM deixou de
+    // ser concedido automaticamente e setExactAndAllowWhileIdle lancava SecurityException.
+    // Para um lembrete com cinco dias de antecedencia a precisao do Doze e suficiente.
+    alarmManager.setAndAllowWhileIdle(
       AlarmManager.RTC_WAKEUP,
       time,
       pendingIntent
     )
+    Log.i("NotificationUtils", "scheduleNotification: agendada para $localDateTime")
+  }
+
+  fun cancelNotification(context: Context, maintenance: Maintenance) {
+    val intent = Intent(context.applicationContext, NotificationReceiver::class.java)
+    val pendingIntent = PendingIntent.getBroadcast(
+      context.applicationContext,
+      maintenance.id,
+      intent,
+      PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    alarmManager.cancel(pendingIntent)
+    pendingIntent.cancel()
   }
 }

@@ -274,15 +274,15 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
             userId = userId,
             vehicleId = vehicleId,
             updatedVehicle = currentVehicle.copy(maintenances = maintenances),
+            onSaved = {
+              NotificationUtils.scheduleNotification(
+                context = context,
+                maintenance = maintenance,
+                localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
+              )
+              context.finish()
+            }
           )
-
-          NotificationUtils.scheduleNotification(
-            context = context,
-            maintenance = maintenance,
-            localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
-          )
-
-          context.finish()
         }) {
         Text(text = stringResource(R.string.text_save), style = Typography.h5)
       }

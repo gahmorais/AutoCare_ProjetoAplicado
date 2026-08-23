@@ -10,6 +10,12 @@ interface VehicleRepository {
     image: Uri,
     callback: (String) -> Unit
   )
+  /**
+   * Leitura pontual (sem listener) de todos os veiculos do usuario, incluindo as
+   * manutencoes. Usada pelo reagendamento das notificacoes apos o reboot.
+   */
+  suspend fun getVehiclesOnce(userId: String): List<Vehicle>
+
   fun getVehicleDetails(
     userId: String,
     vehicleId: String,

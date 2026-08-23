@@ -38,6 +38,15 @@ class VehicleRepositoryImpl(
     }
   }
 
+  override suspend fun getVehiclesOnce(userId: String): List<Vehicle> {
+    val snapshot = database.reference
+      .child(Constants.VEHICLE_CHILD)
+      .child(userId)
+      .get()
+      .await()
+    return snapshot.children.mapNotNull { it.getValue<Vehicle>() }
+  }
+
   override fun getVehicleDetails(
     userId: String,
     vehicleId: String,

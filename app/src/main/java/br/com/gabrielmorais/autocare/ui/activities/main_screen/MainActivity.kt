@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,9 +56,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
+import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
 import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
@@ -85,21 +88,29 @@ class MainActivity : ComponentActivity() {
     setContent {
       val notificationPermission = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-          if (isGranted) {
-            Toast.makeText(this@MainActivity, "Permissão aceita", Toast.LENGTH_SHORT).show()
-          }
-        }
+        onResult = { }
       )
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+      // Pedir a permissao no corpo da composicao e efeito colateral: era
+      // disparado de novo a cada recomposicao. LaunchedEffect(Unit) roda uma vez.
+      LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+          ContextCompat.checkSelfPermission(
+            this@MainActivity,
+            Manifest.permission.POST_NOTIFICATIONS
+          ) != PackageManager.PERMISSION_GRANTED
+        ) {
+          notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
       }
-      NotificationUtils.createNotificationChannel(applicationContext)
       AutoCareTheme {
         MainScreen(viewModel)
       }
 
     }
+
+    // Cobre o caso de o BOOT_COMPLETED nao ter chegado (app forcado a parar,
+    // instalacao nova) mantendo os alarmes consistentes ao abrir o app.
+    BootReceiver.enqueueReschedule(this)
 
     lifecycleScope.launch {
       viewModel.message.collectLatest { message ->
