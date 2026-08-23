@@ -9,7 +9,8 @@
 
 ## Configuração
 
-O projeto depende de um projeto Firebase (Authentication, Realtime Database e Storage).
+O projeto depende de um projeto Firebase (Authentication e Realtime Database).
+O armazenamento de imagens **não** usa Firebase Storage — ver *Imagens* abaixo.
 
 1. Crie o projeto no [Firebase Console](https://console.firebase.google.com/) e registre o app
    com o applicationId `br.com.gabrielmorais.autocare`.
@@ -19,16 +20,16 @@ O projeto depende de um projeto Firebase (Authentication, Realtime Database e St
 4. Publique as regras de segurança versionadas neste repositório:
 
    ```sh
-   firebase deploy --only database,storage
+   firebase deploy --only database
    ```
 
-   - [`database.rules.json`](./database.rules.json) — restringe `Usuarios/{uid}` e `vehicles/{uid}`
-     ao próprio usuário autenticado e deixa `lista-servicos` como somente leitura.
-   - [`storage.rules`](./storage.rules) — restringe `{uid}/**` ao próprio usuário, limita o upload
-     a imagens de até 5 MB.
+   [`database.rules.json`](./database.rules.json) restringe `Usuarios/{uid}` e `vehicles/{uid}`
+   ao próprio usuário autenticado e deixa `lista-servicos` como somente leitura.
 
-   > ⚠️ As regras padrão em modo de teste liberam leitura e escrita para qualquer um.
-   > Publique as regras acima antes de expor o app a usuários reais.
+   > ⚠️ Conceder `".read": "auth != null"` **no nó pai** (`Usuarios`, `vehicles`) expõe os dados
+   > de todos os usuários: as regras cascateiam para baixo e não podem ser revogadas no filho.
+   > Como o cadastro é self-service, qualquer pessoa cria uma conta e lê o banco inteiro via
+   > REST. A permissão precisa ficar no nível `$uid`, como no arquivo versionado.
 
 5. Popule o nó `lista-servicos` do Realtime Database com os tipos de serviço:
 
