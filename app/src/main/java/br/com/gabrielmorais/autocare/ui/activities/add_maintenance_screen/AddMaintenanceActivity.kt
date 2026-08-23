@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
@@ -122,178 +123,191 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
     ) {
       Spacer(modifier = Modifier.padding(top = 20.dp))
 
-      // Antes a tela inteira ficava em branco enquanto a lista nao chegava, e
-      // permanecia assim se a leitura falhasse.
-      if (servicesLoading) {
-        LoadingPage(stringResource(R.string.text_loading_services))
-        return@Column
-      }
+      // Nada de `return@Column` aqui. Sair antes do fim de uma lambda de
+      // composable deixa o Composer com grupos abertos sem o endNode
+      // correspondente, e a composicao morre com IndexOutOfBoundsException em
+      // ComposerImpl.endNode. Os tres estados sao ramos de um when.
+      when {
+        // Antes a tela inteira ficava em branco enquanto a lista nao chegava, e
+        // permanecia assim se a leitura falhasse.
+        servicesLoading -> LoadingPage(stringResource(R.string.text_loading_services))
 
-      if (options.isEmpty()) {
-        Text(
+        options.isEmpty() -> Text(
           text = stringResource(R.string.text_services_unavailable),
           style = Typography.h6
         )
-        return@Column
-      }
 
-      var expanded by remember { mutableStateOf(false) }
-      var selectedIndex by remember(options) { mutableStateOf(0) }
-      val selectedOption = options[selectedIndex.coerceIn(options.indices)]
-      val averageTraveledDistance = vehicle?.averageDistanceTraveledPerMonth
-
-      val datepickerDialog = rememberMaterialDialogState()
-      val datepickerNextMaintenance = rememberMaterialDialogState()
-
-      MaterialDialog(
-        dialogState = datepickerDialog,
-        buttons = {
-          positiveButton("OK")
-          negativeButton("Cancel")
-        }
-      ) {
-        datepicker() {
-          state.onDateChange(it)
-        }
-      }
-
-      MaterialDialog(
-        dialogState = datepickerNextMaintenance,
-        buttons = {
-          positiveButton("OK")
-          negativeButton("Cancel")
-        }
-      ) {
-        datepicker {
-          state.onForecastNextExchangeDateChange(it)
-        }
-      }
-
-      // Escrever estado durante a composicao realimenta a recomposicao; por isso
-      // os dois calculos derivados moram em LaunchedEffect.
-      LaunchedEffect(selectedOption, state.currentMileage) {
-        val currentMileage = state.currentMileage.toIntOrNull() ?: 0
-        state.onForecastNextExchangeMileageChange(
-          (selectedOption.mileageChange + currentMileage).toString()
+        else -> MaintenanceForm(
+          state = state,
+          options = options,
+          vehicle = vehicle,
+          canSave = userId.isNotBlank(),
+          onSave = { vehicleId, updatedVehicle, maintenance ->
+            viewModel.saveMaintenance(
+              userId = userId,
+              vehicleId = vehicleId,
+              updatedVehicle = updatedVehicle,
+              onSaved = {
+                NotificationUtils.scheduleNotification(
+                  context = context,
+                  maintenance = maintenance,
+                  localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
+                )
+                context.finish()
+              }
+            )
+          }
         )
       }
-
-      LaunchedEffect(selectedOption, state.date, averageTraveledDistance) {
-        // Sem a guarda, media nula estourava NPE e media zero, divisao por zero.
-        val monthsByMileage = if (averageTraveledDistance != null && averageTraveledDistance > 0) {
-          selectedOption.mileageChange / averageTraveledDistance
-        } else {
-          0
-        }
-        val months = maxOf(monthsByMileage, selectedOption.mustBeDoneBefore)
-        Utils.futureDateMonth(state.date, months)
-          ?.let { state.onForecastNextExchangeDateChange(it) }
-      }
-
-      SelectMenu(
-        modifier = Modifier.fillMaxWidth(),
-        items = options.map { it.name },
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        value = selectedOption.name,
-        label = stringResource(R.string.text_service_type),
-        onDissmis = { expanded = false },
-        onClick = { _, index ->
-          selectedIndex = index
-          expanded = false
-        }
-      )
-
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = Utils.formatDate(state.date.toEpochDay()),
-        label = { Text(stringResource(id = R.string.text_date)) },
-        readOnly = true,
-        trailingIcon = {
-          IconButton(onClick = { datepickerDialog.show() }) {
-            Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
-          }
-        },
-        onValueChange = {}
-      )
-
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = state.currentMileage,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        label = { Text(stringResource(id = R.string.text_current_mileage)) },
-        onValueChange = { state.onCurrentMilageChange(it.filter(Char::isDigit)) }
-      )
-
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = state.forecastNextExchangeMileage,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        label = { Text(stringResource(id = R.string.text_next_maintenance_mileage)) },
-        onValueChange = { state.onForecastNextExchangeMileageChange(it.filter(Char::isDigit)) }
-      )
-
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = Utils.formatDate(state.forecastNextExchangeDate.toEpochDay()),
-        label = { Text(stringResource(id = R.string.text_next_date_maintenance)) },
-        readOnly = true,
-        trailingIcon = {
-          IconButton(onClick = { datepickerNextMaintenance.show() }) {
-            Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
-          }
-        },
-        onValueChange = {}
-      )
-
-      OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = state.comments,
-        label = { Text(stringResource(id = R.string.text_comments)) },
-        onValueChange = state.onCommentsChange
-      )
-
-      val currentVehicle = vehicle
-      val currentMileage = state.currentMileage.toIntOrNull()
-
-      OutlinedButton(
-        modifier = Modifier.fillMaxWidth(),
-        enabled = currentVehicle?.id != null && currentMileage != null && userId.isNotBlank(),
-        onClick = {
-          val vehicleId = currentVehicle?.id ?: return@OutlinedButton
-          val mileage = currentMileage ?: return@OutlinedButton
-          val nextMileage = state.forecastNextExchangeMileage.toIntOrNull() ?: mileage
-
-          val maintenances = currentVehicle.maintenances.orEmpty().toMutableList()
-
-          val maintenance = Maintenance(
-            description = selectedOption.name,
-            date = state.date.toEpochDay(),
-            currentMileage = mileage,
-            forecastNextExchangeMileage = nextMileage,
-            forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
-            comments = state.comments
-          )
-
-          maintenances.add(maintenance)
-
-          viewModel.saveMaintenance(
-            userId = userId,
-            vehicleId = vehicleId,
-            updatedVehicle = currentVehicle.copy(maintenances = maintenances),
-            onSaved = {
-              NotificationUtils.scheduleNotification(
-                context = context,
-                maintenance = maintenance,
-                localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
-              )
-              context.finish()
-            }
-          )
-        }) {
-        Text(text = stringResource(R.string.text_save), style = Typography.h5)
-      }
     }
+  }
+}
+
+@Composable
+private fun MaintenanceForm(
+  state: AddMaintenanceUiState,
+  options: List<ServiceOption>,
+  vehicle: Vehicle?,
+  canSave: Boolean,
+  onSave: (vehicleId: String, updatedVehicle: Vehicle, maintenance: Maintenance) -> Unit
+) {
+  var expanded by remember { mutableStateOf(false) }
+  var selectedIndex by remember(options) { mutableStateOf(0) }
+  val selectedOption = options[selectedIndex.coerceIn(options.indices)]
+  val averageTraveledDistance = vehicle?.averageDistanceTraveledPerMonth
+
+  val datepickerDialog = rememberMaterialDialogState()
+  val datepickerNextMaintenance = rememberMaterialDialogState()
+
+  MaterialDialog(
+    dialogState = datepickerDialog,
+    buttons = {
+      positiveButton("OK")
+      negativeButton("Cancel")
+    }
+  ) {
+    datepicker { state.onDateChange(it) }
+  }
+
+  MaterialDialog(
+    dialogState = datepickerNextMaintenance,
+    buttons = {
+      positiveButton("OK")
+      negativeButton("Cancel")
+    }
+  ) {
+    datepicker { state.onForecastNextExchangeDateChange(it) }
+  }
+
+  // Escrever estado durante a composicao realimenta a recomposicao; por isso
+  // os dois calculos derivados moram em LaunchedEffect.
+  LaunchedEffect(selectedOption, state.currentMileage) {
+    val currentMileage = state.currentMileage.toIntOrNull() ?: 0
+    state.onForecastNextExchangeMileageChange(
+      (selectedOption.mileageChange + currentMileage).toString()
+    )
+  }
+
+  LaunchedEffect(selectedOption, state.date, averageTraveledDistance) {
+    // Sem a guarda, media nula estourava NPE e media zero, divisao por zero.
+    val monthsByMileage = if (averageTraveledDistance != null && averageTraveledDistance > 0) {
+      selectedOption.mileageChange / averageTraveledDistance
+    } else {
+      0
+    }
+    val months = maxOf(monthsByMileage, selectedOption.mustBeDoneBefore)
+    Utils.futureDateMonth(state.date, months)
+      ?.let { state.onForecastNextExchangeDateChange(it) }
+  }
+
+  SelectMenu(
+    modifier = Modifier.fillMaxWidth(),
+    items = options.map { it.name },
+    expanded = expanded,
+    onExpandedChange = { expanded = !expanded },
+    value = selectedOption.name,
+    label = stringResource(R.string.text_service_type),
+    onDissmis = { expanded = false },
+    onClick = { _, index ->
+      selectedIndex = index
+      expanded = false
+    }
+  )
+
+  OutlinedTextField(
+    modifier = Modifier.fillMaxWidth(),
+    value = Utils.formatDate(state.date.toEpochDay()),
+    label = { Text(stringResource(id = R.string.text_date)) },
+    readOnly = true,
+    trailingIcon = {
+      IconButton(onClick = { datepickerDialog.show() }) {
+        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+      }
+    },
+    onValueChange = {}
+  )
+
+  OutlinedTextField(
+    modifier = Modifier.fillMaxWidth(),
+    value = state.currentMileage,
+    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+    label = { Text(stringResource(id = R.string.text_current_mileage)) },
+    onValueChange = { state.onCurrentMilageChange(it.filter(Char::isDigit)) }
+  )
+
+  OutlinedTextField(
+    modifier = Modifier.fillMaxWidth(),
+    value = state.forecastNextExchangeMileage,
+    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+    label = { Text(stringResource(id = R.string.text_next_maintenance_mileage)) },
+    onValueChange = { state.onForecastNextExchangeMileageChange(it.filter(Char::isDigit)) }
+  )
+
+  OutlinedTextField(
+    modifier = Modifier.fillMaxWidth(),
+    value = Utils.formatDate(state.forecastNextExchangeDate.toEpochDay()),
+    label = { Text(stringResource(id = R.string.text_next_date_maintenance)) },
+    readOnly = true,
+    trailingIcon = {
+      IconButton(onClick = { datepickerNextMaintenance.show() }) {
+        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+      }
+    },
+    onValueChange = {}
+  )
+
+  OutlinedTextField(
+    modifier = Modifier.fillMaxWidth(),
+    value = state.comments,
+    label = { Text(stringResource(id = R.string.text_comments)) },
+    onValueChange = state.onCommentsChange
+  )
+
+  val currentMileage = state.currentMileage.toIntOrNull()
+
+  OutlinedButton(
+    modifier = Modifier.fillMaxWidth(),
+    enabled = canSave && vehicle?.id != null && currentMileage != null,
+    onClick = {
+      // Retorno antecipado aqui e seguro: onClick e lambda de evento, nao de
+      // composicao.
+      val vehicleId = vehicle?.id ?: return@OutlinedButton
+      val mileage = currentMileage ?: return@OutlinedButton
+      val nextMileage = state.forecastNextExchangeMileage.toIntOrNull() ?: mileage
+
+      val maintenance = Maintenance(
+        description = selectedOption.name,
+        date = state.date.toEpochDay(),
+        currentMileage = mileage,
+        forecastNextExchangeMileage = nextMileage,
+        forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
+        comments = state.comments
+      )
+
+      val maintenances = vehicle.maintenances.orEmpty() + maintenance
+      onSave(vehicleId, vehicle.copy(maintenances = maintenances), maintenance)
+    }) {
+    Text(text = stringResource(R.string.text_save), style = Typography.h5)
   }
 }
 

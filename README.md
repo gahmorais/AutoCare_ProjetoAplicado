@@ -147,6 +147,7 @@ android.jar de teste e qualquer asserção passaria sem exercitar nada.
 >
 > ```sh
 > ./gradlew installDebug installDebugAndroidTest
+> adb shell wm dismiss-keyguard   # senão a Activity para em STOPPED
 > adb shell am instrument -w \
 >   br.com.gabrielmorais.autocare.test/androidx.test.runner.AndroidJUnitRunner
 > ```
