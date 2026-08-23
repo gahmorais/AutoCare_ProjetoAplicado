@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.images.CloudinaryTransformations
+import br.com.gabrielmorais.autocare.data.images.CloudinaryUrl
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
@@ -271,7 +273,7 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
       alignment = Alignment.Center,
       model = ImageRequest
         .Builder(LocalContext.current)
-        .data(user?.photo)
+        .data(CloudinaryUrl.withTransformation(user?.photo, CloudinaryTransformations.AVATAR))
         .crossfade(true)
         // Recorte pelo clip e nao por transformacao: transformacao so se aplica
         // ao bitmap carregado, entao o fallback ficaria quadrado.

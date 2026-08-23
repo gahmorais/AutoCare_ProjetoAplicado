@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.images.CloudinaryTransformations
+import br.com.gabrielmorais.autocare.data.images.CloudinaryUrl
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import coil.compose.AsyncImage
@@ -35,7 +37,10 @@ fun CardVehicleDetails(
           .fillMaxHeight(0.3F)
           .fillMaxWidth()
           .clickable(onClick = onClick),
-        model = vehicle.photo ?: R.drawable.car_photo,
+        model = CloudinaryUrl.withTransformation(
+          vehicle.photo,
+          CloudinaryTransformations.VEHICLE_BANNER
+        ) ?: R.drawable.car_photo,
         contentDescription = "",
         error = painterResource(id = R.drawable.car_photo)
       )
