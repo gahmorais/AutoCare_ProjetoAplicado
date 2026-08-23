@@ -56,7 +56,6 @@ import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.Vehicl
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -69,8 +68,7 @@ class MyAccountActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val userId = intent.getStringExtra(INTENT_USER_ID)
-    userId?.let { viewModel.observeUser(it) }
+    viewModel.observeUser()
     setContent {
       MyAccountScreen(viewModel)
     }
@@ -175,9 +173,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
             val state = rememberDismissState(
               confirmStateChange = {
                 if (it == DismissValue.DismissedToStart) {
-                  val userId = user?.value?.id ?: ""
-                  val vehicleId = vehicle.id ?: ""
-                  viewModel?.deleteVehicle(userId, vehicleId)
+                  vehicle.id?.let { id -> viewModel?.deleteVehicle(id) }
                 }
                 true
               }
@@ -219,10 +215,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 vehicle = vehicle,
                 onCardClick = {
                   val intent = Intent(context, VehicleDetailsActivity::class.java)
-                  val userId = user?.value?.id ?: ""
-                  val vehicleId = vehicle.id ?: ""
-                  intent.putExtra(INTENT_USER_ID, userId)
-                  intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
+                  intent.putExtra(INTENT_VEHICLE_ID, vehicle.id ?: "")
                   context.startActivity(intent)
                 }
               )
@@ -246,10 +239,9 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
               onConfirm = {
                 // toInt() estourava NumberFormatException com o campo vazio.
                 val averageDistance = addVehicleDialogState.averageDistanceTraveled.toIntOrNull()
-                val userId = user?.value?.id
                 if (averageDistance == null || averageDistance <= 0) {
                   Toast.makeText(context, invalidDistanceMessage, Toast.LENGTH_SHORT).show()
-                } else if (userId != null) {
+                } else {
                   val newVehicle = Vehicle(
                     nickName = addVehicleDialogState.nickName,
                     brand = addVehicleDialogState.brand,
@@ -258,7 +250,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                     photo = addVehicleDialogState.photo,
                     averageDistanceTraveledPerMonth = averageDistance
                   )
-                  viewModel.saveVehicle(userId, newVehicle)
+                  viewModel?.saveVehicle(newVehicle)
                   showDialogAddVehicle = false
                 }
               })

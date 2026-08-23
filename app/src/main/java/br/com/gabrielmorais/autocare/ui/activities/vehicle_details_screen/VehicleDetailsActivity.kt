@@ -42,7 +42,6 @@ import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCard
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
@@ -76,11 +75,9 @@ class VehicleDetailsActivity : ComponentActivity() {
     super.onStart()
     val extras = intent.extras
     extras?.let { bundle ->
-      val userId = bundle.getString(INTENT_USER_ID)
       val vehicleId = bundle.getString(INTENT_VEHICLE_ID)
-      if (userId != null && vehicleId != null) {
-        viewModel.setUserid(userId)
-        viewModel.getVehicle(userId, vehicleId)
+      if (vehicleId != null) {
+        viewModel.getVehicle(vehicleId)
       }
     }
   }
@@ -131,7 +128,6 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
         actions = {
           IconButton(onClick = {
             val intent = Intent(context, AddMaintenanceActivity::class.java)
-            intent.putExtra(INTENT_USER_ID, userId.value)
             intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
             context.startActivity(intent)
           }) {

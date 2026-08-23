@@ -23,7 +23,24 @@ class MyAccountViewModel(
   private val _message = MutableStateFlow("")
   val message: Flow<String> = _message
 
-  fun saveVehicle(userId: String, vehicle: Vehicle) {
+  private var observeUserJob: Job? = null
+
+  /** Sempre a sessao autenticada - nunca um id vindo da UI ou de uma Intent. */
+  private val currentUserId: String?
+    get() = authRepository.getCurrentUser()?.uid
+
+  fun observeUser() {
+    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
+    observeUserJob?.cancel()
+    observeUserJob = viewModelScope.launch {
+      userRepository.observeUser(userId)
+        .catch { publishError(it) }
+        .collect { _user.value = it }
+    }
+  }
+
+  fun saveVehicle(vehicle: Vehicle) {
+    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
     userRepository.saveVehicle(
       userId = userId,
       vehicle = vehicle,
@@ -32,15 +49,14 @@ class MyAccountViewModel(
     )
   }
 
-  private var observeUserJob: Job? = null
-
-  fun observeUser(userId: String) {
-    observeUserJob?.cancel()
-    observeUserJob = viewModelScope.launch {
-      userRepository.observeUser(userId)
-        .catch { publishError(it) }
-        .collect { _user.value = it }
-    }
+  fun deleteVehicle(vehicleId: String) {
+    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
+    userRepository.deleteVehicle(
+      userId = userId,
+      vehicleId = vehicleId,
+      callback = { _message.value = it },
+      onError = ::publishError
+    )
   }
 
   fun changePassword(email: String) {
@@ -52,17 +68,9 @@ class MyAccountViewModel(
   }
 
   fun updateUser(user: User) {
+    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
     userRepository.updateUser(
-      user = user,
-      callback = { _message.value = it },
-      onError = ::publishError
-    )
-  }
-
-  fun deleteVehicle(userId: String, vehicleId: String) {
-    userRepository.deleteVehicle(
-      userId = userId,
-      vehicleId = vehicleId,
+      user = user.copy(id = userId),
       callback = { _message.value = it },
       onError = ::publishError
     )

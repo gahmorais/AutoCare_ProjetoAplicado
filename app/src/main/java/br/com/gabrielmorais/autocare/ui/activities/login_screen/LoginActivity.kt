@@ -2,7 +2,6 @@ package br.com.gabrielmorais.autocare.ui.activities.login_screen
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -63,7 +62,6 @@ class LoginActivity : ComponentActivity() {
     lifecycleScope.launch {
       viewModel.currentUser.collect { user ->
         user?.let {
-          Log.i("LoginActivity", "onResume: ${viewModel.currentUser}")
           val openActivity = Intent(this@LoginActivity, MainActivity::class.java)
           openActivity.putExtra("user_id", it.uid)
           startActivity(openActivity)

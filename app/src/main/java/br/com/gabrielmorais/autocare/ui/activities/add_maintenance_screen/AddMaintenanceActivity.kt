@@ -70,11 +70,9 @@ class AddMaintenanceActivity : ComponentActivity() {
     super.onStart()
     val extras = intent.extras
     extras?.let { bundle ->
-      val userId = bundle.getString(Constants.INTENT_USER_ID)
       val vehicleId = bundle.getString(Constants.INTENT_VEHICLE_ID)
-      if (userId != null && vehicleId != null) {
-        viewModel.setUserId(userId)
-        viewModel.getVehicle(userId, vehicleId)
+      if (vehicleId != null) {
+        viewModel.getVehicle(vehicleId)
       }
     }
   }

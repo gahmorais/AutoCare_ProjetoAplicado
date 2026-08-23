@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.repository.services.ServicesRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
@@ -16,13 +17,15 @@ import kotlinx.coroutines.launch
 class AddMaintenanceViewModel(
   private val servicesRepository: ServicesRepository,
   private val maintenanceRepository: MaintenanceRepository,
-  private val vehicleRepository: VehicleRepository
+  private val vehicleRepository: VehicleRepository,
+  private val authRepository: AuthRepository
 ) :
   ViewModel() {
   private val _services = MutableStateFlow<List<Service?>>(listOf())
   val services = _services.asStateFlow()
 
-  private val _userId = MutableStateFlow("")
+  // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
+  private val _userId = MutableStateFlow(authRepository.getCurrentUser()?.uid.orEmpty())
   val userId = _userId.asStateFlow()
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)
@@ -70,11 +73,12 @@ class AddMaintenanceViewModel(
     )
   }
 
-  fun setUserId(userId: String) {
-    _userId.value = userId
-  }
-
-  fun getVehicle(userId: String, vehicleId: String) {
+  fun getVehicle(vehicleId: String) {
+    val userId = _userId.value
+    if (userId.isBlank()) {
+      _message.value = "Sessão expirada"
+      return
+    }
     vehicleRepository.getVehicleDetails(
       userId,
       vehicleId,

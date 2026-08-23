@@ -1,7 +1,6 @@
 package br.com.gabrielmorais.autocare.data.repository.vehicleRepository
 
 import android.net.Uri
-import android.util.Log
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.utils.Constants
 import com.google.firebase.database.DataSnapshot
@@ -61,7 +60,6 @@ class VehicleRepositoryImpl(
         override fun onDataChange(snapshot: DataSnapshot) {
           if (snapshot.exists()) {
             val vehicle = snapshot.getValue<Vehicle>()
-            Log.i("VehicleRepositoryImpl", "onDataChange: $vehicle")
             vehicle?.let(onSuccess)
           }
         }

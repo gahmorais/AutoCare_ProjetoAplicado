@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -67,7 +66,6 @@ import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.Vehicl
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -124,7 +122,7 @@ class MainActivity : ComponentActivity() {
     // Uma vez so: o Flow do repositorio mantem a tela atualizada sozinho.
     // Antes isso rodava em onResume e cada retorno a tela deixava para tras
     // mais um ValueEventListener ativo.
-    intent.getStringExtra(INTENT_USER_ID)?.let { viewModel.observeUser(it) }
+    viewModel.observeUser()
   }
 }
 
@@ -167,7 +165,6 @@ fun MainScreen(viewModel: MainViewModel? = null) {
     }
   )
 
-  Log.i("Lista de veículos'", "MainScreen: $vehicleList")
 
   Scaffold(
     scaffoldState = scaffoldState,
@@ -195,11 +192,8 @@ fun MainScreen(viewModel: MainViewModel? = null) {
               .padding(5.dp)
               .clip(shape = RoundedCornerShape(15.dp)),
             onCardClick = {
-              val userId = user.value?.id
-              val vehicleId = vehicle.id
               val intent = Intent(context, VehicleDetailsActivity::class.java)
-              intent.putExtra(INTENT_USER_ID, userId)
-              intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
+              intent.putExtra(INTENT_VEHICLE_ID, vehicle.id)
               context.startActivity(intent)
             }
           )
@@ -256,7 +250,6 @@ fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
 fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   val context = LocalContext.current
 
-  Log.i("MainScreen", "MainScreen: DrawerContent ${user?.name}")
   Column(
     modifier = Modifier.fillMaxWidth(),
     verticalArrangement = Arrangement.Center,
@@ -283,9 +276,7 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   }
 
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
-    val intent = Intent(context, MyAccountActivity::class.java)
-    intent.putExtra(INTENT_USER_ID, user?.id)
-    context.startActivity(intent)
+    context.startActivity(Intent(context, MyAccountActivity::class.java))
   }) {
     Text(text = stringResource(id = R.string.text_my_account), style = Typography.h6)
   }

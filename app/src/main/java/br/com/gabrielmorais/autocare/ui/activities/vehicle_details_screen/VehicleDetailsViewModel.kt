@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
-  private val vehicleRepository: VehicleRepository
+  private val vehicleRepository: VehicleRepository,
+  private val authRepository: AuthRepository
 ) : ViewModel() {
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)
-  private val _userId = MutableStateFlow("")
+
+  // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
+  private val _userId = MutableStateFlow(authRepository.getCurrentUser()?.uid.orEmpty())
   val userId = _userId.asStateFlow()
 
   private val _message = MutableStateFlow<String?>(null)
@@ -36,7 +40,12 @@ class VehicleDetailsViewModel(
     }
   }
 
-  fun getVehicle(userId: String, vehicleId: String) {
+  fun getVehicle(vehicleId: String) {
+    val userId = _userId.value
+    if (userId.isBlank()) {
+      publishError(IllegalStateException("Sessão expirada"))
+      return
+    }
     vehicleRepository.getVehicleDetails(
       userId,
       vehicleId,
@@ -58,10 +67,6 @@ class VehicleDetailsViewModel(
       onSuccess = { _vehicle.value = vehicle },
       onError = ::publishError
     )
-  }
-
-  fun setUserid(id: String) {
-    _userId.value = id
   }
 
   private fun publishError(error: Throwable) {

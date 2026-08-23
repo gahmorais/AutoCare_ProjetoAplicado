@@ -1,6 +1,5 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -36,7 +35,6 @@ fun CardVehicle(
   onLongClick: () -> Unit = {},
 ) {
 
-  Log.i("CardVehicle", "CardVehicle: ${vehicle}")
   Card(
     modifier = modifier,
     elevation = 5.dp,

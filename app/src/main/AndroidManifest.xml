@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- A foto e opcional e o cropper tambem aceita a galeria; exigir camera
+         apenas bloqueava a instalacao em aparelhos sem ela. -->
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="true" />
+        android:required="false" />
 
     <!-- Sem esta permissao declarada, o pedido em runtime e negado pelo sistema
          sem nem exibir o dialogo, e nenhuma notificacao aparece no Android 13+. -->
@@ -47,9 +49,11 @@
         <activity android:name=".ui.activities.vehicle_details_screen.VehicleDetailsActivity" />
         <activity android:name=".ui.activities.my_account_screen.MyAccountActivity" />
         <activity android:name=".ui.activities.maintenance_screen.MaintenanceActivity" />
+        <!-- Estava exported sem intent-filter: qualquer app instalado podia
+             inicia-la passando user_id e vehicle_id arbitrarios. -->
         <activity
             android:name=".ui.activities.add_maintenance_screen.AddMaintenanceActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".ui.activities.login_screen.LoginActivity"
             android:exported="true"

@@ -32,7 +32,14 @@ class MainViewModel(
    * ValueEventListener ativo para sempre. O Job anterior e cancelado e o
    * awaitClose do callbackFlow remove o listener.
    */
-  fun observeUser(userId: String) {
+  fun observeUser() {
+    // O uid vem da sessao autenticada, nao de um extra de Intent que qualquer
+    // app podia forjar.
+    val userId = authRepository.getCurrentUser()?.uid
+    if (userId == null) {
+      publishError(IllegalStateException("Sessão expirada"))
+      return
+    }
     observeUserJob?.cancel()
     observeUserJob = viewModelScope.launch {
       userRepository.observeUser(userId)
