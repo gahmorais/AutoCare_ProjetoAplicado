@@ -64,8 +64,13 @@ O preset precisa ser criado como **Unsigned** no console, com estas restrições
 | Folder | `autocare` | Escopo fixo |
 | Use filename / Unique filename | `false` / auto | **Ver aviso abaixo** |
 | Allowed formats | `jpg, png, webp` | Impede upload arbitrário |
-| Max file size | `5 MB` | — |
 | Incoming transformation | `c_limit,w_1600,h_1600` | Reduz custo de storage |
+
+> **Limite de tamanho:** não é configurável por preset no plano gratuito — vale o limite
+> da conta. O `c_limit` acima já contém o custo de storage (corta as dimensões antes de
+> armazenar), e o app rejeita arquivos acima de 5 MB antes de enviar
+> (`CloudinaryUploadApi.DEFAULT_MAX_FILE_SIZE_BYTES`). Para conferir o que o preset tem
+> gravado de fato: `curl -u API_KEY:API_SECRET https://api.cloudinary.com/v1_1/<cloud>/upload_presets/<preset>`.
 
 > ⚠️ **O `public_id` deve ser gerado pelo Cloudinary.** Se o preset permitir que o cliente
 > defina o `public_id`, um atacante pode sobrescrever a imagem de outro usuário passando o

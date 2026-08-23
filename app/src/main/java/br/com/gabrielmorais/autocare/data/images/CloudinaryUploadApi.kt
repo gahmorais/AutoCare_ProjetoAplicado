@@ -30,7 +30,8 @@ class CloudinaryUploadApi(
   private val cloudName: String,
   private val uploadPreset: String,
   baseUrl: HttpUrl = DEFAULT_BASE_URL.toHttpUrl(),
-  private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+  private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+  private val maxFileSizeBytes: Long = DEFAULT_MAX_FILE_SIZE_BYTES
 ) {
 
   private val uploadUrl: HttpUrl = baseUrl.newBuilder()
@@ -44,6 +45,19 @@ class CloudinaryUploadApi(
         "cloudinary.uploadPreset em local.properties"
     }
     if (bytes.isEmpty()) throw IOException("A imagem selecionada está vazia")
+
+    // Guarda de UX, nao de seguranca: como o preset e extraivel do APK, quem
+    // quiser abusar da conta fala direto com a API e ignora o app. O que isso
+    // evita e o usuario esperar o envio de um arquivo grande no 4G para so
+    // entao receber o erro do servidor. O teto real e o limite da conta no
+    // Cloudinary, somado ao c_limit do preset, que corta as dimensoes antes de
+    // armazenar.
+    if (bytes.size > maxFileSizeBytes) {
+      throw IOException(
+        "A imagem tem ${bytes.size / BYTES_IN_MB} MB e o limite é " +
+          "${maxFileSizeBytes / BYTES_IN_MB} MB"
+      )
+    }
 
     val mediaType = mimeType?.toMediaTypeOrNull() ?: FALLBACK_MEDIA_TYPE.toMediaTypeOrNull()
 
@@ -83,6 +97,8 @@ class CloudinaryUploadApi(
 
   companion object {
     const val DEFAULT_BASE_URL = "https://api.cloudinary.com/"
+    const val DEFAULT_MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024
+    private const val BYTES_IN_MB = 1024 * 1024
     private const val FALLBACK_MEDIA_TYPE = "image/jpeg"
     private const val FILE_PART_NAME = "upload"
     private const val FIELD_SECURE_URL = "secure_url"

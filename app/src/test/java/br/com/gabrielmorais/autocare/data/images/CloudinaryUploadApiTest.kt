@@ -33,13 +33,15 @@ internal class CloudinaryUploadApiTest {
 
   private fun api(
     cloudName: String = "cloud-teste",
-    uploadPreset: String = "preset-teste"
+    uploadPreset: String = "preset-teste",
+    maxFileSizeBytes: Long = CloudinaryUploadApi.DEFAULT_MAX_FILE_SIZE_BYTES
   ) = CloudinaryUploadApi(
     client = OkHttpClient(),
     cloudName = cloudName,
     uploadPreset = uploadPreset,
     baseUrl = server.url("/"),
-    dispatcher = UnconfinedTestDispatcher()
+    dispatcher = UnconfinedTestDispatcher(),
+    maxFileSizeBytes = maxFileSizeBytes
   )
 
   @Test
@@ -128,6 +130,27 @@ internal class CloudinaryUploadApiTest {
 
     assertTrue(error is IOException)
     assertEquals(0, server.requestCount)
+  }
+
+  // O limite por preset nao fica disponivel no plano gratuito do Cloudinary, entao
+  // a checagem acontece aqui - antes de gastar a banda do usuario.
+  @Test
+  fun `rejeita imagem acima do limite sem chamar a rede`() = runTest {
+    val error = runCatching {
+      api(maxFileSizeBytes = 4).upload(ByteArray(5) { 1 }, "image/jpeg")
+    }.exceptionOrNull()
+
+    assertTrue(error is IOException)
+    assertEquals(0, server.requestCount)
+  }
+
+  @Test
+  fun `aceita imagem exatamente no limite`() = runTest {
+    server.enqueue(MockResponse().setBody("""{"secure_url":"https://x/y.jpg"}"""))
+
+    val url = api(maxFileSizeBytes = 6).upload(imageBytes, "image/jpeg")
+
+    assertEquals("https://x/y.jpg", url)
   }
 
   @Test
