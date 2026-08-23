@@ -3,8 +3,10 @@ package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
   private val vehicleRepository: VehicleRepository,
-  private val authRepository: AuthRepository
+  private val authRepository: AuthRepository,
+  private val maintenanceRepository: MaintenanceRepository
 ) : ViewModel() {
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)
@@ -50,6 +53,27 @@ class VehicleDetailsViewModel(
       userId,
       vehicleId,
       onSuccess = { _vehicle.value = it },
+      onError = ::publishError
+    )
+  }
+
+  fun deleteMaintenance(maintenance: Maintenance, onDeleted: (Maintenance) -> Unit) {
+    val userId = _userId.value
+    val vehicleId = _vehicle.value?.id
+    if (userId.isBlank() || vehicleId == null) {
+      publishError(IllegalStateException("Não foi possível remover a manutenção"))
+      return
+    }
+    maintenanceRepository.delete(
+      userId = userId,
+      vehicleId = vehicleId,
+      maintenanceId = maintenance.id,
+      onSuccess = {
+        _message.value = it
+        // Cancela tambem o alarme, senao a notificacao chegaria para um
+        // registro que nao existe mais.
+        onDeleted(maintenance)
+      },
       onError = ::publishError
     )
   }

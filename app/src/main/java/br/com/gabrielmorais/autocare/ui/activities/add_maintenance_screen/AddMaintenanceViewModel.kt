@@ -1,6 +1,5 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.Service
@@ -9,10 +8,8 @@ import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepositor
 import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.repository.services.ServicesRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class AddMaintenanceViewModel(
   private val servicesRepository: ServicesRepository,
@@ -23,6 +20,9 @@ class AddMaintenanceViewModel(
   ViewModel() {
   private val _services = MutableStateFlow<List<Service?>>(listOf())
   val services = _services.asStateFlow()
+
+  private val _servicesLoading = MutableStateFlow(true)
+  val servicesLoading = _servicesLoading.asStateFlow()
 
   // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
   private val _userId = MutableStateFlow(authRepository.getCurrentUser()?.uid.orEmpty())
@@ -39,12 +39,15 @@ class AddMaintenanceViewModel(
   }
 
   private fun getServices() {
+    _servicesLoading.value = true
     servicesRepository.getServices(
       onSuccess = {
-        viewModelScope.launch(Dispatchers.IO) { _services.emit(it) }
+        _servicesLoading.value = false
+        _services.value = it
       },
       onError = {
-        Log.i("AddMaintenanceViewModel", "getServices: ${it.message}")
+        _servicesLoading.value = false
+        _message.value = it.message ?: "Não foi possível carregar os tipos de serviço"
       }
     )
   }
@@ -85,8 +88,6 @@ class AddMaintenanceViewModel(
       onSuccess = {
         _vehicle.value = it
       },
-      onError = {
-        Log.i("AddMaintenanceViewModel", "getVehicle: ${it.message}")
-      })
+      onError = { _message.value = it.message ?: "Não foi possível carregar o veículo" })
   }
 }

@@ -14,6 +14,8 @@ interface MaintenanceRepository {
   fun delete(
     userId: String,
     vehicleId: String,
-    maintenanceId: Int
+    maintenanceId: Int,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
   )
 }

@@ -280,9 +280,6 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   }) {
     Text(text = stringResource(id = R.string.text_my_account), style = Typography.h6)
   }
-  TextButton(modifier = Modifier.fillMaxWidth(), onClick = { }) {
-    Text(text = stringResource(id = R.string.text_maintenance), style = Typography.h6)
-  }
 }
 
 @Composable

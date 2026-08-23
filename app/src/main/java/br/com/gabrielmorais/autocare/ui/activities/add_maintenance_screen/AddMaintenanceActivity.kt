@@ -35,6 +35,7 @@ import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
+import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
@@ -94,6 +95,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
   // descartando tudo que o usuario digitasse.
   val state = remember { AddMaintenanceUiState() }
   val services by viewModel.services.collectAsState()
+  val servicesLoading by viewModel.servicesLoading.collectAsState()
   val userId by viewModel.userId.collectAsState()
   val vehicle by viewModel.vehicle.collectAsState()
   val context = LocalContext.current as ComponentActivity
@@ -119,6 +121,13 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
       verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
       Spacer(modifier = Modifier.padding(top = 20.dp))
+
+      // Antes a tela inteira ficava em branco enquanto a lista nao chegava, e
+      // permanecia assim se a leitura falhasse.
+      if (servicesLoading) {
+        LoadingPage(stringResource(R.string.text_loading_services))
+        return@Column
+      }
 
       if (options.isEmpty()) {
         Text(
