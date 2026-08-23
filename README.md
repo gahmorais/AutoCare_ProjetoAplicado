@@ -20,8 +20,14 @@ O armazenamento de imagens **não** usa Firebase Storage — ver *Imagens* abaix
 4. Publique as regras de segurança versionadas neste repositório:
 
    ```sh
+   npm install -g firebase-tools   # se ainda não tiver
+   firebase login
    firebase deploy --only database
    ```
+
+   O [`firebase.json`](./firebase.json) aponta o serviço para o arquivo de regras e o
+   [`.firebaserc`](./.firebaserc) fixa o projeto padrão — sem eles o CLI responde
+   *"Not in a Firebase app directory"*. Para apontar para outro projeto: `firebase use --add`.
 
    [`database.rules.json`](./database.rules.json) restringe `Usuarios/{uid}` e `vehicles/{uid}`
    ao próprio usuário autenticado e deixa `lista-servicos` como somente leitura.

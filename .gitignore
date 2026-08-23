@@ -20,3 +20,6 @@ google-services.json
 # Chave de service account: acesso administrativo total ao projeto
 service-account*.json
 node_modules/
+
+# Cache local do Firebase CLI
+.firebase/
