@@ -25,7 +25,7 @@ class RescheduleNotificationsWorker(
   private val vehicleRepository: VehicleRepository by inject()
 
   override suspend fun doWork(): Result {
-    val userId = authRepository.getCurrentUser()?.uid
+    val userId = authRepository.currentUserId()
     if (userId == null) {
       Log.i(TAG, "doWork: nenhum usuário logado, nada a reagendar")
       return Result.success()

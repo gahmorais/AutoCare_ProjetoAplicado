@@ -34,6 +34,8 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
 
   override fun getCurrentUser() = firebaseAuth.currentUser
 
+  override fun currentUserId(): String? = firebaseAuth.currentUser?.uid
+
   override fun getCurrentUserListener(callback: (firebaseAuth: FirebaseAuth) -> Unit) =
     firebaseAuth.addAuthStateListener {
       callback(it)

@@ -47,6 +47,28 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    lint {
+        abortOnError true
+        checkReleaseBuilds true
+        // Regras que teriam apontado bugs reais deste projeto: activity exportada
+        // sem necessidade, permissao usada sem estar declarada no manifesto,
+        // alarme exato sem verificacao no Android 14 e coroutine/estado mal usado
+        // no Compose.
+        fatal 'ExportedActivity',
+                'ExportedReceiver',
+                'ExportedService',
+                'ExportedContentProvider',
+                'MissingPermission',
+                'ScheduleExactAlarm',
+                'UnsafeProtectedBroadcastReceiver',
+                'ProtectedPermissions',
+                'ComposableNaming',
+                'ProduceStateDoesNotAssignValue',
+                'CoroutineCreationDuringComposition',
+                'FlowOperatorInvokedInComposition',
+                'UnrememberedMutableState'
+    }
 }
 
 dependencies {
@@ -82,6 +104,8 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-extended:1.4.3'
     implementation 'com.google.firebase:firebase-messaging-ktx:23.1.0'
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"

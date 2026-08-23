@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
@@ -28,7 +29,14 @@ class NotificationReceiver : BroadcastReceiver() {
       return
     }
 
-    if (!hasNotificationPermission(context)) {
+    // Check inline (e nao extraido para um helper) para que o lint consiga
+    // rastrear que a permissao foi verificada antes do notify.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
       Log.w("NotificationReceiver", "onReceive: sem permissão de notificação")
       return
     }
@@ -52,16 +60,8 @@ class NotificationReceiver : BroadcastReceiver() {
       .setAutoCancel(true)
       .build()
 
-    androidx.core.app.NotificationManagerCompat.from(context)
-      .notify(maintenanceData.id, notification)
+    NotificationManagerCompat.from(context).notify(maintenanceData.id, notification)
   }
-
-  private fun hasNotificationPermission(context: Context): Boolean =
-    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-      ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.POST_NOTIFICATIONS
-      ) == PackageManager.PERMISSION_GRANTED
 }
 
 @Suppress("DEPRECATION")

@@ -25,7 +25,7 @@ class AddMaintenanceViewModel(
   val servicesLoading = _servicesLoading.asStateFlow()
 
   // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
-  private val _userId = MutableStateFlow(authRepository.getCurrentUser()?.uid.orEmpty())
+  private val _userId = MutableStateFlow(authRepository.currentUserId().orEmpty())
   val userId = _userId.asStateFlow()
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)

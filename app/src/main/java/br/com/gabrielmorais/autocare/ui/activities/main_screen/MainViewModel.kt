@@ -35,7 +35,7 @@ class MainViewModel(
   fun observeUser() {
     // O uid vem da sessao autenticada, nao de um extra de Intent que qualquer
     // app podia forjar.
-    val userId = authRepository.getCurrentUser()?.uid
+    val userId = authRepository.currentUserId()
     if (userId == null) {
       publishError(IllegalStateException("Sessão expirada"))
       return

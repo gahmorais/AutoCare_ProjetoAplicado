@@ -27,7 +27,7 @@ class MyAccountViewModel(
 
   /** Sempre a sessao autenticada - nunca um id vindo da UI ou de uma Intent. */
   private val currentUserId: String?
-    get() = authRepository.getCurrentUser()?.uid
+    get() = authRepository.currentUserId()
 
   fun observeUser() {
     val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
