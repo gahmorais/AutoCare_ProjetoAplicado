@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.repository.Status
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.utils.CredentialValidator
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -22,7 +23,16 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     getCurrentUserListener()
   }
 
-  fun loginUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
+  fun loginUser(email: String, password: String) {
+    val validationError = CredentialValidator.validateLogin(email, password)
+    if (validationError != null) {
+      viewModelScope.launch { _loginState.send(LoginState(isError = validationError)) }
+      return
+    }
+    collectLogin(email, password)
+  }
+
+  private fun collectLogin(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
     authRepository.login(email, password).collect { resource ->
       when (resource.status) {
         Status.SUCCESS -> _loginState.send(

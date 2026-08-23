@@ -96,7 +96,7 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
   var showDialogAddVehicle by remember { mutableStateOf(false) }
 
   val context = LocalContext.current
-  Log.i("MyAccountActivity", "MyAccountScreen: $user")
+  val invalidDistanceMessage = stringResource(R.string.text_invalid_distance)
   AutoCareTheme {
     Scaffold(
       topBar = { TopAppBar(title = { Text(text = stringResource(R.string.text_my_account)) }) }
@@ -242,17 +242,21 @@ fun MyAccountScreen(viewModel: MyAccountViewModel? = null) {
                 showDialogAddVehicle = false
               },
               onConfirm = {
-                val newVehicle = Vehicle(
-                  nickName = addVehicleDialogState.nickName,
-                  brand = addVehicleDialogState.brand,
-                  model = addVehicleDialogState.model,
-                  plate = addVehicleDialogState.plate,
-                  photo = addVehicleDialogState.photo,
-                  averageDistanceTraveledPerMonth = addVehicleDialogState.averageDistanceTraveled.toInt()
-                )
-                user?.value?.id?.let {
-                  Log.d("MyAccountScreen", "MyAccountScreen: $it")
-                  viewModel.saveVehicle(it, newVehicle)
+                // toInt() estourava NumberFormatException com o campo vazio.
+                val averageDistance = addVehicleDialogState.averageDistanceTraveled.toIntOrNull()
+                val userId = user?.value?.id
+                if (averageDistance == null || averageDistance <= 0) {
+                  Toast.makeText(context, invalidDistanceMessage, Toast.LENGTH_SHORT).show()
+                } else if (userId != null) {
+                  val newVehicle = Vehicle(
+                    nickName = addVehicleDialogState.nickName,
+                    brand = addVehicleDialogState.brand,
+                    model = addVehicleDialogState.model,
+                    plate = addVehicleDialogState.plate,
+                    photo = addVehicleDialogState.photo,
+                    averageDistanceTraveledPerMonth = averageDistance
+                  )
+                  viewModel.saveVehicle(userId, newVehicle)
                   showDialogAddVehicle = false
                 }
               })

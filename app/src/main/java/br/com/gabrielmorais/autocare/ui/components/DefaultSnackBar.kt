@@ -19,11 +19,13 @@ fun DefaultSnackBar(
   snackbarHostState: SnackbarHostState? = null,
   onDismiss: () -> Unit = {}
 ) {
+  // O !! aqui quebrava o @Preview, que chama o componente sem hostState.
+  val hostState = snackbarHostState ?: return
   SnackbarHost(
     modifier = modifier
       .fillMaxWidth()
       .wrapContentHeight(Alignment.Bottom),
-    hostState = snackbarHostState!!,
+    hostState = hostState,
     snackbar = { data ->
       Snackbar(modifier = Modifier.padding(8.dp),
         content = {

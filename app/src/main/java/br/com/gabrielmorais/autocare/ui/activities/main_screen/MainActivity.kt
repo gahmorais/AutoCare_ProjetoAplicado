@@ -72,6 +72,8 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -98,6 +100,14 @@ class MainActivity : ComponentActivity() {
       }
 
     }
+
+    lifecycleScope.launch {
+      viewModel.message.collectLatest { message ->
+        if (message.isNotBlank()) {
+          Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        }
+      }
+    }
   }
 
   override fun onResume() {
@@ -123,12 +133,9 @@ fun MainScreen(viewModel: MainViewModel? = null) {
     contract = CropImageContract(),
     onResult = { result ->
       val imageUri = result.uriContent
-      val userId = user?.value?.id!!
-      imageUri?.let { image ->
-        viewModel.updateUserPhoto(
-          userId,
-          image
-        )
+      val userId = user?.value?.id
+      if (imageUri != null && userId != null) {
+        viewModel?.updateUserPhoto(userId, imageUri)
       }
     }
   )

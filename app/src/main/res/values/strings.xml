@@ -56,4 +56,6 @@
     <string name="channel_description">channel_autocare</string>
     <string name="maintenance_coming">Faltam cinco dias para a manutenção</string>
     <string name="notify_again">Avisar novamente?</string>
+    <string name="text_services_unavailable">Não foi possível carregar os tipos de serviço. Verifique sua conexão e tente novamente.</string>
+    <string name="text_invalid_distance">Informe a distância média percorrida por mês</string>
 </resources>

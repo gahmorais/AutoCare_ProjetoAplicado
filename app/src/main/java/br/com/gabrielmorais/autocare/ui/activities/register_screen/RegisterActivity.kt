@@ -122,7 +122,7 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
           TextButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-              viewModel.registerUser(email, password)
+              viewModel.registerUser(email, password, confirmPassword)
             }) {
             Text(
               text = stringResource(R.string.text_register_user),

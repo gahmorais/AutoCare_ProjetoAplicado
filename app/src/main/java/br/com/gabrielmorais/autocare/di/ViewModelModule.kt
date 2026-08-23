@@ -12,6 +12,6 @@ val viewModelModule = module {
   viewModel { VehicleDetailsViewModel(get()) }
   viewModel { MainViewModel(get(), get()) }
   viewModel { RegisterViewModel(get(), get()) }
-  viewModel { MyAccountViewModel(get()) }
+  viewModel { MyAccountViewModel(get(), get()) }
   viewModel { AddMaintenanceViewModel(get(), get(), get()) }
 }

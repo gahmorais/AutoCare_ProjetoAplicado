@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
@@ -47,6 +48,8 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class VehicleDetailsActivity : ComponentActivity() {
@@ -57,6 +60,14 @@ class VehicleDetailsActivity : ComponentActivity() {
     setContent {
       AutoCareTheme {
         VehicleDetailsScreen(viewModel)
+      }
+    }
+
+    lifecycleScope.launch {
+      viewModel.message.collectLatest { message ->
+        message?.let {
+          Toast.makeText(this@VehicleDetailsActivity, it, Toast.LENGTH_SHORT).show()
+        }
       }
     }
   }
@@ -85,13 +96,9 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
     contract = CropImageContract(),
     onResult = { result ->
       val imageUri = result.uriContent
-      imageUri?.let { image ->
-        viewModel.uploadVehiclePhoto(
-          userId.value,
-          vehicle.value?.id!!,
-          image
-        )
-        Log.i("VehicleDetailsScreen", "VehicleDetailsScreen: $image")
+      val vehicleId = vehicle.value?.id
+      if (imageUri != null && vehicleId != null) {
+        viewModel.uploadVehiclePhoto(userId.value, vehicleId, imageUri)
       }
     }
   )

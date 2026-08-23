@@ -110,11 +110,11 @@ fun AddVehicleDialog(
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
           textStyle = Typography.h6,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           label = { Text(text = stringResource(R.string.text_average_distace_traveled_per_month)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_average_distance_traveled)) },
           value = state.averageDistanceTraveled,
-          onValueChange = state.onAverageDistanceChange
+          onValueChange = { state.onAverageDistanceChange(it.filter(Char::isDigit)) }
         )
 
         TextButton(

@@ -41,7 +41,9 @@ fun SimpleCardMaintenance(
       modifier = modifier.padding(8.dp),
       horizontalAlignment = Alignment.End
     ) {
-      Text(text = maintenance.description!!, style = Typography.h5)
+      // Registros gravados antes de uma mudanca de schema podem vir incompletos:
+      // exibe um placeholder em vez de derrubar a tela.
+      Text(text = maintenance.description ?: "-", style = Typography.h5)
       Divider()
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -54,8 +56,14 @@ fun SimpleCardMaintenance(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
-        Text(text = formatDate(maintenance.date!!), style = Typography.h5)
-        Text(text = formatDate(maintenance.forecastNextExchangeDate!!), style = Typography.h5)
+        Text(
+          text = maintenance.date?.let { formatDate(it) } ?: "-",
+          style = Typography.h5
+        )
+        Text(
+          text = maintenance.forecastNextExchangeDate?.let { formatDate(it) } ?: "-",
+          style = Typography.h5
+        )
       }
       Row(
         modifier = Modifier.fillMaxWidth(),

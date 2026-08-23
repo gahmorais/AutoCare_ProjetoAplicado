@@ -18,58 +18,75 @@ class UserRepositoryImpl(
   private val database: FirebaseDatabase,
   private val storage: FirebaseStorage
 ) : UserRepository {
-  override fun createUser(user: User, callback: () -> Unit) {
+  override fun createUser(user: User, callback: () -> Unit, onError: (Throwable) -> Unit) {
+    val userId = user.id
+    if (userId.isNullOrBlank()) {
+      onError(IllegalArgumentException("Usuário sem identificador"))
+      return
+    }
     database.reference
       .child(USER_CHILD)
-      .child(user.id ?: "")
+      .child(userId)
       .setValue(user)
       .addOnSuccessListener {
         callback()
       }
-      .addOnFailureListener { error ->
-        throw error
-      }
+      .addOnFailureListener(onError)
   }
 
-  override fun getUser(userId: String, callback: (User?) -> Unit) {
+  override fun getUser(userId: String, callback: (User?) -> Unit, onError: (Throwable) -> Unit) {
     database
       .reference
       .child(USER_CHILD)
       .child(userId)
       .addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
-          try {
-            val user = snapshot.getValue<User>()
-            getVehicles(user?.id!!) { vehicles ->
-              val updatedUser = user.copy(vehicles = vehicles)
-              callback(updatedUser)
+          val user = runCatching { snapshot.getValue<User>() }
+            .getOrElse { error ->
+              onError(error)
+              return
             }
-          } catch (e: Exception) {
-            e.printStackTrace()
+
+          if (user == null) {
+            callback(null)
+            return
           }
+
+          getVehicles(
+            userId = user.id ?: userId,
+            callback = { vehicles -> callback(user.copy(vehicles = vehicles)) },
+            onError = onError
+          )
         }
 
         override fun onCancelled(error: DatabaseError) {
-
+          onError(error.toException())
         }
       })
   }
 
-  override fun updateUser(user: User, callback: (String) -> Unit) {
+  override fun updateUser(user: User, callback: (String) -> Unit, onError: (Throwable) -> Unit) {
+    val userId = user.id
+    if (userId.isNullOrBlank()) {
+      onError(IllegalArgumentException("Usuário sem identificador"))
+      return
+    }
     database
       .reference
       .child(USER_CHILD)
-      .child(user.id ?: "")
+      .child(userId)
       .setValue(user)
       .addOnSuccessListener {
         callback("Usuário atualizado com sucesso")
       }
-      .addOnFailureListener { error ->
-        throw error
-      }
+      .addOnFailureListener(onError)
   }
 
-  override fun getVehicles(userId: String, callback: (List<Vehicle>) -> Unit) {
+  override fun getVehicles(
+    userId: String,
+    callback: (List<Vehicle>) -> Unit,
+    onError: (Throwable) -> Unit
+  ) {
     database
       .reference
       .child(VEHICLE_CHILD)
@@ -105,27 +122,40 @@ class UserRepositoryImpl(
         }
 
         override fun onCancelled(error: DatabaseError) {
-          throw error.toException()
+          onError(error.toException())
         }
       })
   }
 
-  override fun saveVehicle(userId: String, vehicle: Vehicle, callback: (String) -> Unit) {
+  override fun saveVehicle(
+    userId: String,
+    vehicle: Vehicle,
+    callback: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) {
+    val vehicleId = vehicle.id
+    if (vehicleId.isNullOrBlank()) {
+      onError(IllegalArgumentException("Veículo sem identificador"))
+      return
+    }
     database
       .reference
       .child(VEHICLE_CHILD)
       .child(userId)
-      .child(vehicle.id!!)
+      .child(vehicleId)
       .setValue(vehicle)
       .addOnSuccessListener {
         callback("Veiculo salvo com sucesso")
       }
-      .addOnFailureListener { error ->
-        throw error
-      }
+      .addOnFailureListener(onError)
   }
 
-  override fun deleteVehicle(userId: String, vehicleId: String, callback: (String) -> Unit) {
+  override fun deleteVehicle(
+    userId: String,
+    vehicleId: String,
+    callback: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) {
     database
       .reference
       .child(VEHICLE_CHILD)
@@ -135,9 +165,7 @@ class UserRepositoryImpl(
       .addOnSuccessListener {
         callback("Veículo deletado com sucesso")
       }
-      .addOnFailureListener { error ->
-        throw error
-      }
+      .addOnFailureListener(onError)
   }
 
   override suspend fun saveUserPhoto(

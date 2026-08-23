@@ -13,5 +13,5 @@ interface AuthRepository {
   fun register(email: String, password: String): Flow<Resource<AuthResult>>
   fun logout()
   fun getCurrentUserListener(callback: (firebaseAuth: FirebaseAuth) -> Unit)
-  fun changePassword(email: String, callback: (String) -> Unit)
+  fun changePassword(email: String, callback: (String) -> Unit, onError: (Throwable) -> Unit)
 }
