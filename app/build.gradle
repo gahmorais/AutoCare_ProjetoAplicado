@@ -5,6 +5,15 @@ plugins {
     id 'kotlin-parcelize'
 }
 
+// cloud_name e upload preset do Cloudinary. Nao sao segredos no sentido estrito
+// (o cloud_name aparece em toda URL de imagem e o preset e extraivel do APK),
+// mas ficam fora do git assim mesmo. Ver a secao "Imagens" no README.
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
 android {
     namespace 'br.com.gabrielmorais.autocare'
     compileSdk 34
@@ -20,6 +29,11 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        buildConfigField "String", "CLOUDINARY_CLOUD_NAME",
+                "\"${localProperties.getProperty('cloudinary.cloudName', '')}\""
+        buildConfigField "String", "CLOUDINARY_UPLOAD_PRESET",
+                "\"${localProperties.getProperty('cloudinary.uploadPreset', '')}\""
     }
 
     buildTypes {
@@ -38,6 +52,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.4.2'
@@ -91,6 +106,10 @@ dependencies {
     //WorkManager - reagendamento das notificacoes apos o reboot
     implementation "androidx.work:work-runtime-ktx:2.8.1"
 
+    //OkHttp - upload de imagens para o Cloudinary. Declarado explicitamente e nao
+    //herdado transitivamente do Coil.
+    implementation "com.squareup.okhttp3:okhttp:4.11.0"
+
     //MAterial Dialog Compose
     implementation "io.github.vanpra.compose-material-dialogs:core:$material_dialog_version"
     implementation "io.github.vanpra.compose-material-dialogs:datetime:$material_dialog_version"
@@ -106,6 +125,10 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
     testImplementation 'androidx.arch.core:core-testing:2.2.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.11.0'
+    // Implementacao real de org.json no classpath de teste: a do android.jar e
+    // um stub que devolve valores default e faria o parser passar sem testar nada.
+    testImplementation 'org.json:json:20231013'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"

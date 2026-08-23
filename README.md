@@ -41,5 +41,45 @@ O armazenamento de imagens **não** usa Firebase Storage — ver *Imagens* abaix
    }
    ```
 
+### Imagens (Cloudinary)
+
+As fotos de perfil e de veículo são hospedadas no [Cloudinary](https://cloudinary.com/) —
+o Firebase encerrou o tier gratuito de Storage. O upload é **não assinado**, via
+*upload preset*, porque assinar exigiria o `api_secret` no cliente (inaceitável) ou um
+backend (o projeto não tem).
+
+Declare as credenciais em `local.properties` — arquivo não versionado:
+
+```properties
+cloudinary.cloudName=seu-cloud-name
+cloudinary.uploadPreset=seu-preset
+```
+
+Sem elas o app compila, mas o upload falha com mensagem explícita apontando para cá.
+
+O preset precisa ser criado como **Unsigned** no console, com estas restrições:
+
+| Configuração | Valor | Por quê |
+|---|---|---|
+| Folder | `autocare` | Escopo fixo |
+| Use filename / Unique filename | `false` / auto | **Ver aviso abaixo** |
+| Allowed formats | `jpg, png, webp` | Impede upload arbitrário |
+| Max file size | `5 MB` | — |
+| Incoming transformation | `c_limit,w_1600,h_1600` | Reduz custo de storage |
+
+> ⚠️ **O `public_id` deve ser gerado pelo Cloudinary.** Se o preset permitir que o cliente
+> defina o `public_id`, um atacante pode sobrescrever a imagem de outro usuário passando o
+> id dela. Por isso o app não envia esse campo e guarda a `secure_url` retornada.
+
+**Limitações conhecidas deste modelo:**
+
+- O `cloud_name` e o preset são extraíveis do APK — quem fizer isso pode subir imagens
+  nesta conta. As restrições do preset limitam o estrago, mas não eliminam o vetor.
+- **Não há como deletar** pelo app: a Admin API é assinada. Trocar a foto de perfil ou
+  excluir um veículo deixa o asset órfão.
+
+Ambos deixam de valer se algum dia houver um backend para assinar as requisições — nesse
+caso só a implementação de `ImageUploader` muda.
+
 O build requer **JDK 17** (AGP 8.0.2).
 
