@@ -138,11 +138,7 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
-      val imageUri = result.uriContent
-      val userId = user?.value?.id
-      if (imageUri != null && userId != null) {
-        viewModel?.updateUserPhoto(userId, imageUri)
-      }
+      result.uriContent?.let { imageUri -> viewModel?.updateUserPhoto(imageUri) }
     }
   )
 

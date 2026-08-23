@@ -8,7 +8,6 @@ import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -30,15 +29,14 @@ class VehicleDetailsViewModel(
 
   val vehicle = _vehicle.asStateFlow()
 
-  fun uploadVehiclePhoto(userId: String, vehicleId: String, image: Uri) {
-    viewModelScope.launch(Dispatchers.IO) {
+  fun uploadVehiclePhoto(image: Uri) {
+    viewModelScope.launch {
       // saveVehicleImage propaga a excecao do upload; sem o catch ela escapa
       // do viewModelScope e derruba o app.
       runCatching {
-        vehicleRepository.saveVehicleImage(userId, vehicleId, image) { imageUrl ->
-          val current = _vehicle.value ?: return@saveVehicleImage
-          updateVehicle(userId = userId, vehicle = current.copy(photo = imageUrl))
-        }
+        val imageUrl = vehicleRepository.saveVehicleImage(image)
+        val current = _vehicle.value ?: return@runCatching
+        updateVehicle(userId = _userId.value, vehicle = current.copy(photo = imageUrl))
       }.onFailure(::publishError)
     }
   }

@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare.data.repository.user
 
 import android.net.Uri
+import br.com.gabrielmorais.autocare.data.images.ImageUploader
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.utils.Constants
@@ -11,7 +12,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.getValue
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -20,7 +20,7 @@ import kotlinx.coroutines.tasks.await
 
 class UserRepositoryImpl(
   private val database: FirebaseDatabase,
-  private val storage: FirebaseStorage
+  private val imageUploader: ImageUploader
 ) : UserRepository {
   override fun createUser(user: User, callback: () -> Unit, onError: (Throwable) -> Unit) {
     val userId = user.id
@@ -140,26 +140,5 @@ class UserRepositoryImpl(
       .addOnFailureListener(onError)
   }
 
-  override suspend fun saveUserPhoto(
-    userId: String,
-    image: Uri,
-    callback: (String) -> Unit
-  ) {
-    val uploadTask = storage.reference
-      .child(userId)
-      .child(Constants.PROFILE_PHOTO_PATH)
-      .child(userId)
-      .putFile(image)
-      .await()
-
-    if (uploadTask.task.isSuccessful) {
-      val imageUrl = uploadTask.storage.downloadUrl.await()
-      callback(imageUrl.toString())
-    } else {
-      uploadTask.task.exception?.let { error ->
-        throw error
-      }
-    }
-
-  }
+  override suspend fun saveUserPhoto(image: Uri): String = imageUploader.upload(image)
 }

@@ -100,16 +100,11 @@ class VehicleDetailsActivity : ComponentActivity() {
 fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
 
   val vehicle = viewModel.vehicle.collectAsState()
-  val userId = viewModel.userId.collectAsState()
   val context = LocalContext.current
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
-      val imageUri = result.uriContent
-      val vehicleId = vehicle.value?.id
-      if (imageUri != null && vehicleId != null) {
-        viewModel.uploadVehiclePhoto(userId.value, vehicleId, imageUri)
-      }
+      result.uriContent?.let { imageUri -> viewModel.uploadVehiclePhoto(imageUri) }
     }
   )
 

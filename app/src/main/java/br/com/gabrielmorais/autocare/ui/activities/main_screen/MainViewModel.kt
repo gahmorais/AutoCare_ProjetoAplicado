@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,19 +47,18 @@ class MainViewModel(
     }
   }
 
-  fun updateUserPhoto(userId: String, image: Uri) {
-    viewModelScope.launch(Dispatchers.IO) {
+  fun updateUserPhoto(image: Uri) {
+    viewModelScope.launch {
       // saveUserPhoto suspende e propaga a excecao do upload; sem o catch a
       // excecao escapa do viewModelScope e derruba o app.
       runCatching {
-        userRepository.saveUserPhoto(userId, image) { imageUrl ->
-          _user.value?.let { current ->
-            userRepository.updateUser(
-              user = current.copy(photo = imageUrl),
-              callback = { _message.value = it },
-              onError = ::publishError
-            )
-          }
+        val imageUrl = userRepository.saveUserPhoto(image)
+        _user.value?.let { current ->
+          userRepository.updateUser(
+            user = current.copy(photo = imageUrl),
+            callback = { _message.value = it },
+            onError = ::publishError
+          )
         }
       }.onFailure(::publishError)
     }

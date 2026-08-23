@@ -93,7 +93,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-database-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
 
     //Image Crop
     implementation("com.vanniktech:android-image-cropper:4.5.0")
@@ -126,6 +125,9 @@ dependencies {
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
     testImplementation 'androidx.arch.core:core-testing:2.2.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.11.0'
+    // Uri e abstrata e Uri.parse e stub no android.jar de teste: sem um mock nao
+    // ha como atravessar as assinaturas que recebem Uri.
+    testImplementation 'org.mockito:mockito-core:4.11.0'
     // Implementacao real de org.json no classpath de teste: a do android.jar e
     // um stub que devolve valores default e faria o parser passar sem testar nada.
     testImplementation 'org.json:json:20231013'

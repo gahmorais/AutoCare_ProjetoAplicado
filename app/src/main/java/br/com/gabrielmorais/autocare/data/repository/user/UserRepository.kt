@@ -37,5 +37,9 @@ interface UserRepository {
     onError: (Throwable) -> Unit
   )
 
-  suspend fun saveUserPhoto(userId: String, image: Uri, callback: (String) -> Unit)
+  /**
+   * Hospeda a foto de perfil e devolve a URL publica. Nao recebe mais userId: o
+   * host gera o identificador do asset e o caminho por usuario deixou de existir.
+   */
+  suspend fun saveUserPhoto(image: Uri): String
 }

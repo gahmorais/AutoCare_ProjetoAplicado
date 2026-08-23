@@ -63,8 +63,8 @@ class FakeUserRepository : UserRepository {
     callback("Veículo deletado com sucesso")
   }
 
-  override suspend fun saveUserPhoto(userId: String, image: Uri, callback: (String) -> Unit) {
+  override suspend fun saveUserPhoto(image: Uri): String {
     failureToReturn?.let { throw it }
-    callback("https://exemplo.com/foto.jpg")
+    return "https://res.cloudinary.com/teste/image/upload/v1/foto.jpg"
   }
 }
