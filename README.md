@@ -31,6 +31,14 @@ O armazenamento de imagens **não** usa Firebase Storage — ver *Imagens* abaix
    > Como o cadastro é self-service, qualquer pessoa cria uma conta e lê o banco inteiro via
    > REST. A permissão precisa ficar no nível `$uid`, como no arquivo versionado.
 
+   **Compatibilidade com versões já instaladas:** o escopo por `$uid` não quebra clientes
+   antigos — todo acesso do app sempre foi em ou abaixo do próprio uid. As regras
+   propositalmente **não** incluem `.validate`: elas seriam restrições novas sobre a escrita,
+   e versões anteriores à correção de tratamento de erro lançam exceção de dentro dos
+   callbacks do Firebase, transformando uma rejeição em crash em vez de mensagem.
+   Se quiser adicionar `.validate` depois, confirme antes que todo registro em
+   `Usuarios/{uid}` tem `id` presente e igual ao uid, e valide no *Rules Playground*.
+
 5. Popule o nó `lista-servicos` do Realtime Database com os tipos de serviço:
 
    ```json
@@ -117,7 +125,7 @@ O script roda em **modo simulação por padrão** — só apaga com `--apply`.
 ## Testes
 
 ```sh
-./gradlew testDebugUnitTest      # 36 testes JVM
+./gradlew testDebugUnitTest      # 44 testes JVM
 ```
 
 `ImageCompressor` só tem cobertura instrumentada: `BitmapFactory` e `Bitmap` são stubs no

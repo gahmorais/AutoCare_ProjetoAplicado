@@ -6,19 +6,14 @@
     "Usuarios": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid",
-        ".validate": "newData.hasChildren(['id']) && newData.child('id').val() === $uid"
+        ".write": "auth != null && auth.uid === $uid"
       }
     },
 
     "vehicles": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid",
-
-        "$vehicleId": {
-          ".validate": "newData.hasChildren(['id'])"
-        }
+        ".write": "auth != null && auth.uid === $uid"
       }
     },
 
