@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.Icon
@@ -34,6 +36,7 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -47,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,7 +63,6 @@ import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
-import br.com.gabrielmorais.autocare.sampleData.userSample
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
@@ -69,7 +72,6 @@ import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.transform.CircleCropTransformation
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -242,9 +244,15 @@ fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
     actions = { TopAppBarActions(viewModel) })
 }
 
+private val AVATAR_SIZE = 120.dp
+
 @Composable
 fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   val context = LocalContext.current
+
+  // Painter unico para os tres estados: sem foto, carregando e falha. Sem ele o
+  // AsyncImage sem tamanho colapsava para 0x0 e o drawer ficava visualmente vazio.
+  val avatarFallback = rememberVectorPainter(Icons.Outlined.Person)
 
   Column(
     modifier = Modifier.fillMaxWidth(),
@@ -253,21 +261,33 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
   ) {
     AsyncImage(
       modifier = Modifier
-        .padding(vertical = 5.dp)
+        .padding(vertical = 16.dp)
+        // O tamanho explicito e o que garante que a area exista mesmo quando a
+        // imagem nao carrega.
+        .size(AVATAR_SIZE)
+        .clip(CircleShape)
         .clickable(onClick = updateUserPhoto),
-      contentScale = ContentScale.Fit,
+      contentScale = ContentScale.Crop,
       alignment = Alignment.Center,
       model = ImageRequest
         .Builder(LocalContext.current)
-        .data(user?.photo ?: userSample.photo)
+        .data(user?.photo)
         .crossfade(true)
-        .transformations(CircleCropTransformation())
+        // Recorte pelo clip e nao por transformacao: transformacao so se aplica
+        // ao bitmap carregado, entao o fallback ficaria quadrado.
         .build(),
+      placeholder = avatarFallback,
+      error = avatarFallback,
+      fallback = avatarFallback,
       contentDescription = stringResource(R.string.profile_image_description)
     )
     Text(
-      text = user?.name ?: stringResource(R.string.text_unknow),
-      style = TextStyle(fontSize = 25.sp)
+      // O cadastro grava apenas id e e-mail, entao name e nulo para todo mundo
+      // que nunca editou o perfil: mostrar o e-mail informa mais que "Desconhecido".
+      text = user?.name?.takeIf { it.isNotBlank() }
+        ?: user?.email
+        ?: stringResource(R.string.text_unknow),
+      style = TextStyle(fontSize = 20.sp)
     )
   }
 
