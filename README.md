@@ -86,6 +86,34 @@ O preset precisa ser criado como **Unsigned** no console, com estas restrições
 Ambos deixam de valer se algum dia houver um backend para assinar as requisições — nesse
 caso só a implementação de `ImageUploader` muda.
 
+### Limpando as fotos antigas do Firebase Storage
+
+URLs de foto gravadas antes da migração apontam para `firebasestorage.googleapis.com` e
+nunca mais vão resolver. Elas não quebram o app — cai no placeholder —, mas cada render
+dispara uma requisição condenada a falhar. [`scripts/clear-legacy-photos.js`](./scripts/clear-legacy-photos.js)
+anula esses campos em `Usuarios/{uid}/photo` e `vehicles/{uid}/{id}/photo`.
+
+Precisa de uma chave de service account: *Firebase Console → Configurações do projeto →
+Contas de serviço → Gerar nova chave privada*.
+
+```sh
+cd scripts
+npm install
+export GOOGLE_APPLICATION_CREDENTIALS=/caminho/da/service-account.json
+export FIREBASE_DATABASE_URL=https://<project-id>-default-rtdb.firebaseio.com
+
+npm run clear-legacy-photos          # simulação: lista o que seria apagado
+npm run clear-legacy-photos:apply    # grava
+```
+
+O script roda em **modo simulação por padrão** — só apaga com `--apply`.
+
+> ⚠️ A chave de service account dá acesso administrativo total ao projeto e ignora as
+> regras de segurança. O `.gitignore` cobre `service-account*.json`, mas confira antes de
+> commitar.
+
+É uma tarefa de uma vez só: fotos novas já nascem no Cloudinary.
+
 ## Testes
 
 ```sh

@@ -1,0 +1,13 @@
+{
+  "name": "autocare-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scripts de manutenção pontual do banco do AutoCare",
+  "scripts": {
+    "clear-legacy-photos": "node clear-legacy-photos.js",
+    "clear-legacy-photos:apply": "node clear-legacy-photos.js --apply"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

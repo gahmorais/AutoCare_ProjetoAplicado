@@ -56,7 +56,9 @@ fun CardVehicle(
           .transformations(CircleCropTransformation())
           .crossfade(true)
           .build(),
-        error = painterResource(id = R.drawable.error),
+        // URLs antigas do Firebase Storage estao mortas: cair no icone de carro
+        // comunica melhor que um icone de imagem quebrada.
+        error = painterResource(id = R.drawable.icon_car),
         contentDescription = null,
         contentScale = ContentScale.Fit
       )
