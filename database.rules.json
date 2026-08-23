@@ -1,0 +1,31 @@
+{
+  "rules": {
+    "Usuarios": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['id', 'email']) && newData.child('id').val() === $uid"
+      }
+    },
+
+    "vehicles": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "$vehicleId": {
+          ".validate": "newData.hasChildren(['id'])"
+        }
+      }
+    },
+
+    "lista-servicos": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

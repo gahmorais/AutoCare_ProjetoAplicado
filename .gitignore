@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Configuracao do Firebase gerada pelo console - nao deve ser versionada
+google-services.json
