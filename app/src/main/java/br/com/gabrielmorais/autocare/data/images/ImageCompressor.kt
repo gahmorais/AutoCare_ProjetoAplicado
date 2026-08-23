@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 
 /**
  * Reduz a imagem antes do envio.
@@ -24,9 +25,12 @@ class ImageCompressor(
 
   /** @return bytes JPEG prontos para envio. */
   fun compress(contentResolver: ContentResolver, image: Uri): ByteArray {
+    // Atencao: com inJustDecodeBounds, decodeStream devolve null por contrato e
+    // so preenche outWidth/outHeight. Encadear um ?: no retorno dele - como esta
+    // versao fazia - falha para toda imagem, sempre. A checagem de nulo pertence
+    // ao openInputStream, nao ao decode.
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    contentResolver.openInputStream(image)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-      ?: throw IOException("Não foi possível ler a imagem selecionada")
+    openStream(contentResolver, image).use { BitmapFactory.decodeStream(it, null, bounds) }
 
     if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
       throw IOException("O arquivo selecionado não é uma imagem válida")
@@ -37,8 +41,8 @@ class ImageCompressor(
     val options = BitmapFactory.Options().apply {
       inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight)
     }
-    val decoded = contentResolver.openInputStream(image)
-      ?.use { BitmapFactory.decodeStream(it, null, options) }
+    val decoded = openStream(contentResolver, image)
+      .use { BitmapFactory.decodeStream(it, null, options) }
       ?: throw IOException("Não foi possível decodificar a imagem selecionada")
 
     val scaled = scaleWithinBounds(decoded)
@@ -55,6 +59,10 @@ class ImageCompressor(
       decoded.recycle()
     }
   }
+
+  private fun openStream(contentResolver: ContentResolver, image: Uri): InputStream =
+    contentResolver.openInputStream(image)
+      ?: throw IOException("Não foi possível ler a imagem selecionada")
 
   private fun calculateInSampleSize(width: Int, height: Int): Int {
     var sampleSize = 1

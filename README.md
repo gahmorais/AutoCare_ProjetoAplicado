@@ -86,5 +86,28 @@ O preset precisa ser criado como **Unsigned** no console, com estas restrições
 Ambos deixam de valer se algum dia houver um backend para assinar as requisições — nesse
 caso só a implementação de `ImageUploader` muda.
 
+## Testes
+
+```sh
+./gradlew testDebugUnitTest      # 36 testes JVM
+```
+
+`ImageCompressor` só tem cobertura instrumentada: `BitmapFactory` e `Bitmap` são stubs no
+android.jar de teste e qualquer asserção passaria sem exercitar nada.
+
+```sh
+./gradlew connectedDebugAndroidTest
+```
+
+> Se o aparelho estiver pareado **sem fio** (serial no formato `adb-XXXX._adb-tls-connect._tcp`),
+> o AGP 8.0.2 coleta 0 testes e falha a task sem executar nada. Conecte por USB, ou rode a
+> instrumentação direto:
+>
+> ```sh
+> ./gradlew installDebug installDebugAndroidTest
+> adb shell am instrument -w \
+>   br.com.gabrielmorais.autocare.test/androidx.test.runner.AndroidJUnitRunner
+> ```
+
 O build requer **JDK 17** (AGP 8.0.2).
 
