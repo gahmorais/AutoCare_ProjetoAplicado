@@ -60,15 +60,17 @@ import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_USER_ID
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MyAccountActivity : ComponentActivity() {
-  private val viewModel: MyAccountViewModel by inject()
+  // by inject() criava uma instancia solta, fora do ViewModelStore, entao o
+  // estado se perdia ao girar a tela.
+  private val viewModel: MyAccountViewModel by viewModel()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val userId = intent.getStringExtra(INTENT_USER_ID)
-    userId?.let { viewModel.getUser(it) }
+    userId?.let { viewModel.observeUser(it) }
     setContent {
       MyAccountScreen(viewModel)
     }

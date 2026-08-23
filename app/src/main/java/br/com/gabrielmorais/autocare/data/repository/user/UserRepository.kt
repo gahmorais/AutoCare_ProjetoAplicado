@@ -3,6 +3,7 @@ package br.com.gabrielmorais.autocare.data.repository.user
 import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Toda operacao recebe um [onError] porque os callbacks do Firebase sao assincronos:
@@ -11,9 +12,17 @@ import br.com.gabrielmorais.autocare.data.models.Vehicle
  */
 interface UserRepository {
   fun createUser(user: User, callback: () -> Unit, onError: (Throwable) -> Unit)
-  fun getUser(userId: String, callback: (User?) -> Unit, onError: (Throwable) -> Unit)
   fun updateUser(user: User, callback: (String) -> Unit, onError: (Throwable) -> Unit)
-  fun getVehicles(userId: String, callback: (List<Vehicle>) -> Unit, onError: (Throwable) -> Unit)
+
+  /**
+   * Usuario com seus veiculos. Como Flow, o ValueEventListener e removido em
+   * awaitClose quando o coletor sai de cena; a versao com callback registrava um
+   * listener a cada chamada e nunca o removia.
+   */
+  fun observeUser(userId: String): Flow<User?>
+
+  fun observeVehicles(userId: String): Flow<List<Vehicle>>
+
   fun saveVehicle(
     userId: String,
     vehicle: Vehicle,

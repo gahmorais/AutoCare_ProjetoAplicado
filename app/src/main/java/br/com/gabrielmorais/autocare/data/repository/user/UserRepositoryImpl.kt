@@ -12,6 +12,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryImpl(
@@ -34,35 +38,29 @@ class UserRepositoryImpl(
       .addOnFailureListener(onError)
   }
 
-  override fun getUser(userId: String, callback: (User?) -> Unit, onError: (Throwable) -> Unit) {
-    database
-      .reference
-      .child(USER_CHILD)
-      .child(userId)
-      .addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-          val user = runCatching { snapshot.getValue<User>() }
-            .getOrElse { error ->
-              onError(error)
-              return
-            }
+  /**
+   * A versao anterior aninhava getVehicles dentro do onDataChange do usuario:
+   * cada emissao do listener de usuario registrava mais um listener de veiculos,
+   * nenhum deles removido. Combinar dois Flows independentes evita isso.
+   */
+  override fun observeUser(userId: String): Flow<User?> =
+    combine(observeUserNode(userId), observeVehicles(userId)) { user, vehicles ->
+      user?.copy(vehicles = vehicles)
+    }
 
-          if (user == null) {
-            callback(null)
-            return
-          }
+  private fun observeUserNode(userId: String): Flow<User?> = callbackFlow {
+    val reference = database.reference.child(USER_CHILD).child(userId)
+    val listener = object : ValueEventListener {
+      override fun onDataChange(snapshot: DataSnapshot) {
+        trySend(runCatching { snapshot.getValue<User>() }.getOrNull())
+      }
 
-          getVehicles(
-            userId = user.id ?: userId,
-            callback = { vehicles -> callback(user.copy(vehicles = vehicles)) },
-            onError = onError
-          )
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-          onError(error.toException())
-        }
-      })
+      override fun onCancelled(error: DatabaseError) {
+        close(error.toException())
+      }
+    }
+    reference.addValueEventListener(listener)
+    awaitClose { reference.removeEventListener(listener) }
   }
 
   override fun updateUser(user: User, callback: (String) -> Unit, onError: (Throwable) -> Unit) {
@@ -82,49 +80,23 @@ class UserRepositoryImpl(
       .addOnFailureListener(onError)
   }
 
-  override fun getVehicles(
-    userId: String,
-    callback: (List<Vehicle>) -> Unit,
-    onError: (Throwable) -> Unit
-  ) {
-    database
-      .reference
-      .child(VEHICLE_CHILD)
-      .child(userId)
-      .addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-          val vehicleChildren = snapshot.children
-          val iterator = vehicleChildren.iterator()
-          val vehicleList = mutableListOf<Vehicle>()
-          while (iterator.hasNext()) {
-            val i = iterator.next()
-            val brand = i.child("brand").getValue<String>()
-            val model = i.child("model").getValue<String>()
-            val plate = i.child("plate").getValue<String>()
-            val photo = i.child("photo").getValue<String?>()
-            val id = i.child("id").getValue<String>()
-            val nickName = i.child("nickName").getValue<String>()
-            val averageDistanceTraveledPerMonth = i.child("averageDistanceTraveledPerMonth").getValue<Int>()
+  override fun observeVehicles(userId: String): Flow<List<Vehicle>> = callbackFlow {
+    val reference = database.reference.child(VEHICLE_CHILD).child(userId)
+    val listener = object : ValueEventListener {
+      override fun onDataChange(snapshot: DataSnapshot) {
+        // A montagem campo a campo anterior ignorava 'maintenances': qualquer
+        // codigo que regravasse esse objeto apagaria o historico.
+        trySend(snapshot.children.mapNotNull { child ->
+          runCatching { child.getValue<Vehicle>() }.getOrNull()
+        })
+      }
 
-            val vehicle = Vehicle(
-              id = id,
-              brand = brand,
-              model = model,
-              plate = plate,
-              photo = photo,
-              nickName = nickName,
-              averageDistanceTraveledPerMonth = averageDistanceTraveledPerMonth
-            )
-
-            vehicleList.add(vehicle)
-          }
-          callback(vehicleList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-          onError(error.toException())
-        }
-      })
+      override fun onCancelled(error: DatabaseError) {
+        close(error.toException())
+      }
+    }
+    reference.addValueEventListener(listener)
+    awaitClose { reference.removeEventListener(listener) }
   }
 
   override fun saveVehicle(

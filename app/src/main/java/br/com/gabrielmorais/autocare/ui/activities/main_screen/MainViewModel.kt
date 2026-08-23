@@ -7,8 +7,10 @@ import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class MainViewModel(
@@ -21,14 +23,22 @@ class MainViewModel(
   private val _message = MutableStateFlow("")
   val message: Flow<String> = _message
 
+  private var observeUserJob: Job? = null
+
   fun logout() = authRepository.logout()
 
-  fun getUser(userId: String) {
-    userRepository.getUser(
-      userId = userId,
-      callback = { _user.value = it },
-      onError = ::publishError
-    )
+  /**
+   * Idempotente: era chamado a cada onResume e cada chamada deixava um
+   * ValueEventListener ativo para sempre. O Job anterior e cancelado e o
+   * awaitClose do callbackFlow remove o listener.
+   */
+  fun observeUser(userId: String) {
+    observeUserJob?.cancel()
+    observeUserJob = viewModelScope.launch {
+      userRepository.observeUser(userId)
+        .catch { publishError(it) }
+        .collect { _user.value = it }
+    }
   }
 
   fun updateUserPhoto(userId: String, image: Uri) {

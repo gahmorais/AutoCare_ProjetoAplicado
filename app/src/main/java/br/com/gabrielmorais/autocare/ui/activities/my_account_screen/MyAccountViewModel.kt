@@ -1,12 +1,16 @@
 package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
 import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 
 class MyAccountViewModel(
   private val userRepository: UserRepository,
@@ -28,12 +32,15 @@ class MyAccountViewModel(
     )
   }
 
-  fun getUser(userId: String) {
-    userRepository.getUser(
-      userId = userId,
-      callback = { _user.value = it },
-      onError = ::publishError
-    )
+  private var observeUserJob: Job? = null
+
+  fun observeUser(userId: String) {
+    observeUserJob?.cancel()
+    observeUserJob = viewModelScope.launch {
+      userRepository.observeUser(userId)
+        .catch { publishError(it) }
+        .collect { _user.value = it }
+    }
   }
 
   fun changePassword(email: String) {

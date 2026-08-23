@@ -61,6 +61,7 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
 import br.com.gabrielmorais.autocare.sampleData.userSample
+import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountActivity
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
@@ -119,15 +120,11 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-  }
 
-  override fun onResume() {
-    super.onResume()
-    val userId = intent.getStringExtra(INTENT_USER_ID)
-    Log.i("MainActivity", "onCreate: $userId")
-    userId?.let { id ->
-      viewModel.getUser(userId = id)
-    }
+    // Uma vez so: o Flow do repositorio mantem a tela atualizada sozinho.
+    // Antes isso rodava em onResume e cada retorno a tela deixava para tras
+    // mais um ValueEventListener ativo.
+    intent.getStringExtra(INTENT_USER_ID)?.let { viewModel.observeUser(it) }
   }
 }
 
@@ -309,6 +306,12 @@ fun TopAppBarActions(viewModel: MainViewModel?) {
     onDismissRequest = { showDropDownMenu = false }) {
     TextButton(onClick = {
       viewModel?.logout()
+      // LoginActivity ja tinha se finalizado ao abrir a Main, entao o finish()
+      // sozinho esvaziava a pilha e fechava o app em vez de voltar ao login.
+      val intent = Intent(context, LoginActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+      }
+      context.startActivity(intent)
       context.finish()
     }) {
       Text(text = stringResource(R.string.text_exit))
