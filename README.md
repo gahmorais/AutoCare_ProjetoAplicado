@@ -131,7 +131,7 @@ O script roda em **modo simulação por padrão** — só apaga com `--apply`.
 ## Testes
 
 ```sh
-./gradlew testDebugUnitTest      # 44 testes JVM
+./gradlew testDebugUnitTest      # 90 testes JVM
 ```
 
 `ImageCompressor` só tem cobertura instrumentada: `BitmapFactory` e `Bitmap` são stubs no
@@ -153,4 +153,34 @@ android.jar de teste e qualquer asserção passaria sem exercitar nada.
 > ```
 
 O build requer **JDK 17** (AGP 8.0.2).
+
+## Débito técnico
+
+### Transições entre destinos do NavHost
+
+O redesenho previa transições M3 ao navegar (deslize ao abrir o detalhe do veículo, retorno na
+direção inversa). Ficou de fora: `NavHost` só aceita `enterTransition` / `exitTransition` /
+`popEnterTransition` / `popExitTransition` a partir do **navigation-compose 2.7**, e o projeto está
+no 2.6 porque a cadeia inteira está presa a uma combinação:
+
+```
+kotlinCompilerExtensionVersion 1.4.2  ->  Kotlin 1.8.10  ->  compose-bom 2023.06.01
+                                                          ->  compose-ui 1.4.3 / material3 1.1.1
+```
+
+O 2.7 exige Compose 1.5, que exige o compilador 1.5.x, que exige Kotlin 1.9. Ou seja: **não é uma
+troca de versão da navegação, é subir Kotlin, o compilador do Compose e a BOM de uma vez.** Por isso
+foi deixado para uma mudança própria, em vez de embutido no commit de polimento.
+
+Enquanto isso o 2.6 aplica *fade-through* entre destinos, que é o padrão do M3 para troca de
+superfície — o que falta é só o deslize direcional.
+
+**Ao fazer o upgrade:** as durações e easings já existem em
+[`ui/theme/Motion.kt`](app/src/main/java/br/com/gabrielmorais/autocare/ui/theme/Motion.kt)
+(`Motion.SHORT`, `Motion.MEDIUM`, `EmphasizedDecelerate`, `EmphasizedAccelerate`), e o
+`LocalReducedMotion` do mesmo arquivo precisa ser respeitado nas quatro transições — o Compose não
+honra `ANIMATOR_DURATION_SCALE` sozinho, então sem essa checagem o app anima para quem desligou
+animações nas opções de acessibilidade. O ponto de aplicação é o `NavHost` em
+[`ui/navigation/AutoCareApp.kt`](app/src/main/java/br/com/gabrielmorais/autocare/ui/navigation/AutoCareApp.kt),
+onde há um comentário marcando o lugar.
 
