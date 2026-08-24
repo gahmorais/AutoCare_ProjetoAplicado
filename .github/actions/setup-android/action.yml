@@ -1,0 +1,103 @@
+name: Setup Android
+description: >-
+  JDK 17, cache do Gradle e os arquivos nao versionados que o build exige
+  (google-services.json e local.properties).
+
+inputs:
+  google-services-json-base64:
+    description: >-
+      Conteudo de google-services.json em base64. Vazio (PR de fork, por exemplo)
+      cai num placeholder que satisfaz o plugin google-services mas nao fala com
+      nenhum projeto Firebase real.
+    required: false
+    default: ''
+  cloudinary-cloud-name:
+    description: cloud_name do Cloudinary, gravado em local.properties.
+    required: false
+    default: ''
+  cloudinary-upload-preset:
+    description: Upload preset unsigned do Cloudinary, gravado em local.properties.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Configura o JDK 17
+      # AGP 8.0.2 nao roda em JDK menor que 17.
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Configura o Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        # So o push na branch principal grava o cache; os PRs leem o que ele
+        # deixou, em vez de cada um escrever o seu.
+        cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+    - name: Grava o google-services.json
+      shell: bash
+      env:
+        GOOGLE_SERVICES_JSON_BASE64: ${{ inputs.google-services-json-base64 }}
+      run: |
+        set -euo pipefail
+        if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
+          echo "google-services.json: a partir do secret."
+        else
+          # O plugin google-services falha o build se o arquivo nao existir, entao
+          # sem o secret o placeholder e o que mantem compilacao e testes JVM de pe.
+          # Nada aqui autentica: o app gerado com esse arquivo nao conecta no Firebase.
+          cat > app/google-services.json <<'JSON'
+        {
+          "project_info": {
+            "project_number": "000000000000",
+            "project_id": "autocare-ci-placeholder",
+            "storage_bucket": "autocare-ci-placeholder.appspot.com",
+            "firebase_url": "https://autocare-ci-placeholder-default-rtdb.firebaseio.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                "android_client_info": {
+                  "package_name": "br.com.gabrielmorais.autocare"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "AIzaSyCIplaceholderCIplaceholderCIplaceh"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        JSON
+          echo "::warning::google-services.json ausente - usando placeholder. O artefato gerado nao conecta no Firebase."
+        fi
+
+    - name: Grava o local.properties
+      shell: bash
+      env:
+        CLOUDINARY_CLOUD_NAME: ${{ inputs.cloudinary-cloud-name }}
+        CLOUDINARY_UPLOAD_PRESET: ${{ inputs.cloudinary-upload-preset }}
+      run: |
+        set -euo pipefail
+        # sdk.dir fica de fora de proposito: o runner ja expoe ANDROID_HOME e o
+        # caminho local do desenvolvedor nao vale aqui.
+        {
+          echo "cloudinary.cloudName=$CLOUDINARY_CLOUD_NAME"
+          echo "cloudinary.uploadPreset=$CLOUDINARY_UPLOAD_PRESET"
+        } > local.properties
+        if [ -z "$CLOUDINARY_CLOUD_NAME" ]; then
+          echo "::warning::Credenciais do Cloudinary ausentes - o upload de imagens fica desativado no artefato."
+        fi

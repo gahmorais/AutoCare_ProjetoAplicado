@@ -1,0 +1,134 @@
+name: Release
+
+# Disparo por tag `v<versao>` (ex.: v1.2.0). A tag e a fonte da versao: o
+# versionName sai dela e o versionCode do numero da execucao.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versao a publicar, sem o v (ex.: 1.2.0)'
+        required: true
+
+permissions:
+  contents: write # necessario para criar a GitHub Release
+
+jobs:
+  release:
+    name: APK e AAB assinados
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confere os secrets obrigatorios
+        # Falhar aqui, em 5 segundos, e melhor do que falhar depois de um build
+        # de release inteiro - ou pior, publicar um artefato nao assinado.
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          faltando=()
+          [ -n "$RELEASE_KEYSTORE_BASE64" ] || faltando+=(RELEASE_KEYSTORE_BASE64)
+          [ -n "$GOOGLE_SERVICES_JSON_BASE64" ] || faltando+=(GOOGLE_SERVICES_JSON_BASE64)
+          if [ ${#faltando[@]} -gt 0 ]; then
+            echo "::error::Secrets ausentes: ${faltando[*]}. Ver a secao CI/CD no README."
+            exit 1
+          fi
+
+      - name: Determina a versao
+        id: versao
+        env:
+          # Via env, e nao interpolado direto no script: `inputs.version` e texto
+          # livre de quem dispara e ${{ }} no corpo do run seria injecao de shell.
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "$VERSION_INPUT" ]; then
+            versao="$VERSION_INPUT"
+          else
+            versao="${GITHUB_REF_NAME#v}"
+          fi
+          # A versao vira nome de arquivo e de tag; so o que se espera de um semver.
+          if ! printf '%s' "$versao" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Versao invalida: '$versao'. Use o formato 1.2.3."
+            exit 1
+          fi
+          echo "name=$versao" >> "$GITHUB_OUTPUT"
+          echo "Publicando $versao"
+
+      - uses: ./.github/actions/setup-android
+        with:
+          google-services-json-base64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          cloudinary-cloud-name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          cloudinary-upload-preset: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+
+      - name: Restaura o keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          # Fora do workspace: assim nao entra em nenhum artefato publicado nem no
+          # diff, mesmo se algum passo seguinte varrer o diretorio do projeto.
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          chmod 600 "$RUNNER_TEMP/release.jks"
+
+      - name: Testes e lint
+        # A tag pode apontar para um commit que nunca passou no CI (tag em commit
+        # antigo, push simultaneo). Nao se publica sem a suite verde.
+        run: ./gradlew testDebugUnitTest lintRelease --stacktrace
+
+      - name: Build assinado
+        env:
+          RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          VERSION_NAME: ${{ steps.versao.outputs.name }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
+
+      - name: Confere que os artefatos estao assinados
+        run: |
+          set -euo pipefail
+          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+
+      - name: Renomeia os artefatos
+        id: artefatos
+        env:
+          VERSAO: ${{ steps.versao.outputs.name }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          cp app/build/outputs/apk/release/app-release.apk "release/autocare-$VERSAO.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "release/autocare-$VERSAO.aab"
+          # O mapping e o unico jeito de ler uma stack trace ofuscada depois -
+          # perdido ele, os crashes desta versao ficam ilegiveis para sempre.
+          cp app/build/outputs/mapping/release/mapping.txt "release/mapping-$VERSAO.txt"
+          ls -la release/
+
+      - name: Publica os artefatos na execucao
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.versao.outputs.name }}
+          path: release/
+          if-no-files-found: error
+          # O mapping precisa sobreviver a versao; 90 dias e o teto do plano free.
+          retention-days: 90
+
+      - name: Cria a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSAO: ${{ steps.versao.outputs.name }}
+        run: |
+          set -euo pipefail
+          # O mapping fica fora da Release: e anexo publico e serve para
+          # desofuscar o APK. Quem precisa dele pega no artefato da execucao.
+          gh release create "v$VERSAO" \
+            --title "AutoCare v$VERSAO" \
+            --generate-notes \
+            "release/autocare-$VERSAO.apk" \
+            "release/autocare-$VERSAO.aab"

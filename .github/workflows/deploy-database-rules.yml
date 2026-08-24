@@ -1,0 +1,73 @@
+name: Deploy das regras do Realtime Database
+
+# As regras sao a unica coisa deste projeto que "sobe" para producao - o resto e
+# artefato de app. O filtro de path mantem o deploy restrito aos commits que de
+# fato mexem nelas.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'database.rules.json'
+      - 'firebase.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy-database-rules.yml'
+  workflow_dispatch:
+
+concurrency:
+  # Sem cancel-in-progress: interromper um deploy pela metade e pior do que
+  # esperar o anterior terminar.
+  group: deploy-database-rules
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: firebase deploy --only database
+    runs-on: ubuntu-latest
+    # Ponto para pendurar aprovacao manual em Settings > Environments, caso o
+    # deploy automatico a cada push na main passe a incomodar.
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Valida o JSON das regras
+        # Regra malformada e rejeitada pelo servidor, mas errar aqui custa
+        # 2 segundos em vez de um deploy pela metade.
+        run: python3 -c "import json; json.load(open('database.rules.json'))"
+
+      - name: Confere o secret
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT ausente. Ver a secao CI/CD no README."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instala o Firebase CLI
+        run: npm install --global firebase-tools@13
+
+      - name: Deploy
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          # Credencial fora do workspace e apagada no fim: a chave da acesso
+          # administrativo total e ignora as proprias regras que estamos subindo.
+          credenciais="$RUNNER_TEMP/service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$credenciais"
+          chmod 600 "$credenciais"
+          trap 'rm -f "$credenciais"' EXIT
+
+          export GOOGLE_APPLICATION_CREDENTIALS="$credenciais"
+          # O projeto vem do .firebaserc; --non-interactive impede o CLI de
+          # travar esperando confirmacao.
+          firebase deploy --only database --non-interactive

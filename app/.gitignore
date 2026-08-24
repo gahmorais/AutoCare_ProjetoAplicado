@@ -1,1 +1,3 @@
 /build
+# Saida do assembleRelease/bundleRelease - contem APK assinado
+/release
