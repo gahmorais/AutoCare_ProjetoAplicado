@@ -6,5 +6,8 @@ class Constants private constructor() {
     val USER_CHILD = "Usuarios"
     val MAINTENANCE_CHILD = "maintenances"
     val INTENT_VEHICLE_ID = "vehicle_id"
+
+    /** Manutencao a editar. Ausente quando a tela abre em modo de criacao. */
+    val INTENT_MAINTENANCE = "maintenance"
   }
 }

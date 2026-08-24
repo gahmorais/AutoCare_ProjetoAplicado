@@ -6,16 +6,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Switch
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
@@ -25,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -42,6 +48,7 @@ import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants
 import br.com.gabrielmorais.autocare.utils.Utils
+import br.com.gabrielmorais.autocare.utils.getParcelableExtraCompat
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -76,6 +83,9 @@ class AddMaintenanceActivity : ComponentActivity() {
       if (vehicleId != null) {
         viewModel.getVehicle(vehicleId)
       }
+      // Extra ausente significa modo de criacao.
+      intent.getParcelableExtraCompat<Maintenance>(Constants.INTENT_MAINTENANCE)
+        ?.let(viewModel::startEditing)
     }
   }
 }
@@ -92,14 +102,18 @@ private data class ServiceOption(
 
 @Composable
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
-  // Precisa de remember: sem ele o estado era recriado a cada recomposicao,
-  // descartando tudo que o usuario digitasse.
-  val state = remember { AddMaintenanceUiState() }
   val services by viewModel.services.collectAsState()
   val servicesLoading by viewModel.servicesLoading.collectAsState()
   val userId by viewModel.userId.collectAsState()
   val vehicle by viewModel.vehicle.collectAsState()
+  val editing by viewModel.editingMaintenance.collectAsState()
   val context = LocalContext.current as ComponentActivity
+
+  // Precisa de remember: sem ele o estado era recriado a cada recomposicao,
+  // descartando tudo que o usuario digitasse. A chave e o id da manutencao
+  // porque em modo edicao ela chega depois da primeira composicao, e o estado
+  // precisa ser semeado uma unica vez quando isso acontece.
+  val state = remember(editing?.id) { AddMaintenanceUiState(editing) }
 
   val options = remember(services) {
     services.mapNotNull { service ->
@@ -114,7 +128,19 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
     }
   }
 
-  Scaffold { paddingValues ->
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = {
+          Text(
+            text = stringResource(
+              if (editing != null) R.string.text_edit_maintenance else R.string.add_maintenance
+            )
+          )
+        }
+      )
+    }
+  ) { paddingValues ->
     Column(
       Modifier
         .padding(paddingValues)
@@ -137,27 +163,52 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
           style = Typography.h6
         )
 
-        else -> MaintenanceForm(
-          state = state,
-          options = options,
-          vehicle = vehicle,
-          canSave = userId.isNotBlank(),
-          onSave = { vehicleId, updatedVehicle, maintenance ->
-            viewModel.saveMaintenance(
-              userId = userId,
-              vehicleId = vehicleId,
-              updatedVehicle = updatedVehicle,
-              onSaved = {
-                NotificationUtils.scheduleNotification(
+        // Column propria porque o formulario cresceu com o switch e a barra de
+        // titulo, e sem rolagem o botao de salvar sai da tela em aparelhos
+        // menores. A rolagem fica so neste ramo: LoadingPage usa fillMaxSize,
+        // que dentro de um verticalScroll recebe altura infinita e para de
+        // centralizar.
+        else -> Column(
+          modifier = Modifier.verticalScroll(rememberScrollState()),
+          verticalArrangement = Arrangement.spacedBy(15.dp)
+        ) {
+          MaintenanceForm(
+            state = state,
+            options = options,
+            vehicle = vehicle,
+            editing = editing,
+            canSave = userId.isNotBlank(),
+            onSave = { vehicleId, maintenance ->
+              // Retorno antecipado aqui e seguro: onSave e lambda de evento.
+              val onSaved: () -> Unit = {
+                NotificationUtils.rescheduleNotification(
                   context = context,
                   maintenance = maintenance,
                   localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
                 )
                 context.finish()
               }
-            )
-          }
-        )
+
+              if (editing != null) {
+                viewModel.updateMaintenance(
+                  vehicleId = vehicleId,
+                  maintenance = maintenance,
+                  onSaved = onSaved
+                )
+              } else {
+                val current = vehicle ?: return@MaintenanceForm
+                viewModel.saveMaintenance(
+                  userId = userId,
+                  vehicleId = vehicleId,
+                  updatedVehicle = current.copy(
+                    maintenances = current.maintenances.orEmpty() + maintenance
+                  ),
+                  onSaved = onSaved
+                )
+              }
+            }
+          )
+        }
       }
     }
   }
@@ -168,11 +219,17 @@ private fun MaintenanceForm(
   state: AddMaintenanceUiState,
   options: List<ServiceOption>,
   vehicle: Vehicle?,
+  editing: Maintenance?,
   canSave: Boolean,
-  onSave: (vehicleId: String, updatedVehicle: Vehicle, maintenance: Maintenance) -> Unit
+  onSave: (vehicleId: String, maintenance: Maintenance) -> Unit
 ) {
+  val isEditing = editing != null
   var expanded by remember { mutableStateOf(false) }
-  var selectedIndex by remember(options) { mutableStateOf(0) }
+  var selectedIndex by remember(options, editing?.id) {
+    // Em modo edicao comeca no servico do registro; caso nao esteja mais na
+    // lista, cai no primeiro.
+    mutableStateOf(options.indexOfFirst { it.name == editing?.description }.coerceAtLeast(0))
+  }
   val selectedOption = options[selectedIndex.coerceIn(options.indices)]
   val averageTraveledDistance = vehicle?.averageDistanceTraveledPerMonth
 
@@ -199,9 +256,20 @@ private fun MaintenanceForm(
     datepicker { state.onForecastNextExchangeDateChange(it) }
   }
 
+  // Ao abrir uma manutencao existente, os dois calculos derivados abaixo
+  // disparariam de imediato e sobrescreveriam a previsao ja gravada. Cada um
+  // pula a primeira execucao em modo edicao; alteracoes seguintes do usuario
+  // voltam a recalcular normalmente.
+  var mileageDerivationArmed by remember(editing?.id) { mutableStateOf(!isEditing) }
+  var dateDerivationArmed by remember(editing?.id) { mutableStateOf(!isEditing) }
+
   // Escrever estado durante a composicao realimenta a recomposicao; por isso
   // os dois calculos derivados moram em LaunchedEffect.
   LaunchedEffect(selectedOption, state.currentMileage) {
+    if (!mileageDerivationArmed) {
+      mileageDerivationArmed = true
+      return@LaunchedEffect
+    }
     val currentMileage = state.currentMileage.toIntOrNull() ?: 0
     state.onForecastNextExchangeMileageChange(
       (selectedOption.mileageChange + currentMileage).toString()
@@ -209,6 +277,10 @@ private fun MaintenanceForm(
   }
 
   LaunchedEffect(selectedOption, state.date, averageTraveledDistance) {
+    if (!dateDerivationArmed) {
+      dateDerivationArmed = true
+      return@LaunchedEffect
+    }
     // Sem a guarda, media nula estourava NPE e media zero, divisao por zero.
     val monthsByMileage = if (averageTraveledDistance != null && averageTraveledDistance > 0) {
       selectedOption.mileageChange / averageTraveledDistance
@@ -283,6 +355,18 @@ private fun MaintenanceForm(
     onValueChange = state.onCommentsChange
   )
 
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Text(text = stringResource(R.string.text_mark_as_executed))
+    Switch(
+      checked = state.completed,
+      onCheckedChange = state.onCompletedChange
+    )
+  }
+
   val currentMileage = state.currentMileage.toIntOrNull()
 
   OutlinedButton(
@@ -295,17 +379,19 @@ private fun MaintenanceForm(
       val mileage = currentMileage ?: return@OutlinedButton
       val nextMileage = state.forecastNextExchangeMileage.toIntOrNull() ?: mileage
 
-      val maintenance = Maintenance(
+      // Partir de `editing` preserva o id, que e tanto a chave do update quanto
+      // o requestCode do alarme; em modo de criacao Maintenance() sorteia um.
+      val maintenance = (editing ?: Maintenance()).copy(
         description = selectedOption.name,
         date = state.date.toEpochDay(),
         currentMileage = mileage,
         forecastNextExchangeMileage = nextMileage,
         forecastNextExchangeDate = state.forecastNextExchangeDate.toEpochDay(),
-        comments = state.comments
+        comments = state.comments,
+        completed = state.completed
       )
 
-      val maintenances = vehicle.maintenances.orEmpty() + maintenance
-      onSave(vehicleId, vehicle.copy(maintenances = maintenances), maintenance)
+      onSave(vehicleId, maintenance)
     }) {
     Text(text = stringResource(R.string.text_save), style = Typography.h5)
   }

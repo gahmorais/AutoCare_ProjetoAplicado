@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import java.time.LocalDateTime
@@ -77,5 +78,28 @@ object NotificationUtils {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     alarmManager.cancel(pendingIntent)
     pendingIntent.cancel()
+    // Cancelar so o alarme deixaria na bandeja uma notificacao ja postada de um
+    // lembrete que nao vale mais - o id da notificacao e o mesmo da manutencao.
+    NotificationManagerCompat.from(context).cancel(maintenance.id)
+  }
+
+  /**
+   * Reagenda o lembrete de uma manutencao editada. Cancela sempre antes, porque
+   * [scheduleNotification] desiste quando a nova data ja passou e o alarme
+   * antigo sobreviveria; manutencao concluida nao ganha lembrete nenhum.
+   */
+  fun rescheduleNotification(
+    context: Context,
+    maintenance: Maintenance,
+    localDateTime: LocalDateTime
+  ) {
+    cancelNotification(context, maintenance)
+    if (!maintenance.completed) {
+      scheduleNotification(
+        context = context,
+        localDateTime = localDateTime,
+        maintenance = maintenance
+      )
+    }
   }
 }

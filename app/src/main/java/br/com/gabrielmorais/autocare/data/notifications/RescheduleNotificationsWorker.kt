@@ -42,6 +42,8 @@ class RescheduleNotificationsWorker(
 
     vehicles.forEach { vehicle ->
       vehicle.maintenances.orEmpty().forEach maintenances@{ maintenance ->
+        // Manutencao ja executada nao tem lembrete a reagendar.
+        if (maintenance.completed) return@maintenances
         val forecastEpochDay = maintenance.forecastNextExchangeDate ?: return@maintenances
         val forecastDate = LocalDate.ofEpochDay(forecastEpochDay)
         if (forecastDate.isAfter(today)) {

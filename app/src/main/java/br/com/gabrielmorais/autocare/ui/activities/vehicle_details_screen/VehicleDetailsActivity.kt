@@ -9,10 +9,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +26,7 @@ import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FilterChip
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -37,6 +40,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
@@ -54,6 +63,7 @@ import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCard
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import br.com.gabrielmorais.autocare.ui.theme.Typography
+import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_MAINTENANCE
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
@@ -95,7 +105,7 @@ class VehicleDetailsActivity : ComponentActivity() {
   }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
 
@@ -144,6 +154,12 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
         })
     },
   ) { contentPadding ->
+    val allMaintenances = vehicle.value?.maintenances.orEmpty()
+    var filter by rememberSaveable { mutableStateOf(MaintenanceFilter.TODAS) }
+    val visibleMaintenances = remember(allMaintenances, filter) {
+      allMaintenances.filteredBy(filter).sortedForDisplay()
+    }
+
     Column(
       Modifier
         .fillMaxSize()
@@ -162,67 +178,146 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
         text = stringResource(R.string.maintenance_text),
         style = Typography.h5
       )
-      vehicle.value?.maintenances?.takeIf { it.isNotEmpty() }?.let { maintenanceList ->
-        LazyColumn {
-          items(maintenanceList, key = { it.id }) { maintenance ->
-            val dismissState = rememberDismissState(
-              confirmStateChange = { value ->
-                if (value == DismissValue.DismissedToStart) {
-                  viewModel.deleteMaintenance(maintenance) { removed ->
-                    NotificationUtils.cancelNotification(context, removed)
-                  }
+
+      // Um `when` explicito e nao um encadeamento de `?:`/`let`: com o filtro
+      // ligado, um elvis esconderia tambem a barra de filtros quando o
+      // resultado viesse vazio, e o usuario ficaria preso numa tela em branco
+      // sem como voltar para "Todas".
+      when {
+        allMaintenances.isEmpty() -> EmptyMaintenanceMessage(
+          text = stringResource(R.string.does_not_have_maintenance)
+        )
+
+        else -> {
+          MaintenanceFilterRow(
+            selected = filter,
+            maintenances = allMaintenances,
+            onSelect = { filter = it }
+          )
+
+          if (visibleMaintenances.isEmpty()) {
+            EmptyMaintenanceMessage(
+              text = stringResource(
+                when (filter) {
+                  MaintenanceFilter.PENDENTES -> R.string.text_no_pending_maintenance
+                  MaintenanceFilter.CONCLUIDAS -> R.string.text_no_completed_maintenance
+                  MaintenanceFilter.TODAS -> R.string.does_not_have_maintenance
                 }
-                true
-              }
-            )
-            SwipeToDismiss(
-              state = dismissState,
-              directions = setOf(DismissDirection.EndToStart),
-              dismissThresholds = { FractionalThreshold(0.66F) },
-              background = {
-                val color = when (dismissState.dismissDirection) {
-                  DismissDirection.EndToStart -> Color.Red
-                  else -> Color.Transparent
-                }
-                Box(
-                  modifier = Modifier
-                    .fillMaxSize()
-                    .background(color)
-                ) {
-                  Icon(
-                    modifier = Modifier
-                      .align(Alignment.CenterEnd)
-                      .padding(end = 10.dp)
-                      .size(25.dp),
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = null
-                  )
-                }
-              }
-            ) {
-              SimpleCardMaintenance(
-                modifier = Modifier.fillMaxWidth(),
-                maintenance = maintenance
               )
+            )
+          } else {
+            LazyColumn {
+              items(visibleMaintenances, key = { it.id }) { maintenance ->
+                val dismissState = rememberDismissState(
+                  confirmStateChange = { value ->
+                    if (value == DismissValue.DismissedToStart) {
+                      viewModel.deleteMaintenance(maintenance) { removed ->
+                        NotificationUtils.cancelNotification(context, removed)
+                      }
+                    }
+                    true
+                  }
+                )
+                // Column envolvendo o item para que marcar como concluida
+                // deslize o card ate o fim da lista em vez de saltar - e
+                // tambem porque o cartao e o Spacer eram dois nos irmaos
+                // soltos no mesmo item.
+                Column(modifier = Modifier.animateItemPlacement()) {
+                  SwipeToDismiss(
+                    state = dismissState,
+                    directions = setOf(DismissDirection.EndToStart),
+                    dismissThresholds = { FractionalThreshold(0.66F) },
+                    background = {
+                      val color = when (dismissState.dismissDirection) {
+                        DismissDirection.EndToStart -> Color.Red
+                        else -> Color.Transparent
+                      }
+                      Box(
+                        modifier = Modifier
+                          .fillMaxSize()
+                          .background(color)
+                      ) {
+                        Icon(
+                          modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 10.dp)
+                            .size(25.dp),
+                          imageVector = Icons.Rounded.Delete,
+                          contentDescription = null
+                        )
+                      }
+                    }
+                  ) {
+                    SimpleCardMaintenance(
+                      modifier = Modifier.fillMaxWidth(),
+                      maintenance = maintenance,
+                      onClick = {
+                        val vehicleId = vehicle.value?.id ?: return@SimpleCardMaintenance
+                        val intent = Intent(context, AddMaintenanceActivity::class.java)
+                        intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
+                        intent.putExtra(INTENT_MAINTENANCE, maintenance)
+                        context.startActivity(intent)
+                      }
+                    )
+                  }
+                  Spacer(modifier = Modifier.padding(bottom = 8.dp))
+                }
+              }
             }
-            Spacer(modifier = Modifier.padding(bottom = 8.dp))
           }
         }
-      } ?: Column(
-        modifier = Modifier
-          .padding(top = 5.dp)
-          .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-      ) {
-        Text(
-          modifier = Modifier.fillMaxWidth(),
-          text = stringResource(R.string.does_not_have_maintenance),
-          style = Typography.h5,
-          textAlign = TextAlign.Center
-        )
       }
     }
+  }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun MaintenanceFilterRow(
+  selected: MaintenanceFilter,
+  maintenances: List<Maintenance>,
+  onSelect: (MaintenanceFilter) -> Unit
+) {
+  val pendingCount = maintenances.count { !it.completed }
+  val completedCount = maintenances.size - pendingCount
+
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(bottom = 8.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp)
+  ) {
+    val labels = listOf(
+      MaintenanceFilter.TODAS to stringResource(R.string.text_filter_all, maintenances.size),
+      MaintenanceFilter.PENDENTES to stringResource(R.string.text_filter_pending, pendingCount),
+      MaintenanceFilter.CONCLUIDAS to stringResource(R.string.text_filter_completed, completedCount)
+    )
+    labels.forEach { (value, label) ->
+      FilterChip(
+        selected = selected == value,
+        onClick = { onSelect(value) }
+      ) {
+        Text(text = label)
+      }
+    }
+  }
+}
+
+@Composable
+private fun EmptyMaintenanceMessage(text: String) {
+  Column(
+    modifier = Modifier
+      .padding(top = 5.dp)
+      .fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Text(
+      modifier = Modifier.fillMaxWidth(),
+      text = text,
+      style = Typography.h5,
+      textAlign = TextAlign.Center
+    )
   }
 }
 

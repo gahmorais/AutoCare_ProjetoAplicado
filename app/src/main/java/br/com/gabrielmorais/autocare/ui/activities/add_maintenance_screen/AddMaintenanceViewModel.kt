@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
@@ -33,6 +34,10 @@ class AddMaintenanceViewModel(
 
   private val _message = MutableStateFlow<String?>(null)
   val message = _message.asStateFlow()
+
+  /** Null enquanto a tela estiver em modo de criacao. */
+  private val _editingMaintenance = MutableStateFlow<Maintenance?>(null)
+  val editingMaintenance = _editingMaintenance.asStateFlow()
 
   init {
     getServices()
@@ -72,6 +77,38 @@ class AddMaintenanceViewModel(
       },
       onError = {
         _message.value = it.message ?: "Não foi possível salvar a manutenção"
+      }
+    )
+  }
+
+  fun startEditing(maintenance: Maintenance) {
+    _editingMaintenance.value = maintenance
+  }
+
+  /**
+   * Como [saveMaintenance], so chama [onSaved] quando a gravacao confirma, para
+   * a notificacao nunca ser reagendada por uma escrita que falhou.
+   */
+  fun updateMaintenance(
+    vehicleId: String,
+    maintenance: Maintenance,
+    onSaved: () -> Unit
+  ) {
+    val userId = _userId.value
+    if (userId.isBlank()) {
+      _message.value = "Sessão expirada"
+      return
+    }
+    maintenanceRepository.update(
+      userId = userId,
+      vehicleId = vehicleId,
+      maintenance = maintenance,
+      onSuccess = {
+        _message.value = it
+        onSaved()
+      },
+      onError = {
+        _message.value = it.message ?: "Não foi possível atualizar a manutenção"
       }
     )
   }

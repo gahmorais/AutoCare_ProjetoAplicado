@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
+import br.com.gabrielmorais.autocare.utils.getParcelableExtraCompat
 
 const val channelID = "channel1"
 
@@ -62,13 +63,4 @@ class NotificationReceiver : BroadcastReceiver() {
 
     NotificationManagerCompat.from(context).notify(maintenanceData.id, notification)
   }
-}
-
-@Suppress("DEPRECATION")
-private inline fun <reified T : android.os.Parcelable> Intent.getParcelableExtraCompat(
-  key: String
-): T? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-  getParcelableExtra(key, T::class.java)
-} else {
-  getParcelableExtra(key)
 }

@@ -59,4 +59,12 @@
     <string name="text_loading_services">Carregando tipos de serviço…</string>
     <string name="text_services_unavailable">Não foi possível carregar os tipos de serviço. Verifique sua conexão e tente novamente.</string>
     <string name="text_invalid_distance">Informe a distância média percorrida por mês</string>
+    <string name="text_edit_maintenance">Editar manutenção</string>
+    <string name="text_mark_as_executed">Já foi executada</string>
+    <string name="text_maintenance_completed">Concluída</string>
+    <string name="text_filter_all">Todas (%1$d)</string>
+    <string name="text_filter_pending">Pendentes (%1$d)</string>
+    <string name="text_filter_completed">Concluídas (%1$d)</string>
+    <string name="text_no_pending_maintenance">Nenhuma manutenção pendente</string>
+    <string name="text_no_completed_maintenance">Nenhuma manutenção concluída</string>
 </resources>
