@@ -10,7 +10,11 @@ import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepo
 import br.com.gabrielmorais.autocare.data.repository.services.ServicesRepository
 import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 class AddMaintenanceViewModel(
   private val servicesRepository: ServicesRepository,
@@ -35,9 +39,17 @@ class AddMaintenanceViewModel(
   private val _message = MutableStateFlow<String?>(null)
   val message = _message.asStateFlow()
 
-  /** Null enquanto a tela estiver em modo de criacao. */
-  private val _editingMaintenance = MutableStateFlow<Maintenance?>(null)
-  val editingMaintenance = _editingMaintenance.asStateFlow()
+  /**
+   * A rota carrega apenas o id: Navigation Compose nao passa Parcelable em
+   * argumento. A manutencao e resolvida quando o veiculo chega, entao os dois
+   * fluxos precisam ser combinados - qual dos dois chega primeiro nao importa.
+   */
+  private val _editingMaintenanceId = MutableStateFlow<Int?>(null)
+
+  val editingMaintenance: StateFlow<Maintenance?> =
+    combine(_vehicle, _editingMaintenanceId) { vehicle, id ->
+      if (id == null) null else vehicle?.maintenances?.firstOrNull { it.id == id }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
   init {
     getServices()
@@ -81,8 +93,8 @@ class AddMaintenanceViewModel(
     )
   }
 
-  fun startEditing(maintenance: Maintenance) {
-    _editingMaintenance.value = maintenance
+  fun startEditing(maintenanceId: Int) {
+    _editingMaintenanceId.value = maintenanceId
   }
 
   /**

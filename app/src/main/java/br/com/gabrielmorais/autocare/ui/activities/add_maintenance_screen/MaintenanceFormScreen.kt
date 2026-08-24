@@ -1,9 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,16 +11,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,58 +35,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
-import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.utils.Constants
+import br.com.gabrielmorais.autocare.ui.navigation.Routes
 import br.com.gabrielmorais.autocare.utils.Utils
-import br.com.gabrielmorais.autocare.utils.getParcelableExtraCompat
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.compose.koinViewModel
 
-class AddMaintenanceActivity : ComponentActivity() {
-  private val viewModel: AddMaintenanceViewModel by viewModel()
+/**
+ * Destino do NavHost. Recebe o id da manutencao e nao o objeto: Navigation
+ * Compose nao carrega Parcelable em argumento de rota.
+ */
+@Composable
+fun MaintenanceFormRoute(
+  vehicleId: String,
+  maintenanceId: Int,
+  onBack: () -> Unit,
+  viewModel: AddMaintenanceViewModel = koinViewModel()
+) {
+  val context = LocalContext.current
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContent {
-      AutoCareTheme() {
-        AddMaintenanceScreen(viewModel)
-      }
-    }
-
-    lifecycleScope.launch {
-      viewModel.message.collectLatest { message ->
-        message?.let { Toast.makeText(this@AddMaintenanceActivity, it, Toast.LENGTH_SHORT).show() }
-      }
-    }
-
+  LaunchedEffect(vehicleId) {
+    if (vehicleId.isNotBlank()) viewModel.getVehicle(vehicleId)
   }
 
-  override fun onStart() {
-    super.onStart()
-    val extras = intent.extras
-    extras?.let { bundle ->
-      val vehicleId = bundle.getString(Constants.INTENT_VEHICLE_ID)
-      if (vehicleId != null) {
-        viewModel.getVehicle(vehicleId)
-      }
-      // Extra ausente significa modo de criacao.
-      intent.getParcelableExtraCompat<Maintenance>(Constants.INTENT_MAINTENANCE)
-        ?.let(viewModel::startEditing)
+  LaunchedEffect(maintenanceId) {
+    if (maintenanceId != Routes.NO_MAINTENANCE) viewModel.startEditing(maintenanceId)
+  }
+
+  LaunchedEffect(Unit) {
+    viewModel.message.collectLatest { message ->
+      message?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
   }
+
+  AddMaintenanceScreen(viewModel = viewModel, onBack = onBack)
 }
 
 /**
@@ -103,19 +92,20 @@ private data class ServiceOption(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
+fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit) {
   val services by viewModel.services.collectAsState()
   val servicesLoading by viewModel.servicesLoading.collectAsState()
   val userId by viewModel.userId.collectAsState()
   val vehicle by viewModel.vehicle.collectAsState()
   val editing by viewModel.editingMaintenance.collectAsState()
-  val context = LocalContext.current as ComponentActivity
 
   // Precisa de remember: sem ele o estado era recriado a cada recomposicao,
   // descartando tudo que o usuario digitasse. A chave e o id da manutencao
   // porque em modo edicao ela chega depois da primeira composicao, e o estado
   // precisa ser semeado uma unica vez quando isso acontece.
   val state = remember(editing?.id) { AddMaintenanceUiState(editing) }
+
+  val notificationContext = LocalContext.current
 
   val options = remember(services) {
     services.mapNotNull { service ->
@@ -139,6 +129,14 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
               if (editing != null) R.string.text_edit_maintenance else R.string.add_maintenance
             )
           )
+        },
+        navigationIcon = {
+          IconButton(onClick = onBack) {
+            Icon(
+              imageVector = Icons.Default.ArrowBack,
+              contentDescription = stringResource(R.string.content_desc_back)
+            )
+          }
         }
       )
     }
@@ -184,11 +182,11 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
               // Retorno antecipado aqui e seguro: onSave e lambda de evento.
               val onSaved: () -> Unit = {
                 NotificationUtils.rescheduleNotification(
-                  context = context,
+                  context = notificationContext,
                   maintenance = maintenance,
                   localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
                 )
-                context.finish()
+                onBack()
               }
 
               if (editing != null) {
@@ -371,14 +369,14 @@ private fun MaintenanceForm(
 
   val currentMileage = state.currentMileage.toIntOrNull()
 
-  OutlinedButton(
+  Button(
     modifier = Modifier.fillMaxWidth(),
     enabled = canSave && vehicle?.id != null && currentMileage != null,
     onClick = {
       // Retorno antecipado aqui e seguro: onClick e lambda de evento, nao de
       // composicao.
-      val vehicleId = vehicle?.id ?: return@OutlinedButton
-      val mileage = currentMileage ?: return@OutlinedButton
+      val vehicleId = vehicle?.id ?: return@Button
+      val mileage = currentMileage ?: return@Button
       val nextMileage = state.forecastNextExchangeMileage.toIntOrNull() ?: mileage
 
       // Partir de `editing` preserva o id, que e tanto a chave do update quanto
@@ -397,10 +395,4 @@ private fun MaintenanceForm(
     }) {
     Text(text = stringResource(R.string.text_save), style = MaterialTheme.typography.titleLarge)
   }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AddMaintenanceScreenPreview() {
-//  AddMaintenanceScreen()
 }

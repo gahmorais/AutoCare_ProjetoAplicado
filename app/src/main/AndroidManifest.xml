@@ -44,15 +44,10 @@
             </intent-filter>
         </receiver>
 
+        <!-- Detalhe do veiculo, minha conta e formulario de manutencao deixaram
+             de ser Activities e viraram destinos do NavHost da MainActivity. -->
         <activity android:name=".ui.activities.main_screen.MainActivity" />
         <activity android:name=".ui.activities.register_screen.RegisterActivity" />
-        <activity android:name=".ui.activities.vehicle_details_screen.VehicleDetailsActivity" />
-        <activity android:name=".ui.activities.my_account_screen.MyAccountActivity" />
-        <!-- Estava exported sem intent-filter: qualquer app instalado podia
-             inicia-la passando user_id e vehicle_id arbitrarios. -->
-        <activity
-            android:name=".ui.activities.add_maintenance_screen.AddMaintenanceActivity"
-            android:exported="false" />
         <activity
             android:name=".ui.activities.login_screen.LoginActivity"
             android:exported="true"

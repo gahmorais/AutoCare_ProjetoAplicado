@@ -48,6 +48,8 @@ fun SimpleCardMaintenance(
   maintenance: Maintenance,
   averageDistancePerMonth: Int? = null,
   today: LocalDate = LocalDate.now(),
+  /** De qual veiculo. So aparece na tela inicial, que mistura varios. */
+  vehicleLabel: String? = null,
   onClick: () -> Unit = {}
 ) {
   val progress = remember(maintenance, averageDistancePerMonth, today) {
@@ -58,20 +60,23 @@ fun SimpleCardMaintenance(
 
   Card(
     onClick = onClick,
-    modifier = modifier
-      // Manutencao concluida fica esmaecida, mas nao apenas esmaecida: o selo e
-      // o texto riscado mantem o estado legivel em alto contraste e para quem
-      // enxerga mal a diferenca de opacidade.
-      .alpha(if (concluida) 0.6f else 1f)
-      // TalkBack anuncia o card como uma unidade em vez de seis textos soltos.
-      .semantics(mergeDescendants = true) {},
+    // TalkBack anuncia o card como uma unidade em vez de seis textos soltos.
+    modifier = modifier.semantics(mergeDescendants = true) {},
     shape = MaterialTheme.shapes.medium,
     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
   ) {
     Column(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+      modifier = Modifier
+        .padding(horizontal = 16.dp, vertical = 14.dp)
+        // O esmaecimento fica no conteudo e nao no Card: alpha no container
+        // torna a superficie translucida, e na lista o fundo do swipe-to-delete
+        // aparecia atraves do cartao concluido. Manutencao concluida fica
+        // esmaecida, mas nao apenas esmaecida - o selo e o texto riscado mantem
+        // o estado legivel em alto contraste e para quem enxerga mal a
+        // diferenca de opacidade.
+        .alpha(if (concluida) 0.6f else 1f),
       verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
       Row(
@@ -80,6 +85,13 @@ fun SimpleCardMaintenance(
         verticalAlignment = Alignment.Top
       ) {
         Column(modifier = Modifier.weight(1f)) {
+          vehicleLabel?.let { label ->
+            Text(
+              text = label,
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+          }
           // Registros gravados antes de uma mudanca de schema podem vir
           // incompletos: exibe um placeholder em vez de derrubar a tela.
           Text(

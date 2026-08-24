@@ -101,6 +101,12 @@ dependencies {
 
     //Koin
     implementation "io.insert-koin:koin-android:$koin_version"
+    //koinViewModel() nos destinos do NavHost: sem ele o ViewModel ficaria fora
+    //do ViewModelStore do destino e o estado se perderia na rotacao.
+    implementation "io.insert-koin:koin-androidx-compose:$koin_compose_version"
+
+    //Navegacao
+    implementation "androidx.navigation:navigation-compose:$navigation_version"
 
     //WorkManager - reagendamento das notificacoes apos o reboot
     implementation "androidx.work:work-runtime-ktx:2.8.1"

@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
+package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import br.com.gabrielmorais.autocare.data.models.User
 import br.com.gabrielmorais.autocare.data.models.Vehicle
@@ -19,19 +19,19 @@ import org.junit.Test
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class MyAccountViewModelTest {
+internal class MainViewModelVehiclesTest {
 
   private val dispatcher = StandardTestDispatcher()
   private lateinit var userRepository: FakeUserRepository
   private lateinit var authRepository: FakeAuthRepository
-  private lateinit var viewModel: MyAccountViewModel
+  private lateinit var viewModel: MainViewModel
 
   @Before
   fun setUp() {
     Dispatchers.setMain(dispatcher)
     userRepository = FakeUserRepository()
     authRepository = FakeAuthRepository()
-    viewModel = MyAccountViewModel(userRepository, authRepository)
+    viewModel = MainViewModel(authRepository, userRepository)
   }
 
   @After

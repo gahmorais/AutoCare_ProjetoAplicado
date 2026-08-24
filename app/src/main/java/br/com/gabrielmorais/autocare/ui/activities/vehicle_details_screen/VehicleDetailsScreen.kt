@@ -1,13 +1,8 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.Manifest
-import android.content.Intent
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -28,6 +23,8 @@ import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -36,9 +33,11 @@ import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,64 +50,63 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
-import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMaintenanceActivity
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
-import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_MAINTENANCE
-import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.compose.koinViewModel
 
-class VehicleDetailsActivity : ComponentActivity() {
+/**
+ * Destino do NavHost. Antes era uma Activity que lia o id de um extra em
+ * onStart e nao tinha botao de voltar.
+ */
+@Composable
+fun VehicleDetailsRoute(
+  vehicleId: String,
+  onBack: () -> Unit,
+  onAddMaintenance: (String) -> Unit,
+  onEditMaintenance: (vehicleId: String, maintenanceId: Int) -> Unit,
+  viewModel: VehicleDetailsViewModel = koinViewModel()
+) {
+  val context = LocalContext.current
 
-  private val viewModel: VehicleDetailsViewModel by viewModel()
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContent {
-      AutoCareTheme {
-        VehicleDetailsScreen(viewModel)
-      }
-    }
+  LaunchedEffect(vehicleId) {
+    if (vehicleId.isNotBlank()) viewModel.getVehicle(vehicleId)
+  }
 
-    lifecycleScope.launch {
-      viewModel.message.collectLatest { message ->
-        message?.let {
-          Toast.makeText(this@VehicleDetailsActivity, it, Toast.LENGTH_SHORT).show()
-        }
-      }
+  LaunchedEffect(Unit) {
+    viewModel.message.collectLatest { message ->
+      message?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
   }
 
-  override fun onStart() {
-    super.onStart()
-    val extras = intent.extras
-    extras?.let { bundle ->
-      val vehicleId = bundle.getString(INTENT_VEHICLE_ID)
-      if (vehicleId != null) {
-        viewModel.getVehicle(vehicleId)
-      }
-    }
-  }
+  VehicleDetailsScreen(
+    viewModel = viewModel,
+    onBack = onBack,
+    onAddMaintenance = onAddMaintenance,
+    onEditMaintenance = onEditMaintenance
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
-
+fun VehicleDetailsScreen(
+  viewModel: VehicleDetailsViewModel,
+  onBack: () -> Unit,
+  onAddMaintenance: (String) -> Unit,
+  onEditMaintenance: (vehicleId: String, maintenanceId: Int) -> Unit
+) {
   val vehicle = viewModel.vehicle.collectAsState()
   val context = LocalContext.current
   val takePicture = rememberLauncherForActivityResult(
@@ -140,19 +138,26 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
   Scaffold(
     topBar = {
       TopAppBar(
-        title = {
-          Text(text = stringResource(R.string.vehicle_details_text))
-        },
-        actions = {
-          IconButton(onClick = {
-            val intent = Intent(context, AddMaintenanceActivity::class.java)
-            intent.putExtra(INTENT_VEHICLE_ID, vehicle.value?.id)
-            context.startActivity(intent)
-          }) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        title = { Text(text = vehicle.value?.nickName ?: stringResource(R.string.vehicle_details_text)) },
+        navigationIcon = {
+          IconButton(onClick = onBack) {
+            Icon(
+              imageVector = Icons.Default.ArrowBack,
+              contentDescription = stringResource(R.string.content_desc_back)
+            )
           }
-        })
+        }
+      )
     },
+    floatingActionButton = {
+      // Era um icone na app bar, com alvo menor e concorrendo com o titulo.
+      FloatingActionButton(onClick = { vehicle.value?.id?.let(onAddMaintenance) }) {
+        Icon(
+          imageVector = Icons.Default.Add,
+          contentDescription = stringResource(R.string.content_desc_add_maintenance)
+        )
+      }
+    }
   ) { contentPadding ->
     val allMaintenances = vehicle.value?.maintenances.orEmpty()
     var filter by rememberSaveable { mutableStateOf(MaintenanceFilter.TODAS) }
@@ -174,7 +179,9 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
       )
       Divider(modifier = Modifier.padding(vertical = 16.dp))
       Text(
-        modifier = Modifier.padding(bottom = 8.dp),
+        modifier = Modifier
+          .padding(bottom = 8.dp)
+          .semantics { heading() },
         text = stringResource(R.string.maintenance_text),
         style = MaterialTheme.typography.titleLarge
       )
@@ -230,15 +237,14 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
                     state = dismissState,
                     directions = setOf(DismissDirection.EndToStart),
                     background = {
-                      val color = when (dismissState.dismissDirection) {
-                        DismissDirection.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                        else -> Color.Transparent
-                      }
+                      // So desenha enquanto o swipe acontece: fora dele nao ha
+                      // nada atras do cartao para vazar por transparencia.
+                      if (dismissState.dismissDirection == DismissDirection.EndToStart) {
                       Box(
                         modifier = Modifier
                           .fillMaxSize()
                           .clip(MaterialTheme.shapes.medium)
-                          .background(color)
+                          .background(MaterialTheme.colorScheme.errorContainer)
                       ) {
                         Icon(
                           modifier = Modifier
@@ -250,6 +256,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
                           contentDescription = stringResource(R.string.content_desc_delete_maintenance)
                         )
                       }
+                      }
                     },
                     dismissContent = {
                       SimpleCardMaintenance(
@@ -257,11 +264,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
                         maintenance = maintenance,
                         averageDistancePerMonth = vehicle.value?.averageDistanceTraveledPerMonth,
                         onClick = {
-                          val vehicleId = vehicle.value?.id ?: return@SimpleCardMaintenance
-                          val intent = Intent(context, AddMaintenanceActivity::class.java)
-                          intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
-                          intent.putExtra(INTENT_MAINTENANCE, maintenance)
-                          context.startActivity(intent)
+                          vehicle.value?.id?.let { onEditMaintenance(it, maintenance.id) }
                         }
                       )
                     }
@@ -303,7 +306,13 @@ private fun MaintenanceFilterRow(
       FilterChip(
         selected = selected == value,
         onClick = { onSelect(value) },
-        label = { Text(text = label) }
+        label = { Text(text = label) },
+        // Mesmo motivo da aba ativa: o secondaryContainer padrao e o oliva de
+        // "em dia", e filtro selecionado nao pode falar a lingua do status.
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+          selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
       )
     }
   }
@@ -325,13 +334,4 @@ private fun EmptyMaintenanceMessage(text: String) {
       textAlign = TextAlign.Center
     )
   }
-}
-
-@Preview(
-  showBackground = true,
-  uiMode = UI_MODE_NIGHT_YES
-)
-@Composable
-fun VehicleDetailsScreenPreview() {
-//  VehicleDetailsScreen(vehicleSample, viewModel)
 }
