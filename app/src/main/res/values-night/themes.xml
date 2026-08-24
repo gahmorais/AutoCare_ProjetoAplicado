@@ -8,4 +8,10 @@
         <item name="android:windowBackground">@color/concreto_escuro</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <style name="Theme.AutoCare.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/concreto_escuro</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_autocare_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.AutoCare</item>
+    </style>
 </resources>

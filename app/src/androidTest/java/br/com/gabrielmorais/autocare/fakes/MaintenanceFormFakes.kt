@@ -72,6 +72,14 @@ class FakeMaintenanceRepository : MaintenanceRepository {
     onError: (Throwable) -> Unit
   ) = onSuccess("ok")
 
+  override fun restore(
+    userId: String,
+    vehicleId: String,
+    maintenance: br.com.gabrielmorais.autocare.data.models.Maintenance,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) = onSuccess("ok")
+
   override fun delete(
     userId: String,
     vehicleId: String,

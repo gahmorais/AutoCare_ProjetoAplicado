@@ -28,6 +28,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.TopAppBar
@@ -42,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +59,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.com.gabrielmorais.autocare.ui.theme.itemPlacementSpec
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
@@ -64,7 +70,10 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
+import br.com.gabrielmorais.autocare.utils.Utils
+import java.time.LocalDate
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -109,6 +118,41 @@ fun VehicleDetailsScreen(
 ) {
   val vehicle = viewModel.vehicle.collectAsState()
   val context = LocalContext.current
+
+  // Excluir era irreversivel e invisivel: swipe sem confirmacao nem volta atras.
+  val snackbarHostState = remember { SnackbarHostState() }
+  val scope = rememberCoroutineScope()
+  val deletedMessage = stringResource(R.string.text_maintenance_deleted)
+  val undoLabel = stringResource(R.string.text_undo)
+
+  val onDeleteMaintenance: (Maintenance) -> Unit = { maintenance ->
+    viewModel.deleteMaintenance(maintenance) { removida ->
+      // O alarme cai junto, senao a notificacao chegaria para um registro que
+      // nao existe mais.
+      NotificationUtils.cancelNotification(context, removida)
+      scope.launch {
+        val result = snackbarHostState.showSnackbar(
+          message = deletedMessage,
+          actionLabel = undoLabel,
+          withDismissAction = true,
+          duration = SnackbarDuration.Long
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+          viewModel.restoreMaintenance(removida) { restaurada ->
+            // Reagenda o que o cancelamento tirou. rescheduleNotification ja
+            // ignora concluidas e datas passadas.
+            restaurada.forecastNextExchangeDate?.let { epochDay ->
+              NotificationUtils.rescheduleNotification(
+                context = context,
+                maintenance = restaurada,
+                localDateTime = Utils.dateMinusFiveDays(LocalDate.ofEpochDay(epochDay))
+              )
+            }
+          }
+        }
+      }
+    }
+  }
   val takePicture = rememberLauncherForActivityResult(
     contract = CropImageContract(),
     onResult = { result ->
@@ -136,6 +180,7 @@ fun VehicleDetailsScreen(
   )
 
   Scaffold(
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     topBar = {
       TopAppBar(
         title = { Text(text = vehicle.value?.nickName ?: stringResource(R.string.vehicle_details_text)) },
@@ -220,9 +265,7 @@ fun VehicleDetailsScreen(
                 val dismissState = rememberDismissState(
                   confirmValueChange = { value ->
                     if (value == DismissValue.DismissedToStart) {
-                      viewModel.deleteMaintenance(maintenance) { removed ->
-                        NotificationUtils.cancelNotification(context, removed)
-                      }
+                      onDeleteMaintenance(maintenance)
                     }
                     true
                   },
@@ -232,7 +275,7 @@ fun VehicleDetailsScreen(
                 // deslize o card ate o fim da lista em vez de saltar - e
                 // tambem porque o cartao e o Spacer eram dois nos irmaos
                 // soltos no mesmo item.
-                Column(modifier = Modifier.animateItemPlacement()) {
+                Column(modifier = Modifier.animateItemPlacement(itemPlacementSpec())) {
                   SwipeToDismiss(
                     state = dismissState,
                     directions = setOf(DismissDirection.EndToStart),

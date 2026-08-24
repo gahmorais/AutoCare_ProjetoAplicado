@@ -88,4 +88,11 @@
     <string name="content_desc_back">Voltar</string>
     <string name="text_all_on_track">Tudo em dia</string>
     <string name="text_empty_maintenances_hint">Abra um veículo e registre a primeira manutenção para acompanhar os vencimentos.</string>
+    <string name="text_undo">Desfazer</string>
+    <string name="text_vehicle_deleted">Veículo excluído</string>
+    <string name="text_maintenance_deleted">Manutenção excluída</string>
+    <string name="content_desc_show_password">Mostrar senha</string>
+    <string name="content_desc_hide_password">Ocultar senha</string>
+    <string name="content_desc_pick_date">Escolher a data do serviço</string>
+    <string name="content_desc_pick_next_date">Escolher a data da próxima manutenção</string>
 </resources>

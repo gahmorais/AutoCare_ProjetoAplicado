@@ -24,6 +24,16 @@ internal fun List<Maintenance>.replacingById(maintenance: Maintenance): List<Mai
   return map { if (it.id == maintenance.id) maintenance else it }
 }
 
+/**
+ * Devolve [maintenance] a lista, ou null se ela ja estiver la. Idempotente de
+ * proposito: o desfazer pode ser tocado duas vezes, e restaurar duas vezes
+ * duplicaria o registro - e o id e usado como chave da lista e do alarme.
+ */
+internal fun List<Maintenance>.addingIfAbsent(maintenance: Maintenance): List<Maintenance>? {
+  if (any { it.id == maintenance.id }) return null
+  return this + maintenance
+}
+
 class MaintenanceRepositoryImpl(private val database: FirebaseDatabase) : MaintenanceRepository {
   override fun create(
     userId: String,
@@ -56,6 +66,21 @@ class MaintenanceRepositoryImpl(private val database: FirebaseDatabase) : Mainte
     onSuccess = onSuccess,
     onError = onError,
     transform = { it.replacingById(maintenance) }
+  )
+
+  override fun restore(
+    userId: String,
+    vehicleId: String,
+    maintenance: Maintenance,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) = mutateMaintenances(
+    userId = userId,
+    vehicleId = vehicleId,
+    successMessage = "Manutenção restaurada",
+    onSuccess = onSuccess,
+    onError = onError,
+    transform = { it.addingIfAbsent(maintenance) }
   )
 
   /**
@@ -102,6 +127,8 @@ class MaintenanceRepositoryImpl(private val database: FirebaseDatabase) : Mainte
 
         val updated = transform(vehicle.maintenances.orEmpty())
         if (updated == null) {
+          // Nada a fazer: ou o alvo nao esta na lista, ou ja esta como se
+          // queria. Nos dois casos a gravacao seria escrita a toa.
           onError(IllegalStateException("Manutenção não encontrada"))
           return@addOnSuccessListener
         }

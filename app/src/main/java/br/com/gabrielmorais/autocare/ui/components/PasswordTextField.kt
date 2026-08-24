@@ -41,7 +41,10 @@ fun PasswordTextField(
           imageVector = if (state.showPassword) {
             Icons.Outlined.Visibility
           } else Icons.Outlined.VisibilityOff,
-          contentDescription = null
+          contentDescription = stringResource(
+            if (state.showPassword) R.string.content_desc_hide_password
+            else R.string.content_desc_show_password
+          )
         )
       }
     }

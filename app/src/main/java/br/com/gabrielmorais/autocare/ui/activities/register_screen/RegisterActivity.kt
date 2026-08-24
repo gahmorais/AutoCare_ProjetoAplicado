@@ -95,7 +95,10 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
             IconButton(onClick = { showPassword = !showPassword }) {
               Icon(
                 imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = null
+                contentDescription = stringResource(
+                  if (showPassword) R.string.content_desc_hide_password
+                  else R.string.content_desc_show_password
+                )
               )
             }
           },
@@ -114,7 +117,10 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
             IconButton(onClick = { showPassword = !showPassword }) {
               Icon(
                 imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = null
+                contentDescription = stringResource(
+                  if (showPassword) R.string.content_desc_hide_password
+                  else R.string.content_desc_show_password
+                )
               )
             }
           },

@@ -313,7 +313,10 @@ private fun MaintenanceForm(
     readOnly = true,
     trailingIcon = {
       IconButton(onClick = { datepickerDialog.show() }) {
-        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+        Icon(
+          imageVector = Icons.Default.CalendarMonth,
+          contentDescription = stringResource(R.string.content_desc_pick_date)
+        )
       }
     },
     onValueChange = {}
@@ -342,7 +345,10 @@ private fun MaintenanceForm(
     readOnly = true,
     trailingIcon = {
       IconButton(onClick = { datepickerNextMaintenance.show() }) {
-        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null)
+        Icon(
+          imageVector = Icons.Default.CalendarMonth,
+          contentDescription = stringResource(R.string.content_desc_pick_next_date)
+        )
       }
     },
     onValueChange = {}

@@ -55,7 +55,7 @@ internal class MainViewModelVehiclesTest {
   fun `falha ao excluir veiculo vira mensagem em vez de excecao`() = runTest(dispatcher) {
     userRepository.failureToReturn = IOException("Permission denied")
 
-    viewModel.deleteVehicle("v1")
+    viewModel.deleteVehicle(Vehicle(id = "v1"))
 
     assertEquals("Permission denied", viewModel.message.first())
   }
@@ -74,7 +74,7 @@ internal class MainViewModelVehiclesTest {
     authRepository.signOutForTest()
 
     viewModel.saveVehicle(Vehicle(id = "v1"))
-    viewModel.deleteVehicle("v1")
+    viewModel.deleteVehicle(Vehicle(id = "v1"))
     viewModel.updateUser(User(id = "outro-uid"))
 
     assertEquals("Sessão expirada", viewModel.message.first())

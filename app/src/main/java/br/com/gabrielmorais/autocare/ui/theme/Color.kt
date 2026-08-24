@@ -41,6 +41,13 @@ val TintaSuaveClara = Color(0xFF55676C)
 val ContornoClaro = Color(0xFF7E9296)
 val ContornoSuaveClaro = Color(0xFFCFD9DA)
 
+// Superficie invertida: o snackbar vive nela. Sem estes papeis definidos o M3
+// cai no baseline e o rotulo da acao sai roxo - o mesmo roxo do template que a
+// migracao tirou de todo o resto.
+val SuperficieInvertidaClara = Color(0xFF1B2A2F)
+val TintaInvertidaClara = Color(0xFFEFF2F2)
+val PetroleoInvertidoClaro = Color(0xFF7FBECD)
+
 // --- Escuro ------------------------------------------------------------------
 // O petroleo #0F3B47 perde contraste sobre fundo escuro, entao clareia.
 val PetroleoEscuro = Color(0xFF5FA3B4)
@@ -66,3 +73,7 @@ val TintaEscura = Color(0xFFE6EDED)
 val TintaSuaveEscura = Color(0xFF93A6AB)
 val ContornoEscuro = Color(0xFF6B8085)
 val ContornoSuaveEscuro = Color(0xFF2A3A42)
+
+val SuperficieInvertidaEscura = Color(0xFFE6EDED)
+val TintaInvertidaEscura = Color(0xFF0B1A1F)
+val PetroleoInvertidoEscuro = Color(0xFF0F3B47)

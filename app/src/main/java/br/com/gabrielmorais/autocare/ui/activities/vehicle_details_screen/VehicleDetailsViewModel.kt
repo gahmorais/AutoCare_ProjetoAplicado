@@ -67,11 +67,31 @@ class VehicleDetailsViewModel(
       vehicleId = vehicleId,
       maintenanceId = maintenance.id,
       onSuccess = {
-        _message.value = it
         // Cancela tambem o alarme, senao a notificacao chegaria para um
         // registro que nao existe mais.
         onDeleted(maintenance)
       },
+      onError = ::publishError
+    )
+  }
+
+  /**
+   * Desfaz uma exclusao. A gravacao ja aconteceu quando o snackbar apareceu,
+   * entao voltar atras e regravar - o [onRestored] reagenda o lembrete que o
+   * delete tinha cancelado.
+   */
+  fun restoreMaintenance(maintenance: Maintenance, onRestored: (Maintenance) -> Unit) {
+    val userId = _userId.value
+    val vehicleId = _vehicle.value?.id
+    if (userId.isBlank() || vehicleId == null) {
+      publishError(IllegalStateException("Não foi possível restaurar a manutenção"))
+      return
+    }
+    maintenanceRepository.restore(
+      userId = userId,
+      vehicleId = vehicleId,
+      maintenance = maintenance,
+      onSuccess = { onRestored(maintenance) },
       onError = ::publishError
     )
   }

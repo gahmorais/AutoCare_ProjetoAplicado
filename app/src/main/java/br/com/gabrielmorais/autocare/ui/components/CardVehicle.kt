@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +40,9 @@ fun CardVehicle(
 ) {
 
   Card(
-    modifier = modifier,
+    // TalkBack anuncia o cartao como uma unidade em vez de apelido, marca,
+    // modelo, placa e distancia como cinco nos separados.
+    modifier = modifier.semantics(mergeDescendants = true) {},
     elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
   ) {
     Row(

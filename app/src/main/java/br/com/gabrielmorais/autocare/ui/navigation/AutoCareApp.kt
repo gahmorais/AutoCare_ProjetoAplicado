@@ -86,6 +86,10 @@ fun AutoCareApp(
       }
     }
   ) { padding ->
+    // Transicoes por rota so existem no navigation-compose 2.7+, que exige
+    // Compose 1.5 e Kotlin 1.9 - subir a stack inteira nao cabe numa fase de
+    // polimento. O 2.6 ja faz fade-through entre destinos, que e o padrao do M3
+    // para troca de superficie; o que fica devendo e o deslize do detalhe.
     NavHost(
       navController = navController,
       startDestination = TopLevelDestination.INICIO.route,

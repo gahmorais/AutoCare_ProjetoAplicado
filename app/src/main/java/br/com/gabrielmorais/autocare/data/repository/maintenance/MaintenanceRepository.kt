@@ -24,6 +24,18 @@ interface MaintenanceRepository {
     onError: (Throwable) -> Unit
   )
 
+  /**
+   * Devolve uma manutencao excluida. Serve ao desfazer do snackbar: a exclusao
+   * ja gravou, entao voltar atras e regravar.
+   */
+  fun restore(
+    userId: String,
+    vehicleId: String,
+    maintenance: Maintenance,
+    onSuccess: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  )
+
   fun delete(
     userId: String,
     vehicleId: String,

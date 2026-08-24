@@ -5,8 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
-private val LightColors = lightColorScheme(
+internal val LightColors = lightColorScheme(
   primary = PetroleoClaro,
   onPrimary = SuperficieClara,
   primaryContainer = PetroleoContainerClaro,
@@ -34,10 +35,14 @@ private val LightColors = lightColorScheme(
   surfaceVariant = SuperficieVarianteClara,
   onSurfaceVariant = TintaSuaveClara,
   outline = ContornoClaro,
-  outlineVariant = ContornoSuaveClaro
+  outlineVariant = ContornoSuaveClaro,
+
+  inverseSurface = SuperficieInvertidaClara,
+  inverseOnSurface = TintaInvertidaClara,
+  inversePrimary = PetroleoInvertidoClaro
 )
 
-private val DarkColors = darkColorScheme(
+internal val DarkColors = darkColorScheme(
   primary = PetroleoEscuro,
   onPrimary = PetroleoOnEscuro,
   primaryContainer = PetroleoContainerEscuro,
@@ -65,7 +70,11 @@ private val DarkColors = darkColorScheme(
   surfaceVariant = SuperficieVarianteEscura,
   onSurfaceVariant = TintaSuaveEscura,
   outline = ContornoEscuro,
-  outlineVariant = ContornoSuaveEscuro
+  outlineVariant = ContornoSuaveEscuro,
+
+  inverseSurface = SuperficieInvertidaEscura,
+  inverseOnSurface = TintaInvertidaEscura,
+  inversePrimary = PetroleoInvertidoEscuro
 )
 
 /**
@@ -75,10 +84,12 @@ private val DarkColors = darkColorScheme(
  */
 @Composable
 fun AutoCareTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-  MaterialTheme(
-    colorScheme = if (darkTheme) DarkColors else LightColors,
-    typography = Typography,
-    shapes = Shapes,
-    content = content
-  )
+  CompositionLocalProvider(LocalReducedMotion provides rememberReducedMotion()) {
+    MaterialTheme(
+      colorScheme = if (darkTheme) DarkColors else LightColors,
+      typography = Typography,
+      shapes = Shapes,
+      content = content
+    )
+  }
 }

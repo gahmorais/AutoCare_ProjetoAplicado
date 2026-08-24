@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.images.CloudinaryTransformations
@@ -40,7 +41,7 @@ fun CardVehicleDetails(
           vehicle.photo,
           CloudinaryTransformations.VEHICLE_BANNER
         ) ?: R.drawable.car_photo,
-        contentDescription = "",
+        contentDescription = stringResource(R.string.content_desc_change_vehicle_photo),
         error = painterResource(id = R.drawable.car_photo)
       )
       Row(Modifier.padding(bottom = 16.dp)) {

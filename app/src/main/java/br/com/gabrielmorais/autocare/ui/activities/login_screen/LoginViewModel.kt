@@ -18,6 +18,15 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
   val loginState = _loginState.receiveAsFlow()
   private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
   var currentUser = _currentUser.asStateFlow()
+
+  /**
+   * `currentUser == null` significa duas coisas diferentes - ainda nao sabemos e
+   * nao ha sessao - e a splash precisa distinguir as duas. O listener do Firebase
+   * dispara assim que restaura a sessao persistida, entao a primeira chamada ja
+   * resolve.
+   */
+  private val _sessionChecked = MutableStateFlow(false)
+  val sessionChecked = _sessionChecked.asStateFlow()
   val loginUiState = LoginUiState()
   init {
     getCurrentUserListener()
@@ -50,7 +59,10 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
   private fun getCurrentUserListener() {
     authRepository.getCurrentUserListener {
-      viewModelScope.launch { _currentUser.emit(it.currentUser) }
+      viewModelScope.launch {
+        _currentUser.emit(it.currentUser)
+        _sessionChecked.value = true
+      }
     }
   }
 }

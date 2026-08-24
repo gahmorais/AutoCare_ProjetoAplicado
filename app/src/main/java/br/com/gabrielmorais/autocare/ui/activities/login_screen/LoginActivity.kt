@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +56,13 @@ class LoginActivity : ComponentActivity() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Antes do super: a splash precisa estar instalada antes de a janela existir.
+    // Ela segura a tela enquanto o Firebase restaura a sessao persistida - sem
+    // isso o formulario de login piscava toda vez que quem ja tinha sessao abria
+    // o app, so para ser substituido pela Main um instante depois.
+    val splash = installSplashScreen()
+    splash.setKeepOnScreenCondition { !viewModel.sessionChecked.value }
+
     super.onCreate(savedInstanceState)
     setContent {
       AutoCareTheme {

@@ -23,6 +23,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -32,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,12 +47,14 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.com.gabrielmorais.autocare.ui.theme.itemPlacementSpec
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialog
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialogState
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
+import kotlinx.coroutines.launch
 
 /**
  * A garagem. Absorve a lista de veiculos que vivia duplicada entre a tela
@@ -68,8 +75,30 @@ fun VehiclesScreen(
   val context = LocalContext.current
   val invalidDistanceMessage = stringResource(R.string.text_invalid_distance)
 
+  // Excluir era irreversivel e invisivel: swipe sem confirmacao levava embora o
+  // veiculo e todo o historico de manutencoes dele.
+  val snackbarHostState = remember { SnackbarHostState() }
+  val scope = rememberCoroutineScope()
+  val deletedMessage = stringResource(R.string.text_vehicle_deleted)
+  val undoLabel = stringResource(R.string.text_undo)
+
+  val onDeleteVehicle: (Vehicle) -> Unit = { vehicle ->
+    viewModel.deleteVehicle(vehicle) { removido ->
+      scope.launch {
+        val result = snackbarHostState.showSnackbar(
+          message = deletedMessage,
+          actionLabel = undoLabel,
+          withDismissAction = true,
+          duration = SnackbarDuration.Long
+        )
+        if (result == SnackbarResult.ActionPerformed) viewModel.saveVehicle(removido)
+      }
+    }
+  }
+
   Scaffold(
     topBar = { TopAppBar(title = { Text(stringResource(R.string.text_vehicles)) }) },
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
       FloatingActionButton(onClick = { showDialog = true }) {
         Icon(
@@ -116,7 +145,7 @@ fun VehiclesScreen(
           VehicleRow(
             vehicle = vehicle,
             onOpen = { vehicle.id?.let(onOpenVehicle) },
-            onDelete = { vehicle.id?.let(viewModel::deleteVehicle) }
+            onDelete = { onDeleteVehicle(vehicle) }
           )
         }
       }
@@ -166,7 +195,7 @@ private fun androidx.compose.foundation.lazy.LazyItemScope.VehicleRow(
   )
 
   SwipeToDismiss(
-    modifier = Modifier.animateItemPlacement(),
+    modifier = Modifier.animateItemPlacement(itemPlacementSpec()),
     state = dismissState,
     directions = setOf(DismissDirection.EndToStart),
     background = {

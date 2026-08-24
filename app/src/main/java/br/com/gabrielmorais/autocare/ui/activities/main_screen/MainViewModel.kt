@@ -79,12 +79,18 @@ class MainViewModel(
     )
   }
 
-  fun deleteVehicle(vehicleId: String) {
+  /**
+   * [onDeleted] recebe o veiculo como estava, para o desfazer do snackbar poder
+   * regrava-lo com o mesmo id - e com as manutencoes junto.
+   */
+  fun deleteVehicle(vehicle: Vehicle, onDeleted: (Vehicle) -> Unit = {}) {
     val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
+    val vehicleId = vehicle.id
+      ?: return publishError(IllegalArgumentException("Veículo sem identificador"))
     userRepository.deleteVehicle(
       userId = userId,
       vehicleId = vehicleId,
-      callback = { _message.value = it },
+      callback = { onDeleted(vehicle) },
       onError = ::publishError
     )
   }

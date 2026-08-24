@@ -41,4 +41,30 @@ class MaintenanceListOperationsTest {
   fun `removingById devolve null quando o id nao esta na lista`() {
     assertNull(listOf(pendente).removingById(99))
   }
+
+  @Test
+  fun `addingIfAbsent devolve a manutencao ao fim da lista`() {
+    val lista = listOf(outra)
+
+    assertEquals(listOf(outra, pendente), lista.addingIfAbsent(pendente))
+  }
+
+  @Test
+  fun `addingIfAbsent nao duplica quando ja esta na lista`() {
+    // O desfazer do snackbar pode ser tocado duas vezes, e duplicar o registro
+    // quebraria a chave da lista e o requestCode do alarme, que sao o mesmo id.
+    val lista = listOf(pendente, outra)
+
+    assertNull(lista.addingIfAbsent(pendente))
+  }
+
+  @Test
+  fun `excluir e restaurar devolve a lista ao estado original`() {
+    val original = listOf(pendente, outra)
+
+    val depoisDeExcluir = original.removingById(pendente.id)!!
+    val depoisDeRestaurar = depoisDeExcluir.addingIfAbsent(pendente)!!
+
+    assertEquals(original.toSet(), depoisDeRestaurar.toSet())
+  }
 }
