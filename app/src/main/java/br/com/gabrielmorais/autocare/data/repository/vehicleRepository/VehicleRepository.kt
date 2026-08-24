@@ -4,12 +4,17 @@ import android.net.Uri
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 
 interface VehicleRepository {
-  suspend fun saveVehicleImage(
-    userId: String,
-    vehicleId: String,
-    image: Uri,
-    callback: (String) -> Unit
-  )
+  /**
+   * Hospeda a imagem e devolve a URL publica. Nao recebe mais userId/vehicleId:
+   * o host gera o identificador do asset e o caminho deixou de existir.
+   */
+  suspend fun saveVehicleImage(image: Uri): String
+  /**
+   * Leitura pontual (sem listener) de todos os veiculos do usuario, incluindo as
+   * manutencoes. Usada pelo reagendamento das notificacoes apos o reboot.
+   */
+  suspend fun getVehiclesOnce(userId: String): List<Vehicle>
+
   fun getVehicleDetails(
     userId: String,
     vehicleId: String,

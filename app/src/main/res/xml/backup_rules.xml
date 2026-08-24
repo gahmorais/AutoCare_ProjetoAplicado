@@ -1,13 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Regras de backup para dispositivos anteriores ao Android 12.
+   Ver o comentario em data_extraction_rules.xml: o objetivo e manter o token
+   de sessao do Firebase Auth fora de qualquer backup.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude
+        domain="sharedpref"
+        path="com.google.firebase.auth.api.Store.xml" />
+    <exclude
+        domain="sharedpref"
+        path="com.google.android.gms.appid.xml" />
+    <exclude domain="database" />
+    <exclude domain="file" />
 </full-backup-content>

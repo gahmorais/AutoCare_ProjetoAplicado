@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.repository.Status
 import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.utils.CredentialValidator
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -17,12 +18,30 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
   val loginState = _loginState.receiveAsFlow()
   private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
   var currentUser = _currentUser.asStateFlow()
+
+  /**
+   * `currentUser == null` significa duas coisas diferentes - ainda nao sabemos e
+   * nao ha sessao - e a splash precisa distinguir as duas. O listener do Firebase
+   * dispara assim que restaura a sessao persistida, entao a primeira chamada ja
+   * resolve.
+   */
+  private val _sessionChecked = MutableStateFlow(false)
+  val sessionChecked = _sessionChecked.asStateFlow()
   val loginUiState = LoginUiState()
   init {
     getCurrentUserListener()
   }
 
-  fun loginUser(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
+  fun loginUser(email: String, password: String) {
+    val validationError = CredentialValidator.validateLogin(email, password)
+    if (validationError != null) {
+      viewModelScope.launch { _loginState.send(LoginState(isError = validationError)) }
+      return
+    }
+    collectLogin(email, password)
+  }
+
+  private fun collectLogin(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
     authRepository.login(email, password).collect { resource ->
       when (resource.status) {
         Status.SUCCESS -> _loginState.send(
@@ -40,7 +59,10 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
   private fun getCurrentUserListener() {
     authRepository.getCurrentUserListener {
-      viewModelScope.launch { _currentUser.emit(it.currentUser) }
+      viewModelScope.launch {
+        _currentUser.emit(it.currentUser)
+        _sessionChecked.value = true
+      }
     }
   }
 }

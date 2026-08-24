@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare
 
 import android.app.Application
+import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.di.firebaseModule
 import br.com.gabrielmorais.autocare.di.mainModule
 import br.com.gabrielmorais.autocare.di.viewModelModule
@@ -17,5 +18,9 @@ class AutoCareApplication : Application() {
       androidContext(this@AutoCareApplication)
       modules(listOf(mainModule, firebaseModule, viewModelModule))
     }
+
+    // O canal precisa existir antes de qualquer notify, inclusive quando o
+    // processo e iniciado pelo alarme e nenhuma Activity chegou a rodar.
+    NotificationUtils.createNotificationChannel(this)
   }
 }

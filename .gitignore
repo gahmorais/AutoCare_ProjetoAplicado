@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Configuracao do Firebase gerada pelo console - nao deve ser versionada
+google-services.json
+
+# Chave de service account: acesso administrativo total ao projeto
+service-account*.json
+node_modules/
+
+# Cache local do Firebase CLI
+.firebase/

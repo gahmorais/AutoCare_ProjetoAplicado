@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- A janela e pintada antes de o Compose compor, entao a barra de status
+         e o fundo precisam vir daqui. Enquanto isso apontava para purple_700,
+         o app inteiro ja estava em petroleo e a barra continuava roxa. -->
     <style name="Theme.AutoCare" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/purple_700</item>
+        <item name="android:statusBarColor">@color/petroleo</item>
+        <item name="android:windowBackground">@color/concreto_claro</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Tema da janela ate o Compose desenhar. postSplashScreenTheme e o que a
+         Activity assume depois. -->
+    <style name="Theme.AutoCare.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/petroleo</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_autocare_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.AutoCare</item>
     </style>
 </resources>

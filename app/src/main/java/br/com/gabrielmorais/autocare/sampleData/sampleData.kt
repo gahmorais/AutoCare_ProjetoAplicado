@@ -12,14 +12,16 @@ private const val URL_VEHICLE_SAMPLE =
 private const val URL_USER_PROFILE_SAMPLE =
   "https://static.catapult.co/cdn-cgi/image/width=1170,height=658,dpr=2,fit=cover,format=auto/production/stories/31705/cover_photos/original/iron_man_site_1633028435_1637683340.jpg"
 
-val maintenanceListSample = MutableList(10) {
+val maintenanceListSample = MutableList(10) { index ->
   Maintenance(
     description = "Troca de óleo",
     date = LocalDate.of(2023, Month.FEBRUARY, 25).toEpochDay(),
     currentMileage = 75000,
     forecastNextExchangeMileage = 82000,
     forecastNextExchangeDate = LocalDate.of(2023, Month.SEPTEMBER, 30).toEpochDay(),
-    comments = "Óleo ELF 10W40 Semisintético"
+    comments = "Óleo ELF 10W40 Semisintético",
+    // Alternado para os previews mostrarem os dois estados do card.
+    completed = index % 2 == 0
   )
 }.toList()
 

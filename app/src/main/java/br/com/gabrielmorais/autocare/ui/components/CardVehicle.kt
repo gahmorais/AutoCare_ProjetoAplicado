@@ -1,23 +1,26 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.images.CloudinaryTransformations
+import br.com.gabrielmorais.autocare.data.images.CloudinaryUrl
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import coil.compose.AsyncImage
@@ -36,10 +39,11 @@ fun CardVehicle(
   onLongClick: () -> Unit = {},
 ) {
 
-  Log.i("CardVehicle", "CardVehicle: ${vehicle}")
   Card(
-    modifier = modifier,
-    elevation = 5.dp,
+    // TalkBack anuncia o cartao como uma unidade em vez de apelido, marca,
+    // modelo, placa e distancia como cinco nos separados.
+    modifier = modifier.semantics(mergeDescendants = true) {},
+    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
   ) {
     Row(
       modifier
@@ -54,11 +58,18 @@ fun CardVehicle(
         modifier = Modifier.height(100.dp),
         model = ImageRequest
           .Builder(LocalContext.current)
-          .data(vehicle.photo ?: R.drawable.icon_car)
+          .data(
+            CloudinaryUrl.withTransformation(
+              vehicle.photo,
+              CloudinaryTransformations.VEHICLE_THUMBNAIL
+            ) ?: R.drawable.icon_car
+          )
           .transformations(CircleCropTransformation())
           .crossfade(true)
           .build(),
-        error = painterResource(id = R.drawable.error),
+        // URLs antigas do Firebase Storage estao mortas: cair no icone de carro
+        // comunica melhor que um icone de imagem quebrada.
+        error = painterResource(id = R.drawable.icon_car),
         contentDescription = null,
         contentScale = ContentScale.Fit
       )
@@ -70,7 +81,7 @@ fun CardVehicle(
         Row {
           Text(
             text = vehicle.brand ?: "",
-            style = TextStyle(fontSize = 20.sp),
+            style = MaterialTheme.typography.titleMedium,
           )
           Spacer(
             modifier = Modifier
@@ -78,12 +89,12 @@ fun CardVehicle(
           )
           Text(
             text = vehicle.model ?: "",
-            style = TextStyle(fontSize = 20.sp),
+            style = MaterialTheme.typography.titleMedium,
           )
         }
         Text(
           text = vehicle.plate ?: "",
-          style = TextStyle(fontSize = 25.sp),
+          style = MaterialTheme.typography.titleLarge,
         )
         Divider(thickness = 2.dp)
         Text(text = "Distância por mês: ")
@@ -92,9 +103,9 @@ fun CardVehicle(
             text = NumberFormat
               .getNumberInstance(Locale("pt", "BR"))
               .format(vehicle.averageDistanceTraveledPerMonth),
-            style = TextStyle(fontSize = 25.sp)
+            style = MaterialTheme.typography.titleLarge
           )
-          Text(text = " Km", style = TextStyle(fontSize = 25.sp))
+          Text(text = " Km", style = MaterialTheme.typography.titleLarge)
         }
       }
     }

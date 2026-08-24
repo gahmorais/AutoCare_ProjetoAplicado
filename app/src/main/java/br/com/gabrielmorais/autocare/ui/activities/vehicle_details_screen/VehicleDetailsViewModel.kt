@@ -1,68 +1,117 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepositoryImpl
-import kotlinx.coroutines.Dispatchers
+import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
+import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
+import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class VehicleDetailsViewModel(
-  private val vehicleRepository: VehicleRepositoryImpl
+  private val vehicleRepository: VehicleRepository,
+  private val authRepository: AuthRepository,
+  private val maintenanceRepository: MaintenanceRepository
 ) : ViewModel() {
 
   private val _vehicle = MutableStateFlow<Vehicle?>(null)
-  private val _userId = MutableStateFlow("")
+
+  // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
+  private val _userId = MutableStateFlow(authRepository.currentUserId().orEmpty())
   val userId = _userId.asStateFlow()
 
+  private val _message = MutableStateFlow<String?>(null)
+  val message = _message.asStateFlow()
+
   val vehicle = _vehicle.asStateFlow()
-  fun uploadVehiclePhoto(userId: String, vehicleId: String, image: Uri) {
-    viewModelScope.launch(Dispatchers.IO) {
-      vehicleRepository.saveVehicleImage(userId, vehicleId, image) {
-        viewModelScope.launch {
-          updateVehicle(
-            userId = userId,
-            _vehicle.value!!.copy(photo = it)
-          )
-        }
-      }
+
+  fun uploadVehiclePhoto(image: Uri) {
+    viewModelScope.launch {
+      // saveVehicleImage propaga a excecao do upload; sem o catch ela escapa
+      // do viewModelScope e derruba o app.
+      runCatching {
+        val imageUrl = vehicleRepository.saveVehicleImage(image)
+        val current = _vehicle.value ?: return@runCatching
+        updateVehicle(userId = _userId.value, vehicle = current.copy(photo = imageUrl))
+      }.onFailure(::publishError)
     }
   }
 
-  fun getVehicle(userId: String, vehicleId: String) {
+  fun getVehicle(vehicleId: String) {
+    val userId = _userId.value
+    if (userId.isBlank()) {
+      publishError(IllegalStateException("Sessão expirada"))
+      return
+    }
     vehicleRepository.getVehicleDetails(
       userId,
       vehicleId,
+      onSuccess = { _vehicle.value = it },
+      onError = ::publishError
+    )
+  }
+
+  fun deleteMaintenance(maintenance: Maintenance, onDeleted: (Maintenance) -> Unit) {
+    val userId = _userId.value
+    val vehicleId = _vehicle.value?.id
+    if (userId.isBlank() || vehicleId == null) {
+      publishError(IllegalStateException("Não foi possível remover a manutenção"))
+      return
+    }
+    maintenanceRepository.delete(
+      userId = userId,
+      vehicleId = vehicleId,
+      maintenanceId = maintenance.id,
       onSuccess = {
-        viewModelScope.launch { _vehicle.emit(it) }
+        // Cancela tambem o alarme, senao a notificacao chegaria para um
+        // registro que nao existe mais.
+        onDeleted(maintenance)
       },
-      onError = {
-        Log.i("VehicleDetailsViewModel", "getVehicle: ${it.message}")
-      }
+      onError = ::publishError
+    )
+  }
+
+  /**
+   * Desfaz uma exclusao. A gravacao ja aconteceu quando o snackbar apareceu,
+   * entao voltar atras e regravar - o [onRestored] reagenda o lembrete que o
+   * delete tinha cancelado.
+   */
+  fun restoreMaintenance(maintenance: Maintenance, onRestored: (Maintenance) -> Unit) {
+    val userId = _userId.value
+    val vehicleId = _vehicle.value?.id
+    if (userId.isBlank() || vehicleId == null) {
+      publishError(IllegalStateException("Não foi possível restaurar a manutenção"))
+      return
+    }
+    maintenanceRepository.restore(
+      userId = userId,
+      vehicleId = vehicleId,
+      maintenance = maintenance,
+      onSuccess = { onRestored(maintenance) },
+      onError = ::publishError
     )
   }
 
   private fun updateVehicle(userId: String, vehicle: Vehicle) {
+    val vehicleId = vehicle.id
+    if (vehicleId == null) {
+      publishError(IllegalArgumentException("Veículo sem identificador"))
+      return
+    }
     vehicleRepository.updateVehicle(
       userId,
-      vehicle.id!!,
+      vehicleId,
       vehicle,
-      onSuccess = {
-        viewModelScope.launch {
-          _vehicle.emit(vehicle)
-        }
-      },
-      onError = {
-        Log.i("VehicleDetailsViewModel", "updateVehicle: ${it.message}")
-      }
+      onSuccess = { _vehicle.value = vehicle },
+      onError = ::publishError
     )
   }
 
-  fun setUserid(id: String) {
-    _userId.value = id
+  private fun publishError(error: Throwable) {
+    _message.value = error.message ?: "Ocorreu um erro inesperado"
   }
 }

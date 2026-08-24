@@ -34,19 +34,27 @@ class AuthRepositoryImpl(private val firebaseAuth: FirebaseAuth) : AuthRepositor
 
   override fun getCurrentUser() = firebaseAuth.currentUser
 
+  override fun currentUserId(): String? = firebaseAuth.currentUser?.uid
+
   override fun getCurrentUserListener(callback: (firebaseAuth: FirebaseAuth) -> Unit) =
     firebaseAuth.addAuthStateListener {
       callback(it)
     }
 
-  override fun changePassword(email: String, callback: (String) -> Unit) {
+  override fun changePassword(
+    email: String,
+    callback: (String) -> Unit,
+    onError: (Throwable) -> Unit
+  ) {
+    if (email.isBlank()) {
+      onError(IllegalArgumentException("Informe um e-mail para redefinir a senha"))
+      return
+    }
     firebaseAuth.sendPasswordResetEmail(email)
       .addOnSuccessListener {
         callback("Email enviado")
       }
-      .addOnFailureListener { error ->
-        throw error
-      }
+      .addOnFailureListener(onError)
   }
 
 

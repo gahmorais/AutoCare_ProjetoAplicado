@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,18 +19,21 @@ fun DefaultSnackBar(
   snackbarHostState: SnackbarHostState? = null,
   onDismiss: () -> Unit = {}
 ) {
+  // O !! aqui quebrava o @Preview, que chama o componente sem hostState.
+  val hostState = snackbarHostState ?: return
   SnackbarHost(
     modifier = modifier
       .fillMaxWidth()
       .wrapContentHeight(Alignment.Bottom),
-    hostState = snackbarHostState!!,
+    hostState = hostState,
     snackbar = { data ->
+      // No M3 mensagem e rotulo de acao passaram a viver em data.visuals.
       Snackbar(modifier = Modifier.padding(8.dp),
         content = {
-          Text(data.message)
+          Text(data.visuals.message)
         },
         action = {
-          data.actionLabel?.let {
+          data.visuals.actionLabel?.let {
             TextButton(onClick = onDismiss) {
               Text(text = stringResource(R.string.text_close))
             }
