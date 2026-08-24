@@ -1,15 +1,15 @@
 package br.com.gabrielmorais.autocare.ui.components
 
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectMenu(
   modifier: Modifier = Modifier,
@@ -27,23 +27,27 @@ fun SelectMenu(
     onExpandedChange = onExpandedChange,
   ) {
     TextField(
-      modifier = modifier,
+      // menuAnchor e obrigatorio no M3: e ele que ancora o popup no campo.
+      modifier = modifier.menuAnchor(),
       value = value,
       onValueChange = onChangeValue,
       readOnly = true,
       label = { Text(text = label) },
       trailingIcon = {
         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-      }
+      },
+      colors = ExposedDropdownMenuDefaults.textFieldColors()
     )
     ExposedDropdownMenu(
       expanded = expanded,
       onDismissRequest = onDissmis
     ) {
       items.forEachIndexed { i, item ->
-        DropdownMenuItem(onClick = { onClick(item, i) }) {
-          Text(text = item)
-        }
+        // No M3 o rotulo virou parametro `text` em vez de conteudo trailing.
+        DropdownMenuItem(
+          text = { Text(text = item) },
+          onClick = { onClick(item, i) }
+        )
       }
     }
   }

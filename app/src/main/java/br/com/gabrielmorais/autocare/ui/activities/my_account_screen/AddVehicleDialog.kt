@@ -1,12 +1,13 @@
 package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Card
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import br.com.gabrielmorais.autocare.R
-import br.com.gabrielmorais.autocare.ui.theme.Typography
 
 class AddVehicleDialogState {
 
@@ -68,15 +68,15 @@ fun AddVehicleDialog(
       onDismiss()
     },
   ) {
-    Card(elevation = 10.dp) {
+    Card(elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),) {
       Column(
         modifier = Modifier
-          .clip(RoundedCornerShape(20.dp))
+          .clip(MaterialTheme.shapes.large)
           .padding(10.dp),
       ) {
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          textStyle = Typography.h6,
+          textStyle = MaterialTheme.typography.titleMedium,
           label = { Text(text = stringResource(R.string.text_nickname)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_nickname)) },
           value = state.nickName,
@@ -84,7 +84,7 @@ fun AddVehicleDialog(
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          textStyle = Typography.h6,
+          textStyle = MaterialTheme.typography.titleMedium,
           label = { Text(text = stringResource(R.string.text_brand)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_brand)) },
           value = state.brand,
@@ -92,7 +92,7 @@ fun AddVehicleDialog(
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          textStyle = Typography.h6,
+          textStyle = MaterialTheme.typography.titleMedium,
           label = { Text(text = stringResource(R.string.text_model)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_model)) },
           value = state.model,
@@ -100,7 +100,7 @@ fun AddVehicleDialog(
         )
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          textStyle = Typography.h6,
+          textStyle = MaterialTheme.typography.titleMedium,
           label = { Text(text = stringResource(R.string.text_plate)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_plate)) },
           value = state.plate,
@@ -109,7 +109,7 @@ fun AddVehicleDialog(
 
         OutlinedTextField(
           modifier = Modifier.fillMaxWidth(),
-          textStyle = Typography.h6,
+          textStyle = MaterialTheme.typography.titleMedium,
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           label = { Text(text = stringResource(R.string.text_average_distace_traveled_per_month)) },
           placeholder = { Text(text = stringResource(R.string.placeholder_average_distance_traveled)) },
@@ -121,7 +121,7 @@ fun AddVehicleDialog(
           modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
           onClick = { onConfirm() }
         ) {
-          Text(text = stringResource(R.string.text_save), style = Typography.h5)
+          Text(text = stringResource(R.string.text_save), style = MaterialTheme.typography.titleLarge)
         }
       }
     }

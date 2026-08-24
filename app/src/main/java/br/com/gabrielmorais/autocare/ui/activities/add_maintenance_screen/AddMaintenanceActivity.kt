@@ -13,14 +13,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
@@ -45,7 +47,6 @@ import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants
 import br.com.gabrielmorais.autocare.utils.Utils
 import br.com.gabrielmorais.autocare.utils.getParcelableExtraCompat
@@ -100,6 +101,7 @@ private data class ServiceOption(
   val mustBeDoneBefore: Int
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
   val services by viewModel.services.collectAsState()
@@ -160,7 +162,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel) {
 
         options.isEmpty() -> Text(
           text = stringResource(R.string.text_services_unavailable),
-          style = Typography.h6
+          style = MaterialTheme.typography.titleMedium
         )
 
         // Column propria porque o formulario cresceu com o switch e a barra de
@@ -393,7 +395,7 @@ private fun MaintenanceForm(
 
       onSave(vehicleId, maintenance)
     }) {
-    Text(text = stringResource(R.string.text_save), style = Typography.h5)
+    Text(text = stringResource(R.string.text_save), style = MaterialTheme.typography.titleLarge)
   }
 }
 

@@ -6,7 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -17,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -38,14 +38,18 @@ class RegisterActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { RegisterScreen(viewModel) }
+    setContent {
+      AutoCareTheme {
+        RegisterScreen(viewModel)
+      }
+    }
   }
 }
 
 @Composable
 fun RegisterScreen(viewModel: RegisterViewModel) {
 
-  val scaffoldState = rememberScaffoldState()
+  val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   val state = viewModel.registerState.collectAsState(initial = null)
   val context = LocalContext.current as ComponentActivity
@@ -57,89 +61,86 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
   if (state.value?.isLoading == true) {
     LoadingPage(stringResource(R.string.text_loading_register_user))
   } else {
-    AutoCareTheme {
-      Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        scaffoldState = scaffoldState,
-        snackbarHost = { scaffoldState.snackbarHostState }
-      ) { contentPadding ->
-        Column(
+    Scaffold(
+      modifier = Modifier.fillMaxSize(),
+      snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { contentPadding ->
+      Column(
+        modifier = Modifier
+          .padding(contentPadding)
+          .padding(horizontal = 16.dp)
+          .fillMaxSize(),
+      ) {
+
+        OutlinedTextField(
           modifier = Modifier
-            .padding(contentPadding)
-            .padding(horizontal = 16.dp)
-            .fillMaxSize(),
-        ) {
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+          value = email,
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+          label = { Text(text = stringResource(id = R.string.text_email)) },
+          leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
+          placeholder = { Text(text = stringResource(R.string.placeeholder_email)) },
+          onValueChange = { email = it },
+        )
+        OutlinedTextField(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp),
+          value = password,
+          label = { Text(text = stringResource(R.string.text_password)) },
+          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+          leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+          trailingIcon = {
+            IconButton(onClick = { showPassword = !showPassword }) {
+              Icon(
+                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                contentDescription = null
+              )
+            }
+          },
+          onValueChange = { password = it },
+        )
 
-          OutlinedTextField(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(vertical = 32.dp),
-            value = email,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            label = { Text(text = stringResource(id = R.string.text_email)) },
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) },
-            placeholder = { Text(text = stringResource(R.string.placeeholder_email)) },
-            onValueChange = { email = it },
-          )
-          OutlinedTextField(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(bottom = 32.dp),
-            value = password,
-            label = { Text(text = stringResource(R.string.text_password)) },
-            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-            trailingIcon = {
-              IconButton(onClick = { showPassword = !showPassword }) {
-                Icon(
-                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                  contentDescription = null
-                )
-              }
-            },
-            onValueChange = { password = it },
-          )
+        OutlinedTextField(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp),
+          value = confirmPassword,
+          label = { Text(text = stringResource(R.string.text_confirm_password)) },
+          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+          leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
+          trailingIcon = {
+            IconButton(onClick = { showPassword = !showPassword }) {
+              Icon(
+                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                contentDescription = null
+              )
+            }
+          },
+          onValueChange = { confirmPassword = it },
+        )
 
-          OutlinedTextField(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(bottom = 32.dp),
-            value = confirmPassword,
-            label = { Text(text = stringResource(R.string.text_confirm_password)) },
-            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, null) },
-            trailingIcon = {
-              IconButton(onClick = { showPassword = !showPassword }) {
-                Icon(
-                  imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                  contentDescription = null
-                )
-              }
-            },
-            onValueChange = { confirmPassword = it },
+        TextButton(
+          modifier = Modifier.fillMaxWidth(),
+          onClick = {
+            viewModel.registerUser(email, password, confirmPassword)
+          }) {
+          Text(
+            text = stringResource(R.string.text_register_user),
+            style = MaterialTheme.typography.titleLarge
           )
-
-          TextButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-              viewModel.registerUser(email, password, confirmPassword)
-            }) {
-            Text(
-              text = stringResource(R.string.text_register_user),
-              style = TextStyle(fontSize = 24.sp)
-            )
-          }
         }
-        Box(
-          Modifier.fillMaxSize(),
-          contentAlignment = Alignment.BottomCenter
-        ) {
-          DefaultSnackBar(
-            snackbarHostState = scaffoldState.snackbarHostState,
-            onDismiss = {
-              scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-            })
-        }
+      }
+      Box(
+        Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+      ) {
+        DefaultSnackBar(
+          snackbarHostState = snackbarHostState,
+          onDismiss = {
+            snackbarHostState.currentSnackbarData?.dismiss()
+          })
       }
     }
   }
@@ -158,15 +159,15 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
     scope.launch {
       if (state.value?.isError?.isNotEmpty() == true) {
         val error = state.value?.isError
-        showSnackBar(scaffoldState, "$error")
+        showSnackBar(snackbarHostState, "$error")
       }
     }
   }
 }
 
-fun showSnackBar(scaffoldState: ScaffoldState, message: String) {
+fun showSnackBar(hostState: SnackbarHostState, message: String) {
   CoroutineScope(Dispatchers.Main).launch {
-    scaffoldState.snackbarHostState.showSnackbar(message)
+    hostState.showSnackbar(message)
   }
 }
 

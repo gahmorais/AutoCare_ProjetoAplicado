@@ -3,16 +3,17 @@ package br.com.gabrielmorais.autocare.ui.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +40,7 @@ fun CardVehicle(
 
   Card(
     modifier = modifier,
-    elevation = 5.dp,
+    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
   ) {
     Row(
       modifier
@@ -77,7 +78,7 @@ fun CardVehicle(
         Row {
           Text(
             text = vehicle.brand ?: "",
-            style = TextStyle(fontSize = 20.sp),
+            style = MaterialTheme.typography.titleMedium,
           )
           Spacer(
             modifier = Modifier
@@ -85,12 +86,12 @@ fun CardVehicle(
           )
           Text(
             text = vehicle.model ?: "",
-            style = TextStyle(fontSize = 20.sp),
+            style = MaterialTheme.typography.titleMedium,
           )
         }
         Text(
           text = vehicle.plate ?: "",
-          style = TextStyle(fontSize = 25.sp),
+          style = MaterialTheme.typography.titleLarge,
         )
         Divider(thickness = 2.dp)
         Text(text = "Distância por mês: ")
@@ -99,9 +100,9 @@ fun CardVehicle(
             text = NumberFormat
               .getNumberInstance(Locale("pt", "BR"))
               .format(vehicle.averageDistanceTraveledPerMonth),
-            style = TextStyle(fontSize = 25.sp)
+            style = MaterialTheme.typography.titleLarge
           )
-          Text(text = " Km", style = TextStyle(fontSize = 25.sp))
+          Text(text = " Km", style = MaterialTheme.typography.titleLarge)
         }
       }
     }

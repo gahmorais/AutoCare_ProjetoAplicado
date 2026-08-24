@@ -67,4 +67,19 @@
     <string name="text_filter_completed">Concluídas (%1$d)</string>
     <string name="text_no_pending_maintenance">Nenhuma manutenção pendente</string>
     <string name="text_no_completed_maintenance">Nenhuma manutenção concluída</string>
+    <string name="text_empty_vehicles_hint">Cadastre um veículo para começar a acompanhar as manutenções.</string>
+    <string name="content_desc_open_menu">Abrir menu</string>
+    <string name="content_desc_delete_vehicle">Excluir veículo</string>
+    <string name="content_desc_delete_maintenance">Excluir manutenção</string>
+    <string name="content_desc_add_maintenance">Adicionar manutenção</string>
+    <string name="content_desc_change_vehicle_photo">Alterar foto do veículo</string>
+    <string name="text_mileage_done">Feito</string>
+    <string name="text_mileage_now">Agora</string>
+    <string name="text_mileage_forecast">Prevista</string>
+    <string name="text_status_on_track">Em dia</string>
+    <string name="text_status_due_soon">Vence em breve</string>
+    <string name="text_status_overdue">Vencida</string>
+    <!-- %1$s ja vem formatado com separador de milhar -->
+    <string name="text_mileage_overshoot">Passou em %1$s km</string>
+    <string name="text_estimated_mileage">≈%1$s km</string>
 </resources>

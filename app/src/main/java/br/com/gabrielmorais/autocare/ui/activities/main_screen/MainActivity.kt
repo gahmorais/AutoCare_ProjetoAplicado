@@ -11,34 +11,35 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -54,7 +55,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,7 +70,6 @@ import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.MyAccountAc
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsActivity
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -131,10 +130,13 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel? = null) {
-  val scaffoldState = rememberScaffoldState()
-  val scrollState = rememberScrollState()
+  // No M3 o drawer saiu do Scaffold e virou ModalNavigationDrawer, entao o
+  // estado do drawer e o do snackbar sao independentes - nao ha mais ScaffoldState.
+  val drawerState = rememberDrawerState(DrawerValue.Closed)
+  val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val user = viewModel?.user?.collectAsState(initial = null)
   val vehicleList = user?.value?.vehicles
@@ -166,81 +168,90 @@ fun MainScreen(viewModel: MainViewModel? = null) {
   )
 
 
-  Scaffold(
-    scaffoldState = scaffoldState,
-    topBar = {
-      TopBar(scaffoldState = scaffoldState, viewModel = viewModel)
-    },
-    drawerGesturesEnabled = true,
+  ModalNavigationDrawer(
+    drawerState = drawerState,
     drawerContent = {
-      DrawerContent(user?.value) {
-        launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
-      }
-    }
-  ) { contentPadding ->
-    if (!vehicleList.isNullOrEmpty()) {
-      LazyColumn(
-        modifier = Modifier
-          .padding(contentPadding)
-          .scrollable(scrollState, orientation = Orientation.Vertical)
-      ) {
-        items(vehicleList) { vehicle ->
-          CardVehicle(
-            vehicle = vehicle,
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(5.dp)
-              .clip(shape = RoundedCornerShape(15.dp)),
-            onCardClick = {
-              val intent = Intent(context, VehicleDetailsActivity::class.java)
-              intent.putExtra(INTENT_VEHICLE_ID, vehicle.id)
-              context.startActivity(intent)
-            }
-          )
+      ModalDrawerSheet {
+        DrawerContent(user?.value) {
+          launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
         }
       }
-    } else
-      Column(
-        modifier = Modifier
-          .padding(contentPadding)
-          .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-      ) {
-        Box(
+    }
+  ) {
+    Scaffold(
+      topBar = {
+        TopBar(
+          viewModel = viewModel,
+          onOpenDrawer = {
+            scope.launch { if (drawerState.isClosed) drawerState.open() else drawerState.close() }
+          }
+        )
+      }
+    ) { contentPadding ->
+      if (!vehicleList.isNullOrEmpty()) {
+        LazyColumn(
+          modifier = Modifier.padding(contentPadding),
+          contentPadding = PaddingValues(16.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          items(vehicleList) { vehicle ->
+            CardVehicle(
+              vehicle = vehicle,
+              modifier = Modifier.fillMaxWidth(),
+              onCardClick = {
+                val intent = Intent(context, VehicleDetailsActivity::class.java)
+                intent.putExtra(INTENT_VEHICLE_ID, vehicle.id)
+                context.startActivity(intent)
+              }
+            )
+          }
+        }
+      } else {
+        Column(
           modifier = Modifier
-            .weight(1F)
-            .wrapContentHeight(Alignment.CenterVertically)
+            .padding(contentPadding)
+            .fillMaxSize()
+            .padding(32.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center
         ) {
           Text(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.text_any_car_registered),
             textAlign = TextAlign.Center,
-            style = Typography.h4
+            style = MaterialTheme.typography.headlineSmall
           )
+          Spacer(Modifier.padding(vertical = 8.dp))
+          Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.text_empty_vehicles_hint),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
+          Spacer(Modifier.padding(vertical = 8.dp))
+          Button(onClick = {
+            context.startActivity(Intent(context, MyAccountActivity::class.java))
+          }) {
+            Text(text = stringResource(R.string.text_add_vehicle))
+          }
         }
       }
+    }
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(scaffoldState: ScaffoldState, viewModel: MainViewModel?) {
-  val scope = rememberCoroutineScope()
+fun TopBar(viewModel: MainViewModel?, onOpenDrawer: () -> Unit) {
   TopAppBar(
     title = { Text(text = stringResource(id = R.string.app_name)) },
     navigationIcon = {
-      IconButton(onClick = {
-        scope.launch {
-          scaffoldState.drawerState.apply {
-            if (isClosed) {
-              open()
-            } else {
-              close()
-            }
-          }
-        }
-      }) {
-        Icon(imageVector = Icons.Default.Menu, null)
+      IconButton(onClick = onOpenDrawer) {
+        Icon(
+          imageVector = Icons.Default.Menu,
+          contentDescription = stringResource(R.string.content_desc_open_menu)
+        )
       }
     },
     actions = { TopAppBarActions(viewModel) })
@@ -289,14 +300,14 @@ fun DrawerContent(user: User? = null, updateUserPhoto: () -> Unit = {}) {
       text = user?.name?.takeIf { it.isNotBlank() }
         ?: user?.email
         ?: stringResource(R.string.text_unknow),
-      style = TextStyle(fontSize = 20.sp)
+      style = MaterialTheme.typography.titleMedium
     )
   }
 
   TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
     context.startActivity(Intent(context, MyAccountActivity::class.java))
   }) {
-    Text(text = stringResource(id = R.string.text_my_account), style = Typography.h6)
+    Text(text = stringResource(id = R.string.text_my_account), style = MaterialTheme.typography.titleMedium)
   }
 }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Sem esta variante o fundo da janela ficava claro no tema escuro e
+         piscava branco a cada abertura de tela, antes de o Compose desenhar. -->
+    <style name="Theme.AutoCare" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/concreto_escuro</item>
+        <item name="android:windowBackground">@color/concreto_escuro</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

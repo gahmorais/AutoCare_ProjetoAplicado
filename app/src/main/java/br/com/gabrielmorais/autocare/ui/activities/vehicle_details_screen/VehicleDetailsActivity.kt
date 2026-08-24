@@ -22,19 +22,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.DismissDirection
-import androidx.compose.material.DismissValue
-import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FilterChip
-import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.SwipeToDismiss
-import androidx.compose.material.TopAppBar
-import androidx.compose.material.rememberDismissState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
@@ -47,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -62,7 +63,6 @@ import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.AddMai
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
-import br.com.gabrielmorais.autocare.ui.theme.Typography
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_MAINTENANCE
 import br.com.gabrielmorais.autocare.utils.Constants.Companion.INTENT_VEHICLE_ID
 import com.canhub.cropper.CropImageContract
@@ -105,7 +105,7 @@ class VehicleDetailsActivity : ComponentActivity() {
   }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
 
@@ -176,7 +176,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
       Text(
         modifier = Modifier.padding(bottom = 8.dp),
         text = stringResource(R.string.maintenance_text),
-        style = Typography.h5
+        style = MaterialTheme.typography.titleLarge
       )
 
       // Um `when` explicito e nao um encadeamento de `?:`/`let`: com o filtro
@@ -208,15 +208,18 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
           } else {
             LazyColumn {
               items(visibleMaintenances, key = { it.id }) { maintenance ->
+                // No M3 o limiar saiu do SwipeToDismiss e virou positionalThreshold
+                // do proprio estado, e confirmStateChange virou confirmValueChange.
                 val dismissState = rememberDismissState(
-                  confirmStateChange = { value ->
+                  confirmValueChange = { value ->
                     if (value == DismissValue.DismissedToStart) {
                       viewModel.deleteMaintenance(maintenance) { removed ->
                         NotificationUtils.cancelNotification(context, removed)
                       }
                     }
                     true
-                  }
+                  },
+                  positionalThreshold = { distance -> distance * 0.66f }
                 )
                 // Column envolvendo o item para que marcar como concluida
                 // deslize o card ate o fim da lista em vez de saltar - e
@@ -226,40 +229,43 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
                   SwipeToDismiss(
                     state = dismissState,
                     directions = setOf(DismissDirection.EndToStart),
-                    dismissThresholds = { FractionalThreshold(0.66F) },
                     background = {
                       val color = when (dismissState.dismissDirection) {
-                        DismissDirection.EndToStart -> Color.Red
+                        DismissDirection.EndToStart -> MaterialTheme.colorScheme.errorContainer
                         else -> Color.Transparent
                       }
                       Box(
                         modifier = Modifier
                           .fillMaxSize()
+                          .clip(MaterialTheme.shapes.medium)
                           .background(color)
                       ) {
                         Icon(
                           modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .padding(end = 10.dp)
-                            .size(25.dp),
+                            .padding(end = 20.dp)
+                            .size(24.dp),
                           imageVector = Icons.Rounded.Delete,
-                          contentDescription = null
+                          tint = MaterialTheme.colorScheme.onErrorContainer,
+                          contentDescription = stringResource(R.string.content_desc_delete_maintenance)
                         )
                       }
+                    },
+                    dismissContent = {
+                      SimpleCardMaintenance(
+                        modifier = Modifier.fillMaxWidth(),
+                        maintenance = maintenance,
+                        averageDistancePerMonth = vehicle.value?.averageDistanceTraveledPerMonth,
+                        onClick = {
+                          val vehicleId = vehicle.value?.id ?: return@SimpleCardMaintenance
+                          val intent = Intent(context, AddMaintenanceActivity::class.java)
+                          intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
+                          intent.putExtra(INTENT_MAINTENANCE, maintenance)
+                          context.startActivity(intent)
+                        }
+                      )
                     }
-                  ) {
-                    SimpleCardMaintenance(
-                      modifier = Modifier.fillMaxWidth(),
-                      maintenance = maintenance,
-                      onClick = {
-                        val vehicleId = vehicle.value?.id ?: return@SimpleCardMaintenance
-                        val intent = Intent(context, AddMaintenanceActivity::class.java)
-                        intent.putExtra(INTENT_VEHICLE_ID, vehicleId)
-                        intent.putExtra(INTENT_MAINTENANCE, maintenance)
-                        context.startActivity(intent)
-                      }
-                    )
-                  }
+                  )
                   Spacer(modifier = Modifier.padding(bottom = 8.dp))
                 }
               }
@@ -271,7 +277,7 @@ fun VehicleDetailsScreen(viewModel: VehicleDetailsViewModel) {
   }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MaintenanceFilterRow(
   selected: MaintenanceFilter,
@@ -293,12 +299,12 @@ private fun MaintenanceFilterRow(
       MaintenanceFilter.CONCLUIDAS to stringResource(R.string.text_filter_completed, completedCount)
     )
     labels.forEach { (value, label) ->
+      // No M3 o rotulo virou parametro `label` em vez de conteudo trailing.
       FilterChip(
         selected = selected == value,
-        onClick = { onSelect(value) }
-      ) {
-        Text(text = label)
-      }
+        onClick = { onSelect(value) },
+        label = { Text(text = label) }
+      )
     }
   }
 }
@@ -315,7 +321,7 @@ private fun EmptyMaintenanceMessage(text: String) {
     Text(
       modifier = Modifier.fillMaxWidth(),
       text = text,
-      style = Typography.h5,
+      style = MaterialTheme.typography.titleLarge,
       textAlign = TextAlign.Center
     )
   }
