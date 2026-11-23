@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # Push novo na mesma ref cancela a execucao anterior: so o ultimo commit importa.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Testes, lint e APK de debug
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-android
+        with:
+          google-services-json-base64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          cloudinary-cloud-name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          cloudinary-upload-preset: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+
+      # As tres tasks ficam separadas para o passo vermelho dizer o que quebrou.
+      - name: Testes unitarios
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Lint
+        # app/build.gradle marca como fatal as regras que ja apontaram bugs reais
+        # do projeto, entao lint reprovado reprova o CI.
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: APK de debug
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Publica os relatorios
+        # always(): o relatorio so serve quando a task falhou.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-*.html
+            app/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Publica o APK de debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14

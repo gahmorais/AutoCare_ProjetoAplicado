@@ -154,6 +154,61 @@ android.jar de teste e qualquer asserção passaria sem exercitar nada.
 
 O build requer **JDK 17** (AGP 8.0.2).
 
+## CI/CD
+
+Quatro workflows em [`.github/workflows/`](.github/workflows/). O setup comum — JDK 17, cache do
+Gradle e os arquivos não versionados que o build exige — está na action composta
+[`.github/actions/setup-android`](.github/actions/setup-android/action.yml).
+
+| Workflow | Dispara em | O que faz |
+| --- | --- | --- |
+| [`ci.yml`](.github/workflows/ci.yml) | push na `main`, todo PR | `testDebugUnitTest`, `lintDebug`, `assembleDebug` |
+| [`instrumented-tests.yml`](.github/workflows/instrumented-tests.yml) | 03:00 BRT, manual | `connectedDebugAndroidTest` em emulador, API 28 e 34 |
+| [`release.yml`](.github/workflows/release.yml) | tag `v*`, manual | APK + AAB assinados e GitHub Release |
+| [`deploy-database-rules.yml`](.github/workflows/deploy-database-rules.yml) | push na `main` que toque nas regras | `firebase deploy --only database` |
+
+### Secrets
+
+Em *Settings → Secrets and variables → Actions*. Nenhum é obrigatório para o `ci.yml` passar:
+sem `GOOGLE_SERVICES_JSON_BASE64` a action escreve um `google-services.json` **placeholder**, que
+só existe para o plugin `com.google.gms.google-services` não abortar o build. Com ele o app compila
+e os testes JVM rodam, mas nada conecta no Firebase — é o que mantém PR de fork verde.
+
+| Secret | Usado por | Como obter |
+| --- | --- | --- |
+| `GOOGLE_SERVICES_JSON_BASE64` | todos | `base64 -w0 app/google-services.json` |
+| `RELEASE_KEYSTORE_BASE64` | release | `base64 -w0 release.jks` |
+| `RELEASE_KEYSTORE_PASSWORD` | release | senha do keystore |
+| `RELEASE_KEY_ALIAS` | release | alias da chave |
+| `RELEASE_KEY_PASSWORD` | release | senha da chave |
+| `CLOUDINARY_CLOUD_NAME` | todos | ver *Imagens* acima |
+| `CLOUDINARY_UPLOAD_PRESET` | todos | ver *Imagens* acima |
+| `FIREBASE_SERVICE_ACCOUNT` | deploy das regras | JSON da service account, colado inteiro |
+
+> ⚠️ `FIREBASE_SERVICE_ACCOUNT` é a mesma chave administrativa descrita em *Limpando as fotos
+> antigas*: ignora as regras de segurança. O `deploy-database-rules.yml` roda no environment
+> `production` — dá para exigir aprovação manual em *Settings → Environments* se o deploy
+> automático a cada push incomodar.
+
+### Publicando uma versão
+
+A tag é a fonte da versão. `versionName` sai dela e `versionCode` do número da execução:
+
+```sh
+git tag v1.1.0 && git push origin v1.1.0
+```
+
+O workflow roda testes e `lintRelease` antes de assinar — a tag pode apontar para um commit que
+nunca passou no CI. Depois de assinar, confere com `apksigner verify` antes de publicar.
+
+Para isso funcionar, [`app/build.gradle`](app/build.gradle) lê assinatura e versão de variáveis de
+ambiente (`RELEASE_KEYSTORE_PATH`, `VERSION_NAME`, `VERSION_CODE`). **Sem elas o build local é
+exatamente o de antes**: versão `1`/`1.0` e `app-release-unsigned.apk`.
+
+O `mapping.txt` do R8 vai só para os artefatos da execução (90 dias), fora da Release — é anexo
+público e serve para desofuscar o APK. Sem ele, as stack traces daquela versão ficam ilegíveis
+para sempre, então baixe e guarde antes de expirar.
+
 ## Débito técnico
 
 ### Transições entre destinos do NavHost

@@ -14,16 +14,34 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.withInputStream { localProperties.load(it) }
 }
 
+// Assinatura e versao da release vem do ambiente, nao do git: a chave nao pode ser
+// versionada e a workflow de release deriva a versao da tag. Sem essas variaveis
+// (build local) o comportamento e o de antes - versao 1/1.0 e APK nao assinado.
+def releaseKeystore = System.getenv('RELEASE_KEYSTORE_PATH')
+def releaseVersionCode = (System.getenv('VERSION_CODE') ?: '1').toInteger()
+def releaseVersionName = System.getenv('VERSION_NAME') ?: '1.0'
+
 android {
     namespace 'br.com.gabrielmorais.autocare'
     compileSdk 34
+
+    signingConfigs {
+        release {
+            if (releaseKeystore) {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv('RELEASE_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('RELEASE_KEY_PASSWORD')
+            }
+        }
+    }
 
     defaultConfig {
         applicationId "br.com.gabrielmorais.autocare"
         minSdk 28
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode releaseVersionCode
+        versionName releaseVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -41,6 +59,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig releaseKeystore ? signingConfigs.release : null
         }
     }
     compileOptions {

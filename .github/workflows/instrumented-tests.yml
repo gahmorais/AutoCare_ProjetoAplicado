@@ -1,0 +1,97 @@
+name: Testes instrumentados
+
+# Fora do CI de PR de proposito: o emulador leva ~10 min por execucao. Roda de
+# madrugada na main e sob demanda. `ImageCompressor` so tem cobertura aqui.
+on:
+  schedule:
+    - cron: '0 6 * * *' # 03:00 BRT
+  workflow_dispatch:
+
+concurrency:
+  group: instrumented-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  connected-tests:
+    name: connectedDebugAndroidTest (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # minSdk 28 e targetSdk 34: as duas pontas suportadas.
+        api-level: [28, 34]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Libera espaco em disco
+        # A imagem do runner vem com ~14 GB livres; a do emulador mais o build
+        # nao cabem sem tirar os SDKs que o projeto nao usa.
+        run: |
+          sudo rm -rf /usr/local/lib/android/sdk/ndk /usr/share/dotnet /opt/ghc
+          df -h /
+
+      - uses: ./.github/actions/setup-android
+        with:
+          google-services-json-base64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          cloudinary-cloud-name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          cloudinary-upload-preset: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+
+      - name: Habilita a aceleracao KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache da AVD
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+
+      - name: Cria a AVD e gera o snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "AVD gerada."
+
+      - name: Roda os testes
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          # Sem isto os testes de Compose competem com as animacoes do sistema e
+          # ficam instaveis.
+          disable-animations: true
+          script: |
+            adb shell wm dismiss-keyguard
+            ./gradlew connectedDebugAndroidTest --stacktrace
+
+      - name: Publica os relatorios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-instrumentados-api-${{ matrix.api-level }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: ignore
+          retention-days: 14
