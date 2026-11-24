@@ -252,27 +252,41 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 
 ---
 
-## Etapa 7 — Auto Backup
+## Etapa 7 — Auto Backup ✅
+
+> Adiantada para antes da etapa 6: com a saída do Firebase (etapa 5), as regras antigas excluíam o banco e as fotos, e quem trocasse de celular perderia tudo.
 
 **Mudanças**
-- [ ] `data_extraction_rules.xml` (Android 12+) e `backup_rules.xml` (≤ 11): **incluir** `database` (o arquivo do Room e seus `-wal`/`-shm`), `file` com path `images/` e o `datastore`. Excluir `cache` e `no_backup`. O comentário atual (sobre o token do Firebase) deixa de valer e deve ser reescrito.
-- [ ] Usar `<include>` explícito para que um diretório novo não entre no backup sem querer.
-- [ ] **Limite de 25 MB do Auto Backup:** usar o tamanho médio medido na etapa 3 (alvo ~150–300 KB por foto de veículo) e documentar quantas fotos cabem. Se o espaço apertar, reduzir o lado máximo, e não a qualidade abaixo de 70.
-- [ ] Depois de uma restauração, reagendar os alarmes, porque eles não fazem parte do backup. O `enqueueReschedule` na abertura da `MainActivity` já cobre isso, então basta confirmar.
+- [x] `data_extraction_rules.xml` (Android 12+, backup na nuvem e transferência entre aparelhos) e `backup_rules.xml` (Android 9–11) com `<include>` explícito de `autocare.db` + `-wal` + `-shm`, `files/images/` e `files/datastore/`. Cache e `no_backup` (banco do WorkManager) ficam de fora.
+- [x] Sem `<exclude>`: só entra o que for incluído, para que uma pasta nova não vá para o backup sem decisão.
+- [x] `BackupRulesTest` amarra os caminhos das regras às constantes do código (`AutoCareDatabase.NAME`, `ImagePaths.DIR`) e confere que os três blocos são iguais. Renomear o banco ou a pasta de fotos quebra o teste, e não o backup do usuário em silêncio.
+- [x] Alarmes não vão no backup e voltam pelo `enqueueReschedule` da `MainActivity`. Confirmado: 0 alarmes depois da restauração e 1 depois de abrir o app.
 
-**Testes**
-- Não há bom teste automatizado de backup. A validação é manual, com o roteiro abaixo registrado no PR.
+**Limite de 25 MB**
+
+| Item medido no emulador | Tamanho |
+|---|---|
+| Banco com 1 perfil, 1 veículo e 1 manutenção (`.db` + `-wal` + `-shm`) | ~136 KB, quase tudo `-wal`/`-shm` de tamanho fixo |
+| Foto de veículo 2:1 (1280×640) de imagem sintética | 38 KB |
+| Foto de veículo 1280×1280 (antes da trava 2:1) | 84 KB |
+| Teto do teste automatizado (foto 4000×3000 → 1280 px) | < 400 KB |
+
+Com o recorte travado em 2:1, a foto de veículo tem 1280×640. Uma foto real de câmera deve ficar entre ~100 e 200 KB, ou seja, **mais de 100 veículos com foto** dentro dos 25 MB. Medir com fotos reais num aparelho físico e registrar aqui.
 
 **Validação**
 ```sh
 adb shell bmgr enable true
 adb shell bmgr transport com.android.localtransport/.LocalTransport
+# o app NAO pode estar em estado "stopped" (force-stop): o Android recusa com
+# "Backup is not allowed". Abra o app e volte para a home antes.
 adb shell bmgr backupnow br.com.gabrielmorais.autocare
-adb shell pm clear br.com.gabrielmorais.autocare          # apaga os dados locais
-adb shell bmgr restore br.com.gabrielmorais.autocare       # restaura do transporte local
+adb shell pm clear br.com.gabrielmorais.autocare
+adb shell bmgr list sets                                   # token do conjunto
+adb shell bmgr restore <token> br.com.gabrielmorais.autocare
 ```
-- [ ] Depois da restauração: perfis, veículos, manutenções e **fotos** de volta, e notificações reagendadas ao abrir o app.
-- [ ] Repetir num aparelho com conta Google (transporte GMS): desinstalar → reinstalar → os dados voltam.
+- [x] Restauração depois de `pm clear`: perfil, veículo, manutenção, foto e perfil ativo de volta; o app abre direto no Início, sem onboarding; alarme reagendado ao abrir.
+- [x] Desinstalar → reinstalar (restauração automática na instalação, transporte local): dados de volta.
+- [ ] Repetir num **aparelho físico com conta Google** (transporte GMS, backup real no Drive).
 
 **Commit:** `Ativa o Auto Backup do banco e das fotos`
 

@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Regras de backup para Android 12+ (API 31).
+   Regras de backup para Android 12+ (API 31). Para Android 9-11 vale o
+   backup_rules.xml, com o mesmo conteudo - mantenha os dois iguais.
 
-   Os arquivos vinham como os templates comentados do Android Studio, o que
-   significa "copie tudo": as SharedPreferences do Firebase Auth, onde fica o
-   refresh token persistido, iam junto no backup em nuvem e na transferencia
-   entre aparelhos. Quem restaurasse o backup herdava a sessao autenticada.
+   Os dados do app existem so no aparelho: sem backup, trocar de celular ou
+   reinstalar apagava todo o historico de manutencao. Entra so o que e dado do
+   usuario, com <include> explicito para que uma pasta nova (de uma biblioteca,
+   por exemplo) nao va para o backup sem que alguem decida:
 
-   Os dados do app moram no Firebase e sao recuperados no proximo login, entao
-   nao ha nada local que valha a pena preservar.
+   - databases/autocare.db (+ -wal e -shm): perfis, veiculos e manutencoes. O
+     Room grava em WAL, entao escritas recentes podem estar so no -wal; sem ele
+     o backup perderia as ultimas alteracoes.
+   - files/images/: fotos de perfil e de veiculo, ja em JPEG comprimido.
+   - files/datastore/: qual perfil esta ativo.
+
+   Fica de fora: cache (Coil, temporarios do cropper) e no_backup (banco do
+   WorkManager). Os alarmes nao fazem parte do backup; a MainActivity enfileira
+   o reagendamento ao abrir, o que os recria depois de uma restauracao.
+
+   Os nomes estao amarrados ao codigo por BackupRulesTest.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude
-            domain="sharedpref"
-            path="com.google.firebase.auth.api.Store.xml" />
-        <exclude
-            domain="sharedpref"
-            path="com.google.android.gms.appid.xml" />
-        <exclude domain="database" />
-        <exclude domain="file" />
+        <include domain="database" path="autocare.db" />
+        <include domain="database" path="autocare.db-wal" />
+        <include domain="database" path="autocare.db-shm" />
+        <include domain="file" path="images/" />
+        <include domain="file" path="datastore/" />
     </cloud-backup>
 
     <device-transfer>
-        <exclude
-            domain="sharedpref"
-            path="com.google.firebase.auth.api.Store.xml" />
-        <exclude
-            domain="sharedpref"
-            path="com.google.android.gms.appid.xml" />
-        <exclude domain="database" />
-        <exclude domain="file" />
+        <include domain="database" path="autocare.db" />
+        <include domain="database" path="autocare.db-wal" />
+        <include domain="database" path="autocare.db-shm" />
+        <include domain="file" path="images/" />
+        <include domain="file" path="datastore/" />
     </device-transfer>
 </data-extraction-rules>
