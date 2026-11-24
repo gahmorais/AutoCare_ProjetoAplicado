@@ -19,6 +19,38 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | Importação | **Mescla por id**, não destrutiva, sempre com prévia antes de aplicar. |
 | Conta Play | **Organização**: não exige o teste fechado com 12 testadores, mas exige D-U-N-S e verificação da organização. |
 
+## Andamento
+
+*Atualizado em 24/11/2026.* Etapas 1 a 7 feitas e commitadas, **ainda sem push nem PR**. A etapa 7 foi adiantada para antes da 6, e as branches estão empilhadas: `feat/etapa-6-perfis` contém todas as anteriores.
+
+| Etapa | Commit | Situação |
+|---|---|---|
+| 1 — Toolchain | `6fd011e` | ✅ |
+| 2 — Room + catálogo | `e71ba9e`, `928f51e` | ✅ catálogo real de 13 serviços, exportado do Firebase |
+| 3 — Fotos locais | `7451716` | ✅ falta medir com fotos reais de câmera |
+| 4 — Dados locais, sem login | `de5553e` | ✅ validado em modo avião |
+| 5 — Remoção do Firebase | `75070f3` | ✅ APK de release de 8,07 MB para 5,62 MB; CI sem secrets ainda não rodou (sem push) |
+| 7 — Auto Backup | `f46154c` | ✅ falta testar em aparelho físico com conta Google |
+| 6 — Múltiplos perfis | `91cda85` | ✅ |
+| 8 — Exportar / importar | — | próxima |
+| 9 — `targetSdk` + edge-to-edge | — | pendente |
+| 10 — AdMob + UMP | — | pendente |
+| 11 — Release e Play Console | — | pendente |
+
+**Situação no último commit (`91cda85`):** 116 testes na JVM e 41 instrumentados passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.679.217 bytes.
+
+**Bugs antigos achados e corrigidos no caminho:** excluir um veículo não cancelava os alarmes dele, e o desfazer não devolvia as manutenções; o recorte de foto não travava a proporção; o círculo do avatar ficava invisível.
+
+**Pendências manuais do responsável pelo app**
+- [ ] Testar o Auto Backup num aparelho físico com conta Google (etapa 7).
+- [ ] Medir o tamanho de fotos reais de câmera e de galeria (etapa 3).
+- [ ] Apagar no GitHub os secrets antigos (`GOOGLE_SERVICES_JSON_BASE64`, `CLOUDINARY_*`).
+- [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
+
+**Sobras conhecidas, para resolver antes da release**
+- Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
+- No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
+
 ## Regras gerais de cada etapa
 
 - **Uma branch e um PR por etapa** (`feat/etapa-N-<assunto>`), com merge por squash, como já acontece no histórico (`(#4)`, `(#5)`…).
@@ -40,32 +72,32 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ---
 
-## Etapa 1 — Toolchain atualizado (sem mudar o comportamento)
+## Etapa 1 — Toolchain atualizado (sem mudar o comportamento) ✅
 
 **Por quê:** o Room/KSP, o SDK de anúncios e o `targetSdk` exigido pela Play pedem um AGP e um Kotlin mais novos. Fazer isso antes, isolado, evita misturar erro de build com erro de funcionalidade.
 
 **Mudanças**
-- [ ] Gradle wrapper `8.4` → versão exigida pelo AGP escolhido (`gradle/wrapper/gradle-wrapper.properties`).
-- [ ] AGP `8.3.2` → 8.9 ou mais recente (suporta `compileSdk 36`).
-- [ ] Kotlin `1.9.24` → 2.x com o plugin `org.jetbrains.kotlin.plugin.compose`, que substitui `composeOptions.kotlinCompilerExtensionVersion` e `compose_compiler_version`.
-- [ ] `compileSdk 34` → 36. **O `targetSdk` fica em 34 por enquanto** (ele sobe na etapa 9).
-- [ ] Java/JVM target `1.8` → 17.
-- [ ] Compose BOM, `core-ktx`, `activity-compose`, `lifecycle`, `navigation` e `work-runtime` nas versões estáveis compatíveis.
-- [ ] Confirmar que `.github/actions/setup-android` continua com o JDK 17 (já está).
+- [x] Gradle wrapper `8.4` → versão exigida pelo AGP escolhido (`gradle/wrapper/gradle-wrapper.properties`).
+- [x] AGP `8.3.2` → 8.9 ou mais recente (suporta `compileSdk 36`).
+- [x] Kotlin `1.9.24` → 2.x com o plugin `org.jetbrains.kotlin.plugin.compose`, que substitui `composeOptions.kotlinCompilerExtensionVersion` e `compose_compiler_version`.
+- [x] `compileSdk 34` → 36. **O `targetSdk` fica em 34 por enquanto** (ele sobe na etapa 9).
+- [x] Java/JVM target `1.8` → 17.
+- [x] Compose BOM, `core-ktx`, `activity-compose`, `lifecycle`, `navigation` e `work-runtime` nas versões estáveis compatíveis.
+- [x] Confirmar que `.github/actions/setup-android` continua com o JDK 17 (já está).
 
 **Testes**
 - Suíte existente, sem alteração. Ela é a rede de segurança desta etapa.
 
 **Validação**
-- [ ] Portão mínimo e portão de release verdes.
-- [ ] 📱 `connectedDebugAndroidTest` verde.
-- [ ] App rodando no emulador: login, lista, detalhe, formulário e notificação continuam funcionando.
+- [x] Portão mínimo e portão de release verdes.
+- [x] 📱 `connectedDebugAndroidTest` verde.
+- [x] App rodando no emulador: login, lista, detalhe, formulário e notificação continuam funcionando.
 
 **Commit:** `Sobe AGP, Kotlin 2 e compileSdk 36`
 
 ---
 
-## Etapa 2 — Camada de dados local (Room + catálogo de serviços)
+## Etapa 2 — Camada de dados local (Room + catálogo de serviços) ✅
 
 **Por quê:** criar a nova fonte de dados **ao lado** da atual, testada e ainda sem ligação com a UI. A troca acontece na etapa 4.
 
@@ -86,16 +118,16 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 - As datas continuam em *epoch day*, como hoje, para não mexer em `MaintenanceProgress`.
 
 **Mudanças**
-- [ ] Dependências: Room (`runtime`, `ktx`, `compiler` via KSP) e o plugin KSP.
-- [ ] `data/local/`: `AutoCareDatabase` (`exportSchema = true`, com `room.schemaLocation` em `app/schemas/`, **versionado no git**), entidades, `ProfileDao`, `VehicleDao` e `MaintenanceDao`, com `Flow` para observação e `suspend` para escrita.
-- [ ] Mapeadores entidade ↔ modelo de domínio (`Vehicle`, `Maintenance`). `User` vira `Profile`.
-- [ ] `assets/services.json` com o conteúdo de `lista-servicos` e um `LocalServicesRepository` que lê esse arquivo.
-- [ ] Novas interfaces de repositório **sem `userId` e sem callbacks** (`suspend`/`Flow`): `ProfileRepository`, `VehicleRepository`, `MaintenanceRepository`, `ServicesRepository`. Implementações `Room*`.
-- [ ] Operações compostas em `@Transaction`, por exemplo "transferir veículo para outro perfil" e "restaurar veículo com manutenções" (o desfazer do snackbar).
+- [x] Dependências: Room (`runtime`, `ktx`, `compiler` via KSP) e o plugin KSP.
+- [x] `data/local/`: `AutoCareDatabase` (`exportSchema = true`, com `room.schemaLocation` em `app/schemas/`, **versionado no git**), entidades, `ProfileDao`, `VehicleDao` e `MaintenanceDao`, com `Flow` para observação e `suspend` para escrita.
+- [x] Mapeadores entidade ↔ modelo de domínio (`Vehicle`, `Maintenance`). `User` vira `Profile`.
+- [x] `assets/services.json` com o conteúdo de `lista-servicos` e um `LocalServicesRepository` que lê esse arquivo.
+- [x] Novas interfaces de repositório **sem `userId` e sem callbacks** (`suspend`/`Flow`): `ProfileRepository`, `VehicleRepository`, `MaintenanceRepository`, `ServicesRepository`. Implementações `Room*`.
+- [x] Operações compostas em `@Transaction`, por exemplo "transferir veículo para outro perfil" e "restaurar veículo com manutenções" (o desfazer do snackbar).
 
 **Testes**
-- [ ] Unitários: mapeadores (ida e volta, campos nulos) e parse de `services.json` (já há `org.json` real no classpath de teste).
-- [ ] 📱 Instrumentados com o Room `inMemoryDatabaseBuilder`:
+- [x] Unitários: mapeadores (ida e volta, campos nulos) e parse de `services.json` (já há `org.json` real no classpath de teste).
+- [x] 📱 Instrumentados com o Room `inMemoryDatabaseBuilder`:
   - excluir um perfil apaga os veículos e as manutenções dele (cascata);
   - `observeVehicles(profileId)` emite só os veículos do perfil e reemite após uma inserção;
   - transferir um veículo muda o dono e mantém as manutenções;
@@ -103,13 +135,13 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
   - consulta de manutenções pendentes com data prevista, de **todos** os perfis (usada pelo worker).
 
 **Validação**
-- [ ] Portão mínimo verde e `app/schemas/.../1.json` gerado e commitado.
+- [x] Portão mínimo verde e `app/schemas/.../1.json` gerado e commitado.
 
 **Commit:** `Adiciona banco Room com perfis, veiculos e manutencoes`
 
 ---
 
-## Etapa 3 — Armazenamento local de fotos
+## Etapa 3 — Armazenamento local de fotos ✅
 
 **Política de imagem** (vale para toda foto salva pelo app: perfil e veículo)
 
@@ -126,19 +158,19 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 - O cropper (`CropImageOptions`, em `VehicleDetailsScreen.kt` e `AccountScreen.kt`) passa a usar `outputCompressFormat = JPEG` e `outputCompressQuality = 90`. Essa é só a imagem intermediária, no cache, e é recomprimida em seguida. Ela é **apagada logo depois** de salva no `filesDir`, porque hoje esses arquivos se acumulam no cache.
 
 **Mudanças**
-- [ ] `ImageCompressor`: qualidade padrão 85 → **75**, lado máximo parametrizado por tipo (1280 / 512) e correção de orientação pelo EXIF antes de recodificar.
-- [ ] `LocalImageStore`:
+- [x] `ImageCompressor`: qualidade padrão 85 → **75**, lado máximo parametrizado por tipo (1280 / 512) e correção de orientação pelo EXIF antes de recodificar.
+- [x] `LocalImageStore`:
   - `save(uri, kind): String` comprime com o `ImageCompressor` conforme o tipo, grava em `images/<uuid>.jpg` e devolve o caminho relativo;
   - `resolve(path): File`;
   - `sweepOrphans(referenced: Set<String>)` apaga arquivos que nenhum registro referencia e que tenham mais de 1 hora. A carência protege a foto recém-salva cujo registro ainda não chegou ao banco.
   - **Não há `delete(path)`**: a varredura é o único caminho de exclusão, para que nada apague uma foto que o "desfazer" ainda pode precisar.
-- [ ] A **exclusão física é feita pela varredura de órfãos** (na abertura do app), e não no momento da exclusão. Assim o "desfazer" do snackbar continua funcionando, porque a foto ainda existe enquanto ele está na tela.
-- [ ] A foto substituída também vira órfã e é recolhida pela varredura.
-- [ ] O Coil passa a carregar um `File` em vez de uma URL. A interface `ImageUploader` é substituída.
+- [x] A **exclusão física é feita pela varredura de órfãos** (na abertura do app), e não no momento da exclusão. Assim o "desfazer" do snackbar continua funcionando, porque a foto ainda existe enquanto ele está na tela.
+- [x] A foto substituída também vira órfã e é recolhida pela varredura.
+- [x] O Coil passa a carregar um `File` em vez de uma URL. A interface `ImageUploader` é substituída.
 
 **Testes**
-- [ ] 📱 Instrumentados: salvar gera um arquivo dentro de `filesDir/images`; `resolve` devolve o mesmo arquivo; `sweepOrphans` apaga só os não referenciados.
-- [ ] 📱 Instrumentados de compressão (estender `ImageCompressorTest`), com uma foto de teste grande (ex.: 4000×3000):
+- [x] 📱 Instrumentados: salvar gera um arquivo dentro de `filesDir/images`; `resolve` devolve o mesmo arquivo; `sweepOrphans` apaga só os não referenciados.
+- [x] 📱 Instrumentados de compressão (estender `ImageCompressorTest`), com uma foto de teste grande (ex.: 4000×3000):
   - o arquivo salvo começa com o marcador JPEG `FF D8 FF`, ou seja, nunca é PNG nem bruto;
   - o maior lado é ≤ 1280 (veículo) e ≤ 512 (perfil), e a proporção é preservada;
   - o arquivo salvo tem **menos de 400 KB** (veículo) e **menos de 100 KB** (perfil), um teto folgado para pegar regressão;
@@ -149,65 +181,65 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 **Validação (manual)**
 - [ ] Tirar 3 fotos reais pela câmera e 3 da galeria, abrir o card e o detalhe e conferir a nitidez (sem blocos ou serrilhado visíveis).
 - [ ] `adb shell run-as br.com.gabrielmorais.autocare ls -l files/images` e registrar no PR o tamanho médio por foto.
-- [ ] `adb shell run-as br.com.gabrielmorais.autocare ls cache` sem sobras do cropper.
-- [ ] Unitário: `sweepOrphans` nunca apaga fora de `images/`, e caminhos com `..` são rejeitados.
+- [x] `adb shell run-as br.com.gabrielmorais.autocare ls cache` sem sobras do cropper.
+- [x] Unitário: `sweepOrphans` nunca apaga fora de `images/`, e caminhos com `..` são rejeitados.
 
 **Validação**
-- [ ] Portão mínimo verde.
+- [x] Portão mínimo verde.
 
 **Commit:** `Adiciona armazenamento local de fotos`
 
 ---
 
-## Etapa 4 — App passa a usar os dados locais (sem login)
+## Etapa 4 — App passa a usar os dados locais (sem login) ✅
 
 **Por quê:** é a virada. A partir daqui o app funciona offline, com um perfil.
 
 **Mudanças**
-- [ ] `ActiveProfileStore` (DataStore Preferences) guarda o `activeProfileId`.
-- [ ] **Primeiro acesso:** uma tela "Como você se chama?" (nome + foto opcional) cria o primeiro perfil e o marca como ativo.
-- [ ] `MainActivity` vira a launcher, com o tema `Theme.AutoCare.Splash`. A splash fica na tela até descobrir se existe perfil, e depois mostra o onboarding ou o início.
-- [ ] `MainViewModel`, `VehicleDetailsViewModel` e `AddMaintenanceViewModel` passam a usar os novos repositórios. Saem `authRepository`, `currentUserId` e as mensagens de "Sessão expirada".
-- [ ] A tela de conta vira **Perfil**: nome e foto editáveis. Saem logout e troca de senha.
-- [ ] Notificações:
+- [x] `ActiveProfileStore` (DataStore Preferences) guarda o `activeProfileId`.
+- [x] **Primeiro acesso:** uma tela "Como você se chama?" (nome + foto opcional) cria o primeiro perfil e o marca como ativo.
+- [x] `MainActivity` vira a launcher, com o tema `Theme.AutoCare.Splash`. A splash fica na tela até descobrir se existe perfil, e depois mostra o onboarding ou o início.
+- [x] `MainViewModel`, `VehicleDetailsViewModel` e `AddMaintenanceViewModel` passam a usar os novos repositórios. Saem `authRepository`, `currentUserId` e as mensagens de "Sessão expirada".
+- [x] A tela de conta vira **Perfil**: nome e foto editáveis. Saem logout e troca de senha.
+- [x] Notificações:
   - o `RescheduleNotificationsWorker` lê do Room as manutenções pendentes de **todos** os perfis;
   - o `BootReceiver` perde a restrição `NetworkType.CONNECTED`, que existia por causa do Firebase;
   - a varredura de fotos órfãs roda no mesmo worker, ao abrir o app.
 
 **Testes**
-- [ ] Unitários de ViewModel com fakes dos novos repositórios. Reescrever `MainViewModelTest` e `MainViewModelVehiclesTest` e criar fakes em `test/fakes/`.
+- [x] Unitários de ViewModel com fakes dos novos repositórios. Reescrever `MainViewModelTest` e `MainViewModelVehiclesTest` e criar fakes em `test/fakes/`.
   - sem perfil → estado de onboarding; com perfil → estado de início;
   - salvar, excluir e desfazer exclusão de veículo;
   - editar o perfil atualiza nome e foto.
-- [ ] 📱 UI: o onboarding cria o perfil e leva ao início. Os testes de formulário e de card continuam passando.
+- [x] 📱 UI: o onboarding cria o perfil e leva ao início. Os testes de formulário e de card continuam passando.
 
 **Validação**
-- [ ] Portão mínimo e portão de release verdes.
-- [ ] Manual, em modo avião: instalar do zero → onboarding → cadastrar veículo com foto → cadastrar manutenção → reiniciar o emulador → a notificação continua agendada (`adb shell dumpsys alarm | grep autocare`).
+- [x] Portão mínimo e portão de release verdes.
+- [x] Manual, em modo avião: instalar do zero → onboarding → cadastrar veículo com foto → cadastrar manutenção → reiniciar o emulador → a notificação continua agendada (`adb shell dumpsys alarm | grep autocare`).
 
 **Commit:** `Troca Firebase por dados locais e remove o login`
 
 ---
 
-## Etapa 5 — Remoção do Firebase, Cloudinary e código morto
+## Etapa 5 — Remoção do Firebase, Cloudinary e código morto ✅
 
 **Mudanças**
-- [ ] Apagar `LoginActivity`, `RegisterActivity`, `LoginViewModel`, `RegisterViewModel`, `LoginViewModelFactory`, `LoginState`, `LoginUiState`, `CredentialValidator`, `PasswordTextField`, `AuthRepository*`, `UserRepository*` e as implementações Firebase dos demais repositórios, `FirebaseModule`, `data/images/Cloudinary*` e `OkHttpClient`.
-- [ ] Testes órfãos: `CloudinaryUploadApiTest`, `CloudinaryUrlTest`, `CredentialValidatorTest`, `FakeAuthRepository` e `FakeUserRepository` (antigo).
-- [ ] Gradle: tirar o plugin e o classpath `google-services`, o BoM do Firebase e todas as dependências `firebase-*`, `okhttp`, `mockwebserver`, e os `buildConfigField` do Cloudinary.
-- [ ] `proguard-rules.pro`: apagar as regras do Firebase e de `data.models.**`. O Room gera código e não usa reflexão.
-- [ ] Manifesto: remover a `RegisterActivity` e qualquer resquício de Firebase.
-- [ ] Repositório: apagar `firebase.json`, `.firebaserc`, `database.rules.json` e `.github/workflows/deploy-database-rules.yml`.
-- [ ] CI (`setup-android`, `ci.yml`, `instrumented-tests.yml`, `release.yml`): tirar os inputs e secrets `GOOGLE_SERVICES_JSON_BASE64` e `CLOUDINARY_*` e a geração do placeholder do `google-services.json`.
-- [ ] `strings.xml`: remover as strings de login, cadastro e senha. O lint `UnusedResources` ajuda a achar.
-- [ ] `README.md`: reescrever a seção de configuração. Não é mais preciso configurar nada para compilar.
+- [x] Apagar `LoginActivity`, `RegisterActivity`, `LoginViewModel`, `RegisterViewModel`, `LoginViewModelFactory`, `LoginState`, `LoginUiState`, `CredentialValidator`, `PasswordTextField`, `AuthRepository*`, `UserRepository*` e as implementações Firebase dos demais repositórios, `FirebaseModule`, `data/images/Cloudinary*` e `OkHttpClient`.
+- [x] Testes órfãos: `CloudinaryUploadApiTest`, `CloudinaryUrlTest`, `CredentialValidatorTest`, `FakeAuthRepository` e `FakeUserRepository` (antigo).
+- [x] Gradle: tirar o plugin e o classpath `google-services`, o BoM do Firebase e todas as dependências `firebase-*`, `okhttp`, `mockwebserver`, e os `buildConfigField` do Cloudinary.
+- [x] `proguard-rules.pro`: apagar as regras do Firebase e de `data.models.**`. O Room gera código e não usa reflexão.
+- [x] Manifesto: remover a `RegisterActivity` e qualquer resquício de Firebase.
+- [x] Repositório: apagar `firebase.json`, `.firebaserc`, `database.rules.json` e `.github/workflows/deploy-database-rules.yml`.
+- [x] CI (`setup-android`, `ci.yml`, `instrumented-tests.yml`, `release.yml`): tirar os inputs e secrets `GOOGLE_SERVICES_JSON_BASE64` e `CLOUDINARY_*` e a geração do placeholder do `google-services.json`.
+- [x] `strings.xml`: remover as strings de login, cadastro e senha. O lint `UnusedResources` ajuda a achar.
+- [x] `README.md`: reescrever a seção de configuração. Não é mais preciso configurar nada para compilar.
 
 **Testes**
 - Nenhum teste novo. A suíte inteira deve continuar verde depois da remoção.
 
 **Validação**
-- [ ] `grep -ri -E "firebase|cloudinary" app/ .github/` sem resultados (fora do histórico).
-- [ ] Portão mínimo e portão de release verdes. Comparar o tamanho do APK de release antes e depois (deve cair bastante).
+- [x] `grep -ri -E "firebase|cloudinary" app/ .github/` sem resultados (fora do histórico).
+- [x] Portão mínimo e portão de release verdes. Comparar o tamanho do APK de release antes e depois (deve cair bastante).
 - [ ] O CI passa **sem nenhum secret** configurado (exceto no release).
 
 **Commit:** `Remove Firebase, Cloudinary e o fluxo de login`
@@ -230,13 +262,13 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 - O texto da notificação inclui o dono quando há mais de um perfil: *"Troca de óleo do Gol (Ana) vence em 5 dias"*.
 
 **Mudanças**
-- [ ] `ProfilesViewModel` e telas de lista e edição de perfil.
-- [ ] `MainViewModel` observa `activeProfileId` e faz `flatMapLatest` para `observeVehicles(profileId)`.
-- [ ] Ação "Transferir para…" no `VehicleDetailsScreen`.
-- [ ] `NotificationReceiver` / `NotificationUtils`: o extra da notificação passa a levar o nome do veículo e do perfil.
+- [x] `ProfilesViewModel` e telas de lista e edição de perfil.
+- [x] `MainViewModel` observa `activeProfileId` e faz `flatMapLatest` para `observeVehicles(profileId)`.
+- [x] Ação "Transferir para…" no `VehicleDetailsScreen`.
+- [x] `NotificationReceiver` / `NotificationUtils`: o extra da notificação passa a levar o nome do veículo e do perfil.
 
 **Testes**
-- [ ] Unitários:
+- [x] Unitários:
   - trocar o perfil ativo troca a lista de veículos;
   - excluir o perfil ativo muda o ativo para outro;
   - excluir o único perfil é bloqueado;
@@ -244,11 +276,11 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
   - o texto da notificação com um perfil e com vários;
   - o Início em "Todos" junta as pendências de todos os perfis e o filtro por perfil restringe a lista;
   - abrir uma pendência de outro perfil troca o perfil ativo.
-- [ ] 📱 UI: criar o segundo perfil pelo seletor, alternar e conferir a lista; o diálogo de exclusão mostra a contagem.
+- [x] 📱 UI: criar o segundo perfil pelo seletor, alternar e conferir a lista; o diálogo de exclusão mostra a contagem.
 
 **Validação**
-- [ ] Portão mínimo verde.
-- [ ] Manual: dois perfis com veículos → reiniciar o aparelho → as notificações dos **dois** perfis continuam agendadas.
+- [x] Portão mínimo verde.
+- [x] Manual: dois perfis com veículos → reiniciar o aparelho → as notificações dos **dois** perfis continuam agendadas.
 
 **Commit:** `Adiciona multiplos perfis e transferencia de veiculo`
 
