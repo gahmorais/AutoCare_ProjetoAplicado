@@ -13,7 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Maintenance
-import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
+import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainActivity
 import br.com.gabrielmorais.autocare.utils.getParcelableExtraCompat
 
 const val channelID = "channel1"
@@ -42,8 +42,7 @@ class NotificationReceiver : BroadcastReceiver() {
       return
     }
 
-    // LoginActivity redireciona para MainActivity quando ja ha sessao ativa.
-    val contentIntent = Intent(context, LoginActivity::class.java).apply {
+    val contentIntent = Intent(context, MainActivity::class.java).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     }
     val contentPendingIntent = PendingIntent.getActivity(

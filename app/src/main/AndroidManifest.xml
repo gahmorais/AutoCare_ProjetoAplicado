@@ -46,10 +46,10 @@
 
         <!-- Detalhe do veiculo, minha conta e formulario de manutencao deixaram
              de ser Activities e viraram destinos do NavHost da MainActivity. -->
-        <activity android:name=".ui.activities.main_screen.MainActivity" />
-        <activity android:name=".ui.activities.register_screen.RegisterActivity" />
+        <!-- Sem login: a Main e a porta de entrada. Login e cadastro deixam de
+             ser alcancaveis e saem do codigo na etapa 5 do plano. -->
         <activity
-            android:name=".ui.activities.login_screen.LoginActivity"
+            android:name=".ui.activities.main_screen.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AutoCare.Splash">
             <intent-filter>
@@ -57,6 +57,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.activities.register_screen.RegisterActivity" />
+        <activity android:name=".ui.activities.login_screen.LoginActivity" />
         <activity
             android:name="com.canhub.cropper.CropImageActivity"
             android:theme="@style/Theme.AppCompat" />

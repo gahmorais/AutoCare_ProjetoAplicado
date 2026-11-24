@@ -2,6 +2,10 @@ package br.com.gabrielmorais.autocare.di
 
 import br.com.gabrielmorais.autocare.data.images.ImageCompressor
 import br.com.gabrielmorais.autocare.data.images.LocalImageStore
+import br.com.gabrielmorais.autocare.data.images.PhotoHousekeeping
+import br.com.gabrielmorais.autocare.data.local.ActiveProfileStore
+import br.com.gabrielmorais.autocare.data.local.DataStoreActiveProfileStore
+import br.com.gabrielmorais.autocare.data.local.settingsDataStore
 import br.com.gabrielmorais.autocare.data.local.AutoCareDatabase
 import br.com.gabrielmorais.autocare.data.local.repository.AssetServicesRepository
 import br.com.gabrielmorais.autocare.data.local.repository.MaintenanceRepository
@@ -15,10 +19,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
- * Armazenamento local. Registrado ja na etapa 2 mas sem consumidor ate a etapa 4:
- * os singles do Koin sao preguicosos, entao o banco so e aberto quando alguem
- * pedir um destes repositorios. As interfaces sao de outro pacote que as do
- * Firebase, entao nao ha conflito de tipo no grafo.
+ * Armazenamento local: banco, fotos e perfil ativo. As interfaces sao de outro
+ * pacote que as do Firebase (que saem na etapa 5), entao nao ha conflito de tipo
+ * no grafo.
  */
 val localDataModule = module {
   single { AutoCareDatabase.build(androidContext()) }
@@ -26,6 +29,8 @@ val localDataModule = module {
   single<VehicleRepository> { RoomVehicleRepository(get()) }
   single<MaintenanceRepository> { RoomMaintenanceRepository(get()) }
   single<ServicesRepository> { AssetServicesRepository(androidContext().assets) }
+  single<ActiveProfileStore> { DataStoreActiveProfileStore(androidContext().settingsDataStore) }
+  single { PhotoHousekeeping(get(), get(), get()) }
   single {
     val context = androidContext()
     LocalImageStore(

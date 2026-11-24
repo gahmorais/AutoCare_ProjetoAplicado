@@ -44,8 +44,7 @@ fun HomeScreen(
   onAddVehicle: () -> Unit,
   today: LocalDate = LocalDate.now()
 ) {
-  val user by viewModel.user.collectAsState(initial = null)
-  val vehicles = user?.vehicles.orEmpty()
+  val vehicles by viewModel.vehicles.collectAsState()
   val summary = remember(vehicles, today) { vehicles.homeSummary(today) }
 
   Scaffold(

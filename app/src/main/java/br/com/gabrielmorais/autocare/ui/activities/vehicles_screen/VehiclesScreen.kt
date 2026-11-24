@@ -49,10 +49,13 @@ import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.ui.theme.itemPlacementSpec
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialog
 import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialogState
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
+import br.com.gabrielmorais.autocare.utils.Utils
+import java.time.LocalDate
 import kotlinx.coroutines.launch
 
 /**
@@ -66,8 +69,7 @@ fun VehiclesScreen(
   viewModel: MainViewModel,
   onOpenVehicle: (String) -> Unit
 ) {
-  val user by viewModel.user.collectAsState(initial = null)
-  val vehicles = user?.vehicles.orEmpty()
+  val vehicles by viewModel.vehicles.collectAsState()
 
   val dialogState = remember { AddVehicleDialogState() }
   var showDialog by remember { mutableStateOf(false) }
@@ -83,6 +85,9 @@ fun VehiclesScreen(
 
   val onDeleteVehicle: (Vehicle) -> Unit = { vehicle ->
     viewModel.deleteVehicle(vehicle) { removido ->
+      // As manutencoes saem em cascata com o veiculo; os alarmes delas tambem
+      // precisam sair, senao o lembrete chegaria para um carro que nao existe.
+      removido.maintenances.orEmpty().forEach { NotificationUtils.cancelNotification(context, it) }
       scope.launch {
         val result = snackbarHostState.showSnackbar(
           message = deletedMessage,
@@ -90,7 +95,20 @@ fun VehiclesScreen(
           withDismissAction = true,
           duration = SnackbarDuration.Long
         )
-        if (result == SnackbarResult.ActionPerformed) viewModel.saveVehicle(removido)
+        if (result == SnackbarResult.ActionPerformed) {
+          // restore, nao save: volta tambem as manutencoes, com os mesmos ids.
+          viewModel.restoreVehicle(removido) { restaurado ->
+            restaurado.maintenances.orEmpty().forEach { maintenance ->
+              maintenance.forecastNextExchangeDate?.let { epochDay ->
+                NotificationUtils.rescheduleNotification(
+                  context = context,
+                  maintenance = maintenance,
+                  localDateTime = Utils.dateMinusFiveDays(LocalDate.ofEpochDay(epochDay))
+                )
+              }
+            }
+          }
+        }
       }
     }
   }

@@ -28,6 +28,9 @@ object PhotoCropOptions {
       imageSourceIncludeGallery = true,
       imageSourceIncludeCamera = true,
       guidelines = CropImageView.Guidelines.ON,
+      // Sem fixAspectRatio a proporcao era so a inicial e o usuario podia
+      // recortar livre - a foto do veiculo saia quadrada num banner 2:1.
+      fixAspectRatio = true,
       aspectRatioX = aspectRatioX,
       aspectRatioY = aspectRatioY,
       outputCompressFormat = Bitmap.CompressFormat.JPEG,

@@ -3,9 +3,7 @@ package br.com.gabrielmorais.autocare.data.notifications
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
@@ -17,17 +15,12 @@ class BootReceiver : BroadcastReceiver() {
 
   companion object {
     /**
-     * A leitura do Firebase nao cabe nos ~10s de um BroadcastReceiver, entao o
-     * trabalho vai para o WorkManager, que tambem cuida do retry sem rede.
+     * Banco e disco nao rodam na main thread de um BroadcastReceiver, entao o
+     * trabalho vai para o WorkManager. Sem restricao de rede: os dados sao
+     * locais, e esperar conexao atrasaria os lembretes de quem esta offline.
      */
     fun enqueueReschedule(context: Context) {
-      val request = OneTimeWorkRequestBuilder<RescheduleNotificationsWorker>()
-        .setConstraints(
-          Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-        )
-        .build()
+      val request = OneTimeWorkRequestBuilder<RescheduleNotificationsWorker>().build()
 
       WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
         RescheduleNotificationsWorker.WORK_NAME,

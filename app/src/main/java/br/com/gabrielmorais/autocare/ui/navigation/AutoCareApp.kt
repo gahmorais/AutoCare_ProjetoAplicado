@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
@@ -24,10 +25,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import br.com.gabrielmorais.autocare.ui.activities.account_screen.AccountScreen
+import br.com.gabrielmorais.autocare.ui.activities.account_screen.ProfileScreen
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.MaintenanceFormRoute
 import br.com.gabrielmorais.autocare.ui.activities.home_screen.HomeScreen
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
+import br.com.gabrielmorais.autocare.ui.activities.main_screen.StartState
+import br.com.gabrielmorais.autocare.ui.activities.onboarding_screen.OnboardingScreen
 import br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen.VehicleDetailsRoute
 import br.com.gabrielmorais.autocare.ui.activities.vehicles_screen.VehiclesScreen
 
@@ -37,9 +40,19 @@ import br.com.gabrielmorais.autocare.ui.activities.vehicles_screen.VehiclesScree
  * tela inicial e "Minha Conta".
  */
 @Composable
-fun AutoCareApp(
+fun AutoCareApp(shellViewModel: MainViewModel) {
+  val startState by shellViewModel.startState.collectAsState()
+  when (startState) {
+    // A splash continua na tela enquanto o banco nao responde (ver MainActivity).
+    StartState.LOADING -> Unit
+    StartState.NEEDS_ONBOARDING -> OnboardingScreen(onStart = shellViewModel::createFirstProfile)
+    StartState.READY -> AutoCareShell(shellViewModel)
+  }
+}
+
+@Composable
+private fun AutoCareShell(
   shellViewModel: MainViewModel,
-  onLoggedOut: () -> Unit,
   navController: NavHostController = rememberNavController()
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -115,10 +128,7 @@ fun AutoCareApp(
       }
 
       composable(TopLevelDestination.EU.route) {
-        AccountScreen(
-          viewModel = shellViewModel,
-          onLoggedOut = onLoggedOut
-        )
+        ProfileScreen(viewModel = shellViewModel)
       }
 
       composable(

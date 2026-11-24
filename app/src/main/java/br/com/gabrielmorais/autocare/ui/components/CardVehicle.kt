@@ -19,8 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.gabrielmorais.autocare.R
-import br.com.gabrielmorais.autocare.data.images.CloudinaryTransformations
-import br.com.gabrielmorais.autocare.data.images.CloudinaryUrl
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import coil.compose.AsyncImage
@@ -58,17 +56,12 @@ fun CardVehicle(
         modifier = Modifier.height(100.dp),
         model = ImageRequest
           .Builder(LocalContext.current)
-          .data(
-            CloudinaryUrl.withTransformation(
-              vehicle.photo,
-              CloudinaryTransformations.VEHICLE_THUMBNAIL
-            ) ?: R.drawable.icon_car
-          )
+          .data(rememberLocalPhoto(vehicle.photo) ?: R.drawable.icon_car)
           .transformations(CircleCropTransformation())
           .crossfade(true)
           .build(),
-        // URLs antigas do Firebase Storage estao mortas: cair no icone de carro
-        // comunica melhor que um icone de imagem quebrada.
+        // Arquivo ausente ou ilegivel: cair no icone de carro comunica melhor
+        // que um icone de imagem quebrada.
         error = painterResource(id = R.drawable.icon_car),
         contentDescription = null,
         contentScale = ContentScale.Fit

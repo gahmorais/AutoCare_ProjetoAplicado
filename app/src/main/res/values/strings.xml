@@ -16,9 +16,9 @@
     <string name="text_update_user_data">Atualizar dados</string>
     <string name="text_vehicles">Veículos</string>
     <string name="text_add_vehicle">Adicionar veículo</string>
-    <string name="name_placeholder">John Doe</string>
+    <string name="name_placeholder">Ex.: Maria</string>
     <string name="text_any_car_registered">Nenhum veículo cadastrado</string>
-    <string name="profile_image_description">Profile Image</string>
+    <string name="profile_image_description">Foto do perfil. Toque para trocar</string>
     <string name="text_maintenance">Manutenções</string>
     <string name="text_exit">Sair</string>
     <string name="text_unknow">Desconhecido</string>
@@ -84,7 +84,7 @@
     <string name="text_estimated_mileage">≈%1$s km</string>
     <string name="nav_home">Início</string>
     <string name="nav_vehicles">Veículos</string>
-    <string name="nav_account">Eu</string>
+    <string name="nav_account">Perfil</string>
     <string name="content_desc_back">Voltar</string>
     <string name="text_all_on_track">Tudo em dia</string>
     <string name="text_empty_maintenances_hint">Abra um veículo e registre a primeira manutenção para acompanhar os vencimentos.</string>
@@ -95,4 +95,11 @@
     <string name="content_desc_hide_password">Ocultar senha</string>
     <string name="content_desc_pick_date">Escolher a data do serviço</string>
     <string name="content_desc_pick_next_date">Escolher a data da próxima manutenção</string>
+
+    <!-- Perfil local e primeiro acesso (etapa 4 do plano) -->
+    <string name="text_profile">Perfil</string>
+    <string name="onboarding_title">Bem-vindo ao AutoCare</string>
+    <string name="onboarding_body">Como você se chama? Seus veículos e manutenções ficam salvos só neste aparelho, sem cadastro nem senha.</string>
+    <string name="onboarding_photo_hint">Toque no círculo para adicionar uma foto (opcional)</string>
+    <string name="onboarding_start">Começar</string>
 </resources>

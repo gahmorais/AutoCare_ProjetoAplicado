@@ -1,41 +1,59 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.net.Uri
-import br.com.gabrielmorais.autocare.data.models.User
-import br.com.gabrielmorais.autocare.fakes.FakeAuthRepository
-import br.com.gabrielmorais.autocare.fakes.FakeUserRepository
+import br.com.gabrielmorais.autocare.data.images.ImagePaths
+import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Profile
+import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.fakes.FakeActiveProfileStore
+import br.com.gabrielmorais.autocare.fakes.FakeProfileRepository
+import br.com.gabrielmorais.autocare.fakes.FakeVehicleRepository
+import br.com.gabrielmorais.autocare.fakes.fakeImageStore
+import br.com.gabrielmorais.autocare.fakes.ioFailure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
-import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class MainViewModelTest {
 
-  private val dispatcher = StandardTestDispatcher()
-  private lateinit var userRepository: FakeUserRepository
-  private lateinit var authRepository: FakeAuthRepository
-  private lateinit var viewModel: MainViewModel
+  @get:Rule
+  val tmp = TemporaryFolder()
 
-  // Os fakes nunca leem o conteudo: basta uma referencia para atravessar a chamada.
+  private val dispatcher = StandardTestDispatcher()
+  private val ana = Profile(id = "ana", name = "Ana", createdAt = 1L)
+  private val pedro = Profile(id = "pedro", name = "Pedro", createdAt = 2L)
+
+  private lateinit var profiles: FakeProfileRepository
+  private lateinit var vehicles: FakeVehicleRepository
+  private lateinit var activeStore: FakeActiveProfileStore
+  private var photoFailure: Throwable? = null
+
+  // O fake de compressao nunca le o conteudo: basta uma referencia.
   private val anyImage: Uri = Mockito.mock(Uri::class.java)
 
   @Before
   fun setUp() {
     Dispatchers.setMain(dispatcher)
-    userRepository = FakeUserRepository()
-    authRepository = FakeAuthRepository()
-    viewModel = MainViewModel(authRepository, userRepository)
+    profiles = FakeProfileRepository()
+    vehicles = FakeVehicleRepository()
+    activeStore = FakeActiveProfileStore()
+    photoFailure = null
   }
 
   @After
@@ -43,41 +61,174 @@ internal class MainViewModelTest {
     Dispatchers.resetMain()
   }
 
+  private fun TestScope.viewModel(): MainViewModel = MainViewModel(
+    profileRepository = profiles,
+    vehicleRepository = vehicles,
+    activeProfileStore = activeStore,
+    imageStore = fakeImageStore(tmp.root, dispatcher) { photoFailure }
+  ).also { advanceUntilIdle() }
+
+  private suspend fun MainViewModel.lastMessage() = message.first()
+
   @Test
-  fun `foto enviada e gravada no perfil com a url retornada`() = runTest(dispatcher) {
-    userRepository.userFlow.value = User(id = "uid-teste", name = "Fulano")
-    viewModel.observeUser()
-    dispatcher.scheduler.advanceUntilIdle()
+  fun `sem perfil o app pede o primeiro acesso`() = runTest(dispatcher) {
+    assertEquals(StartState.NEEDS_ONBOARDING, viewModel().startState.value)
+  }
 
-    viewModel.updateUserPhoto(anyImage)
-    dispatcher.scheduler.advanceUntilIdle()
+  @Test
+  fun `com perfil o app abre direto e o perfil fica ativo`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    activeStore.activeProfileId.value = "ana"
 
-    assertEquals(
-      "https://res.cloudinary.com/teste/image/upload/v1/foto.jpg",
-      userRepository.updatedUsers.single().photo
+    val vm = viewModel()
+
+    assertEquals(StartState.READY, vm.startState.value)
+    assertEquals(ana, vm.activeProfile.value)
+  }
+
+  @Test
+  fun `id ativo de perfil que nao existe cai no primeiro perfil`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "excluido"
+
+    assertEquals(ana, viewModel().activeProfile.value)
+  }
+
+  @Test
+  fun `primeiro acesso cria o perfil, ativa e libera o app`() = runTest(dispatcher) {
+    val vm = viewModel()
+
+    vm.createFirstProfile("  Maria  ")
+    advanceUntilIdle()
+
+    val created = profiles.profiles.value.single()
+    assertEquals("Maria", created.name)
+    assertNull(created.photoPath)
+    assertEquals(created.id, activeStore.activeProfileId.value)
+    assertEquals(StartState.READY, vm.startState.value)
+  }
+
+  @Test
+  fun `primeiro acesso com foto guarda o caminho local`() = runTest(dispatcher) {
+    val vm = viewModel()
+
+    vm.createFirstProfile("Maria", anyImage)
+    advanceUntilIdle()
+
+    val path = profiles.profiles.value.single().photoPath
+    assertTrue("caminho inválido: $path", path != null && ImagePaths.isValid(path))
+  }
+
+  @Test
+  fun `foto que falha nao impede o primeiro acesso`() = runTest(dispatcher) {
+    photoFailure = ioFailure("Não foi possível ler a imagem selecionada")
+    val vm = viewModel()
+
+    vm.createFirstProfile("Maria", anyImage)
+    advanceUntilIdle()
+
+    assertNull(profiles.profiles.value.single().photoPath)
+    assertEquals("Não foi possível ler a imagem selecionada", vm.lastMessage())
+  }
+
+  @Test
+  fun `nome em branco nao cria perfil`() = runTest(dispatcher) {
+    val vm = viewModel()
+
+    vm.createFirstProfile("   ")
+    advanceUntilIdle()
+
+    assertTrue(profiles.profiles.value.isEmpty())
+    assertEquals("Informe seu nome", vm.lastMessage())
+  }
+
+  @Test
+  fun `lista so os veiculos do perfil ativo`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "pedro"
+    vehicles.vehicles.value = listOf(
+      Vehicle(id = "gol", profileId = "ana"),
+      Vehicle(id = "uno", profileId = "pedro")
     )
-  }
 
-  // Regressao: saveUserPhoto suspende e propaga a excecao do upload. Sem o
-  // runCatching na ViewModel ela escapa do viewModelScope e derruba o app.
-  @Test
-  fun `falha no upload vira mensagem e nao grava nada`() = runTest(dispatcher) {
-    userRepository.userFlow.value = User(id = "uid-teste")
-    viewModel.observeUser()
-    dispatcher.scheduler.advanceUntilIdle()
-    userRepository.failureToReturn = IOException("Falha no envio da imagem")
-
-    viewModel.updateUserPhoto(anyImage)
-    dispatcher.scheduler.advanceUntilIdle()
-
-    assertEquals("Falha no envio da imagem", viewModel.message.first())
-    assertTrue(userRepository.updatedUsers.isEmpty())
+    assertEquals(listOf("uno"), viewModel().vehicles.value.map { it.id })
   }
 
   @Test
-  fun `logout delega ao repositorio de autenticacao`() {
-    viewModel.logout()
+  fun `veiculo novo fica com o perfil ativo como dono`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "pedro"
+    val vm = viewModel()
 
-    assertTrue(authRepository.loggedOut)
+    vm.saveVehicle(Vehicle(id = "uno", nickName = "Uno", profileId = "outro"))
+    advanceUntilIdle()
+
+    assertEquals("pedro", vehicles.vehicles.value.single().profileId)
+    assertEquals(listOf("uno"), vm.vehicles.value.map { it.id })
+  }
+
+  @Test
+  fun `falha ao salvar veiculo vira mensagem`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    vehicles.failure = ioFailure("Disco cheio")
+    val vm = viewModel()
+
+    vm.saveVehicle(Vehicle(id = "gol"))
+    advanceUntilIdle()
+
+    assertEquals("Disco cheio", vm.lastMessage())
+  }
+
+  @Test
+  fun `excluir e desfazer devolvem o veiculo com as manutencoes`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val gol = Vehicle(id = "gol", profileId = "ana", maintenances = listOf(Maintenance(id = 1)))
+    vehicles.vehicles.value = listOf(gol)
+    val vm = viewModel()
+    var deleted: Vehicle? = null
+
+    vm.deleteVehicle(gol) { deleted = it }
+    advanceUntilIdle()
+    assertEquals(gol, deleted)
+    assertTrue(vm.vehicles.value.isEmpty())
+
+    vm.restoreVehicle(deleted!!)
+    advanceUntilIdle()
+    assertEquals(listOf(1), vm.vehicles.value.single().maintenances!!.map { it.id })
+  }
+
+  @Test
+  fun `atualiza o nome do perfil sem espacos nas pontas`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val vm = viewModel()
+
+    vm.updateProfileName("  Ana Maria ")
+    advanceUntilIdle()
+
+    assertEquals("Ana Maria", vm.activeProfile.value?.name)
+  }
+
+  @Test
+  fun `troca a foto do perfil`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val vm = viewModel()
+
+    vm.updateProfilePhoto(anyImage)
+    advanceUntilIdle()
+
+    assertTrue(ImagePaths.isValid(vm.activeProfile.value?.photoPath.orEmpty()))
+  }
+
+  @Test
+  fun `falha na foto do perfil vira mensagem e mantem a foto anterior`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana.copy(photoPath = "images/0b6f6a3e-2a7d-4d3b-9a43-1f3d7c1b2e4a.jpg"))
+    photoFailure = ioFailure("O arquivo selecionado não é uma imagem válida")
+    val vm = viewModel()
+
+    vm.updateProfilePhoto(anyImage)
+    advanceUntilIdle()
+
+    assertEquals("images/0b6f6a3e-2a7d-4d3b-9a43-1f3d7c1b2e4a.jpg", vm.activeProfile.value?.photoPath)
+    assertEquals("O arquivo selecionado não é uma imagem válida", vm.lastMessage())
   }
 }

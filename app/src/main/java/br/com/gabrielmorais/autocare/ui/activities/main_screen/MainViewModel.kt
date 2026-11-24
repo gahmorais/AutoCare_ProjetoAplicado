@@ -3,114 +3,171 @@ package br.com.gabrielmorais.autocare.ui.activities.main_screen
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.gabrielmorais.autocare.data.models.User
+import br.com.gabrielmorais.autocare.data.images.ImageKind
+import br.com.gabrielmorais.autocare.data.images.LocalImageStore
+import br.com.gabrielmorais.autocare.data.local.ActiveProfileStore
+import br.com.gabrielmorais.autocare.data.local.repository.ProfileRepository
+import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
+import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repository.user.UserRepository
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/** O que a casca do app mostra ao abrir. */
+enum class StartState {
+  /** Ainda lendo o banco: a splash continua na tela. */
+  LOADING,
+
+  /** Nenhum perfil no aparelho: primeiro acesso. */
+  NEEDS_ONBOARDING,
+  READY
+}
+
+/**
+ * ViewModel da casca (abas Inicio, Veiculos e Perfil). Tudo local: nao ha
+ * sessao, e o "dono" dos dados e o perfil ativo.
+ *
+ * Erros viram [message] e nunca escapam do viewModelScope - uma excecao ali
+ * derruba o app.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(
-  private val authRepository: AuthRepository,
-  private val userRepository: UserRepository
+  private val profileRepository: ProfileRepository,
+  private val vehicleRepository: VehicleRepository,
+  private val activeProfileStore: ActiveProfileStore,
+  private val imageStore: LocalImageStore
 ) : ViewModel() {
-  private val _user = MutableStateFlow<User?>(null)
-  val user: Flow<User?> = _user
 
   private val _message = MutableStateFlow("")
   val message: Flow<String> = _message
 
-  private var observeUserJob: Job? = null
+  /** null enquanto a primeira leitura do banco nao chega. */
+  private val profiles: StateFlow<List<Profile>?> = profileRepository.observeProfiles()
+    .catch { error ->
+      publishError(error)
+      emit(emptyList())
+    }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  /** Sempre a sessao autenticada - nunca um id vindo da UI ou de uma Intent. */
-  private val currentUserId: String?
-    get() = authRepository.currentUserId()
-
-  fun logout() = authRepository.logout()
+  val startState: StateFlow<StartState> = profiles
+    .map { list ->
+      when {
+        list == null -> StartState.LOADING
+        list.isEmpty() -> StartState.NEEDS_ONBOARDING
+        else -> StartState.READY
+      }
+    }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, StartState.LOADING)
 
   /**
-   * Idempotente: era chamado a cada onResume e cada chamada deixava um
-   * ValueEventListener ativo para sempre. O Job anterior e cancelado e o
-   * awaitClose do callbackFlow remove o listener.
+   * O perfil guardado como ativo ou, se ele nao existir mais, o primeiro. Assim
+   * um id orfao no DataStore nunca deixa o app sem dono.
    */
-  fun observeUser() {
-    // O uid vem da sessao autenticada, nao de um extra de Intent que qualquer
-    // app podia forjar.
-    val userId = authRepository.currentUserId()
-    if (userId == null) {
-      publishError(IllegalStateException("Sessão expirada"))
-      return
-    }
-    observeUserJob?.cancel()
-    observeUserJob = viewModelScope.launch {
-      userRepository.observeUser(userId)
-        .catch { publishError(it) }
-        .collect { _user.value = it }
-    }
-  }
+  val activeProfile: StateFlow<Profile?> =
+    combine(profiles, activeProfileStore.activeProfileId) { list, activeId ->
+      list.orEmpty().let { all -> all.firstOrNull { it.id == activeId } ?: all.firstOrNull() }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  fun updateUserPhoto(image: Uri) {
+  val vehicles: StateFlow<List<Vehicle>> = activeProfile
+    .map { it?.id }
+    .distinctUntilChanged()
+    .flatMapLatest { profileId ->
+      if (profileId == null) flowOf(emptyList()) else vehicleRepository.observeVehicles(profileId)
+    }
+    .catch { error ->
+      publishError(error)
+      emit(emptyList())
+    }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  /**
+   * Primeiro acesso. A foto e opcional e, se falhar, o perfil e criado sem ela:
+   * perder a foto e melhor do que prender a pessoa no onboarding.
+   */
+  fun createFirstProfile(name: String, photo: Uri? = null) {
+    val trimmed = name.trim()
+    if (trimmed.isEmpty()) return publishError(IllegalArgumentException("Informe seu nome"))
     viewModelScope.launch {
-      // saveUserPhoto suspende e propaga a excecao do upload; sem o catch a
-      // excecao escapa do viewModelScope e derruba o app.
       runCatching {
-        val imageUrl = userRepository.saveUserPhoto(image)
-        _user.value?.let { current ->
-          userRepository.updateUser(
-            user = current.copy(photo = imageUrl),
-            callback = { _message.value = it },
-            onError = ::publishError
-          )
+        val photoPath = photo?.let { uri ->
+          runCatching { imageStore.save(uri, ImageKind.PROFILE_PHOTO) }
+            .onFailure(::publishError)
+            .getOrNull()
         }
+        val profile = Profile(name = trimmed, photoPath = photoPath)
+        profileRepository.saveProfile(profile)
+        activeProfileStore.setActiveProfileId(profile.id)
       }.onFailure(::publishError)
     }
   }
 
+  fun updateProfileName(name: String) {
+    val trimmed = name.trim()
+    if (trimmed.isEmpty()) return publishError(IllegalArgumentException("Informe seu nome"))
+    val current = activeProfile.value ?: return publishError(noActiveProfile())
+    viewModelScope.launch {
+      runCatching { profileRepository.saveProfile(current.copy(name = trimmed)) }
+        .onSuccess { _message.value = "Perfil atualizado" }
+        .onFailure(::publishError)
+    }
+  }
+
+  /** A foto antiga vira orfa e e recolhida pela limpeza de fotos. */
+  fun updateProfilePhoto(image: Uri) {
+    val current = activeProfile.value ?: return publishError(noActiveProfile())
+    viewModelScope.launch {
+      runCatching {
+        val path = imageStore.save(image, ImageKind.PROFILE_PHOTO)
+        profileRepository.saveProfile(current.copy(photoPath = path))
+      }.onFailure(::publishError)
+    }
+  }
+
+  /** O veiculo sempre fica com o perfil ativo como dono. */
   fun saveVehicle(vehicle: Vehicle) {
-    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
-    userRepository.saveVehicle(
-      userId = userId,
-      vehicle = vehicle,
-      callback = { _message.value = it },
-      onError = ::publishError
-    )
+    val owner = activeProfile.value ?: return publishError(noActiveProfile())
+    viewModelScope.launch {
+      runCatching { vehicleRepository.saveVehicle(vehicle.copy(profileId = owner.id)) }
+        .onSuccess { _message.value = "Veículo salvo com sucesso" }
+        .onFailure(::publishError)
+    }
   }
 
   /**
-   * [onDeleted] recebe o veiculo como estava, para o desfazer do snackbar poder
-   * regrava-lo com o mesmo id - e com as manutencoes junto.
+   * [onDeleted] recebe o veiculo como estava, com as manutencoes, para o
+   * desfazer do snackbar regrava-lo inteiro com [restoreVehicle].
    */
   fun deleteVehicle(vehicle: Vehicle, onDeleted: (Vehicle) -> Unit = {}) {
-    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
     val vehicleId = vehicle.id
       ?: return publishError(IllegalArgumentException("Veículo sem identificador"))
-    userRepository.deleteVehicle(
-      userId = userId,
-      vehicleId = vehicleId,
-      callback = { onDeleted(vehicle) },
-      onError = ::publishError
-    )
+    viewModelScope.launch {
+      runCatching { vehicleRepository.deleteVehicle(vehicleId) }
+        .onSuccess { onDeleted(vehicle) }
+        .onFailure(::publishError)
+    }
   }
 
-  fun changePassword(email: String) {
-    authRepository.changePassword(
-      email = email,
-      callback = { _message.value = it },
-      onError = ::publishError
-    )
+  /** Desfaz [deleteVehicle]: volta o veiculo e as manutencoes, com os mesmos ids. */
+  fun restoreVehicle(vehicle: Vehicle, onRestored: (Vehicle) -> Unit = {}) {
+    viewModelScope.launch {
+      runCatching { vehicleRepository.restoreVehicle(vehicle) }
+        .onSuccess { onRestored(vehicle) }
+        .onFailure(::publishError)
+    }
   }
 
-  fun updateUser(user: User) {
-    val userId = currentUserId ?: return publishError(IllegalStateException("Sessão expirada"))
-    userRepository.updateUser(
-      user = user.copy(id = userId),
-      callback = { _message.value = it },
-      onError = ::publishError
-    )
-  }
+  private fun noActiveProfile() = IllegalStateException("Nenhum perfil selecionado")
 
   private fun publishError(error: Throwable) {
     _message.value = error.message ?: "Ocorreu um erro inesperado"
