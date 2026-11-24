@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 
 /**
- * Duracoes e easings do M3 num lugar so. O Compose Material 3 1.1.1 nao expoe
+ * Duracoes e easings do M3 num lugar so. O Compose Material 3 1.2 nao expoe
  * MotionScheme, entao os tokens vivem aqui em vez de virarem numeros soltos
  * espalhados pelas telas.
  */

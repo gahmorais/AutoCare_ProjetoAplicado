@@ -21,7 +21,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -133,7 +133,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(
-              imageVector = Icons.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.content_desc_back)
             )
           }
