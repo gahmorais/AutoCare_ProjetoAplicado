@@ -19,9 +19,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
- * Armazenamento local: banco, fotos e perfil ativo. As interfaces sao de outro
- * pacote que as do Firebase (que saem na etapa 5), entao nao ha conflito de tipo
- * no grafo.
+ * Armazenamento local: banco, fotos e perfil ativo. E todo o grafo de dados do
+ * app - nao ha servidor.
  */
 val localDataModule = module {
   single { AutoCareDatabase.build(androidContext()) }

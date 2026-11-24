@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.ui.activities.my_account_screen
+package br.com.gabrielmorais.autocare.ui.activities.vehicles_screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions

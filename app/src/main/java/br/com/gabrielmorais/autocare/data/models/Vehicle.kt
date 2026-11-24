@@ -11,8 +11,9 @@ data class Vehicle(
   val photo: String? = null,
   val averageDistanceTraveledPerMonth: Int? = null,
   val maintenances: List<Maintenance>? = null,
-  // Dono do veiculo no armazenamento local. Opcional so enquanto o caminho do
-  // Firebase ainda existe (ate a etapa 5 do plano); o Room exige o valor.
+  // Perfil dono do veiculo. Opcional no modelo porque a tela monta o veiculo
+  // antes de saber o dono - quem grava (MainViewModel.saveVehicle) preenche com o
+  // perfil ativo, e o Room recusa veiculo sem dono.
   val profileId: String? = null
 )
 

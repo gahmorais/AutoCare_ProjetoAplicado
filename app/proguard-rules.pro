@@ -1,7 +1,7 @@
 # Regras do projeto AutoCare.
 # Ver a configuracao em app/build.gradle (proguardFiles).
 
-# Mantem stack traces uteis no Crashlytics/Play Console sem expor os nomes originais.
+# Mantem stack traces uteis no Play Console (com o mapping.txt) sem expor os nomes originais.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
@@ -16,20 +16,8 @@
     public static int e(...);
 }
 
-# O Firebase Realtime Database desserializa por reflexao: sem isso os modelos
-# viram campos ofuscados e a leitura devolve objetos vazios.
--keepclassmembers class br.com.gabrielmorais.autocare.data.models.** {
-    <init>();
-    <fields>;
-    public void set*(***);
-    public *** get*();
-}
--keepnames class br.com.gabrielmorais.autocare.data.models.**
-
-# Anotacoes usadas pelo mapeador do Firebase.
--keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
--keep class com.google.firebase.** { *; }
--dontwarn com.google.firebase.**
+# Room gera o codigo de acesso em tempo de compilacao e traz as proprias regras;
+# os modelos nao sao lidos por reflexao e podem ser ofuscados.
 
 # Koin resolve dependencias por tipo em runtime.
 -keep class org.koin.** { *; }

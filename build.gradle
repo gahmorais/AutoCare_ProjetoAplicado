@@ -14,7 +14,6 @@ buildscript {
         material_dialog_version = "0.8.1-rc"
     }
     dependencies {
-        classpath 'com.google.gms:google-services:4.4.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
     repositories {

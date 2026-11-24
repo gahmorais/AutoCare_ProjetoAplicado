@@ -2,19 +2,9 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
-    id 'com.google.gms.google-services'
     id 'kotlin-parcelize'
     id 'com.google.devtools.ksp'
     id 'androidx.room'
-}
-
-// cloud_name e upload preset do Cloudinary. Nao sao segredos no sentido estrito
-// (o cloud_name aparece em toda URL de imagem e o preset e extraivel do APK),
-// mas ficam fora do git assim mesmo. Ver a secao "Imagens" no README.
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withInputStream { localProperties.load(it) }
 }
 
 // Assinatura e versao da release vem do ambiente, nao do git: a chave nao pode ser
@@ -50,11 +40,6 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
-
-        buildConfigField "String", "CLOUDINARY_CLOUD_NAME",
-                "\"${localProperties.getProperty('cloudinary.cloudName', '')}\""
-        buildConfigField "String", "CLOUDINARY_UPLOAD_PRESET",
-                "\"${localProperties.getProperty('cloudinary.uploadPreset', '')}\""
     }
 
     buildTypes {
@@ -110,12 +95,6 @@ android {
 
 dependencies {
 
-    //Firebase Dependecies
-    implementation platform('com.google.firebase:firebase-bom:32.1.0')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-database-ktx'
-
     //Room - persistencia local de perfis, veiculos e manutencoes
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
@@ -144,10 +123,6 @@ dependencies {
     //WorkManager - reagendamento das notificacoes apos o reboot
     implementation "androidx.work:work-runtime-ktx:2.10.5"
 
-    //OkHttp - upload de imagens para o Cloudinary. Declarado explicitamente e nao
-    //herdado transitivamente do Coil.
-    implementation "com.squareup.okhttp3:okhttp:4.11.0"
-
     //MAterial Dialog Compose
     implementation "io.github.vanpra.compose-material-dialogs:core:$material_dialog_version"
     implementation "io.github.vanpra.compose-material-dialogs:datetime:$material_dialog_version"
@@ -172,11 +147,9 @@ dependencies {
     // Material 2 permanece so por causa do compose-material-dialogs (datepicker),
     // que e construido sobre M2. Nenhum codigo nosso deve importar material.*
     implementation 'androidx.compose.material:material'
-    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2'
     testImplementation 'androidx.arch.core:core-testing:2.2.0'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.11.0'
     // Uri e abstrata e Uri.parse e stub no android.jar de teste: sem um mock nao
     // ha como atravessar as assinaturas que recebem Uri.
     testImplementation 'org.mockito:mockito-core:4.11.0'

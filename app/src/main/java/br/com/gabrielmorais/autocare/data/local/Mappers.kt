@@ -31,8 +31,8 @@ fun VehicleWithMaintenances.toDomain() = Vehicle(
 )
 
 /**
- * O modelo de dominio ainda aceita id e dono nulos por causa do caminho do
- * Firebase; o banco nao. Falhar aqui e melhor do que gravar um veiculo orfao.
+ * O modelo de dominio aceita id e dono nulos (a tela monta o veiculo antes de
+ * saber o dono); o banco nao. Falhar aqui e melhor do que gravar um veiculo orfao.
  */
 fun Vehicle.toEntity() = VehicleEntity(
   id = requireNotNull(id) { "Veículo sem identificador" },

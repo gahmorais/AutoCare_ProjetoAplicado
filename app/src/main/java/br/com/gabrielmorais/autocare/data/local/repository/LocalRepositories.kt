@@ -7,12 +7,9 @@ import br.com.gabrielmorais.autocare.data.models.Vehicle
 import kotlinx.coroutines.flow.Flow
 
 /*
- * Repositorios do armazenamento local. Diferente dos do Firebase, nao recebem
- * userId (nao ha sessao) nem callbacks: escrita e suspend e leitura continua e
+ * Repositorios do armazenamento local - o unico armazenamento do app. Sem
+ * userId (nao ha conta) e sem callbacks: escrita e suspend, leitura continua e
  * Flow, e o erro chega ao chamador como excecao comum, capturavel com runCatching.
- *
- * Convivem com os do Firebase ate a etapa 4 do plano, quando as ViewModels
- * passam a usar estes, e a etapa 5 apaga os antigos.
  */
 
 interface ProfileRepository {

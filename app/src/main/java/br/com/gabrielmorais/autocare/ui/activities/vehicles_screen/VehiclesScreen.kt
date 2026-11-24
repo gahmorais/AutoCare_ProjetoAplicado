@@ -51,8 +51,6 @@ import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
-import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialog
-import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialogState
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
 import br.com.gabrielmorais.autocare.utils.Utils
 import java.time.LocalDate

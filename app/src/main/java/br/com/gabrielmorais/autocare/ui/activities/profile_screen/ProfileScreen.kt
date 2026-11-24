@@ -1,4 +1,4 @@
-package br.com.gabrielmorais.autocare.ui.activities.account_screen
+package br.com.gabrielmorais.autocare.ui.activities.profile_screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -25,7 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import br.com.gabrielmorais.autocare.ui.activities.account_screen.ProfileScreen
+import br.com.gabrielmorais.autocare.ui.activities.profile_screen.ProfileScreen
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.MaintenanceFormRoute
 import br.com.gabrielmorais.autocare.ui.activities.home_screen.HomeScreen
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
