@@ -44,9 +44,7 @@ import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.canhub.cropper.CropImageContract
-import com.canhub.cropper.CropImageContractOptions
-import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
+import br.com.gabrielmorais.autocare.ui.components.PhotoCropOptions
 
 private val AVATAR_SIZE = 112.dp
 
@@ -72,18 +70,7 @@ fun AccountScreen(
     contract = ActivityResultContracts.RequestPermission(),
     onResult = { granted ->
       if (granted) {
-        takePicture.launch(
-          CropImageContractOptions(
-            null,
-            CropImageOptions(
-              imageSourceIncludeGallery = true,
-              imageSourceIncludeCamera = true,
-              guidelines = CropImageView.Guidelines.ON,
-              aspectRatioX = 1,
-              aspectRatioY = 1
-            )
-          )
-        )
+        takePicture.launch(PhotoCropOptions.profile())
       }
     }
   )

@@ -1,5 +1,7 @@
 package br.com.gabrielmorais.autocare.di
 
+import br.com.gabrielmorais.autocare.data.images.ImageCompressor
+import br.com.gabrielmorais.autocare.data.images.LocalImageStore
 import br.com.gabrielmorais.autocare.data.local.AutoCareDatabase
 import br.com.gabrielmorais.autocare.data.local.repository.AssetServicesRepository
 import br.com.gabrielmorais.autocare.data.local.repository.MaintenanceRepository
@@ -24,4 +26,12 @@ val localDataModule = module {
   single<VehicleRepository> { RoomVehicleRepository(get()) }
   single<MaintenanceRepository> { RoomMaintenanceRepository(get()) }
   single<ServicesRepository> { AssetServicesRepository(androidContext().assets) }
+  single {
+    val context = androidContext()
+    LocalImageStore(
+      rootDir = context.filesDir,
+      cacheDir = context.cacheDir,
+      compress = { source, kind -> ImageCompressor(kind).compress(context.contentResolver, source) }
+    )
+  }
 }

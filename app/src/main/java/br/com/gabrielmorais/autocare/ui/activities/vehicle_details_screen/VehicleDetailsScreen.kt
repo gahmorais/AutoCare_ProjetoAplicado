@@ -66,9 +66,7 @@ import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import com.canhub.cropper.CropImageContract
-import com.canhub.cropper.CropImageContractOptions
-import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
+import br.com.gabrielmorais.autocare.ui.components.PhotoCropOptions
 import br.com.gabrielmorais.autocare.utils.Utils
 import java.time.LocalDate
 import kotlinx.coroutines.flow.collectLatest
@@ -163,17 +161,7 @@ fun VehicleDetailsScreen(
     contract = ActivityResultContracts.RequestPermission(),
     onResult = { isGranted ->
       if (isGranted) {
-        val options = CropImageContractOptions(
-          null,
-          CropImageOptions(
-            imageSourceIncludeGallery = true,
-            imageSourceIncludeCamera = true,
-            guidelines = CropImageView.Guidelines.ON,
-            aspectRatioX = 2,
-            aspectRatioY = 1
-          )
-        )
-        takePicture.launch(options)
+        takePicture.launch(PhotoCropOptions.vehicle())
       }
     }
   )

@@ -130,8 +130,8 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 - [ ] `LocalImageStore`:
   - `save(uri, kind): String` comprime com o `ImageCompressor` conforme o tipo, grava em `images/<uuid>.jpg` e devolve o caminho relativo;
   - `resolve(path): File`;
-  - `delete(path)`;
-  - `sweepOrphans(referenced: Set<String>)` apaga arquivos que nenhum registro referencia.
+  - `sweepOrphans(referenced: Set<String>)` apaga arquivos que nenhum registro referencia e que tenham mais de 1 hora. A carência protege a foto recém-salva cujo registro ainda não chegou ao banco.
+  - **Não há `delete(path)`**: a varredura é o único caminho de exclusão, para que nada apague uma foto que o "desfazer" ainda pode precisar.
 - [ ] A **exclusão física é feita pela varredura de órfãos** (na abertura do app), e não no momento da exclusão. Assim o "desfazer" do snackbar continua funcionando, porque a foto ainda existe enquanto ele está na tela.
 - [ ] A foto substituída também vira órfã e é recolhida pela varredura.
 - [ ] O Coil passa a carregar um `File` em vez de uma URL. A interface `ImageUploader` é substituída.
