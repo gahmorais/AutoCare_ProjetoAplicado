@@ -37,14 +37,18 @@ class AssetServicesRepository(
 object ServicesCatalogParser {
   /**
    * Formato: lista de objetos {name, mileageChange, mustBeDoneBefore}, com a
-   * quilometragem em km e o prazo em meses.
+   * quilometragem em km e o prazo em meses. Prazo 0 e valido e e o caso comum:
+   * significa "sem prazo minimo por tempo" - o formulario usa
+   * maxOf(meses pela quilometragem, mustBeDoneBefore), entao a data prevista
+   * sai so da media mensal rodada.
    *
    * Estrito de proposito: o arquivo e nosso e vai no APK, entao um item
    * incompleto e bug de quem editou, e o teste do catalogo real pega antes do
    * build chegar ao usuario.
    *
    * @throws org.json.JSONException se o JSON for invalido ou faltar campo.
-   * @throws IllegalArgumentException se algum valor for vazio ou nao positivo.
+   * @throws IllegalArgumentException se o nome for vazio, a quilometragem nao
+   * for positiva ou o prazo for negativo.
    */
   fun parse(json: String): List<Service> {
     val array = JSONArray(json)
@@ -55,7 +59,7 @@ object ServicesCatalogParser {
       val months = item.getInt("mustBeDoneBefore")
       require(name.isNotEmpty()) { "Serviço $index sem nome" }
       require(mileage > 0) { "Serviço '$name' com quilometragem inválida: $mileage" }
-      require(months > 0) { "Serviço '$name' com prazo inválido: $months" }
+      require(months >= 0) { "Serviço '$name' com prazo inválido: $months" }
       Service(name = name, mileageChange = mileage, mustBeDoneBefore = months)
     }
   }

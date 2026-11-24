@@ -45,7 +45,13 @@ class ServicesCatalogParserTest {
   }
 
   @Test
-  fun `nome vazio ou valores nao positivos falham`() {
+  fun `prazo zero e aceito e significa sem prazo por tempo`() {
+    val json = """[{ "name": "Velas", "mileageChange": 40000, "mustBeDoneBefore": 0 }]"""
+    assertEquals(listOf(Service("Velas", 40_000, 0)), ServicesCatalogParser.parse(json))
+  }
+
+  @Test
+  fun `nome vazio, quilometragem nao positiva ou prazo negativo falham`() {
     listOf(
       """[{ "name": "  ", "mileageChange": 10000, "mustBeDoneBefore": 12 }]""",
       """[{ "name": "Óleo", "mileageChange": 0, "mustBeDoneBefore": 12 }]""",
@@ -69,5 +75,8 @@ class ServicesCatalogParserTest {
     assertTrue("o catálogo não pode estar vazio", services.isNotEmpty())
     val names = services.map { it.name!!.lowercase() }
     assertEquals("nomes repetidos no catálogo", names.size, names.toSet().size)
+    // O no do Firebase tinha uma entrada "Teste" de desenvolvimento; ela nao
+    // pode voltar para o catalogo que vai ao usuario.
+    assertTrue("entrada de teste no catálogo", names.none { it == "teste" })
   }
 }
