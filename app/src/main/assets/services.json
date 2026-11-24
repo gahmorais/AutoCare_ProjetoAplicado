@@ -1,0 +1,16 @@
+[
+  { "name": "Troca de óleo e filtro de óleo", "mileageChange": 10000, "mustBeDoneBefore": 12 },
+  { "name": "Filtro de ar do motor", "mileageChange": 15000, "mustBeDoneBefore": 12 },
+  { "name": "Filtro de ar-condicionado (cabine)", "mileageChange": 15000, "mustBeDoneBefore": 12 },
+  { "name": "Filtro de combustível", "mileageChange": 20000, "mustBeDoneBefore": 12 },
+  { "name": "Alinhamento e balanceamento", "mileageChange": 10000, "mustBeDoneBefore": 6 },
+  { "name": "Rodízio de pneus", "mileageChange": 10000, "mustBeDoneBefore": 6 },
+  { "name": "Velas de ignição", "mileageChange": 30000, "mustBeDoneBefore": 24 },
+  { "name": "Pastilhas de freio", "mileageChange": 30000, "mustBeDoneBefore": 24 },
+  { "name": "Fluido de freio", "mileageChange": 30000, "mustBeDoneBefore": 24 },
+  { "name": "Líquido de arrefecimento", "mileageChange": 40000, "mustBeDoneBefore": 24 },
+  { "name": "Palhetas do limpador", "mileageChange": 20000, "mustBeDoneBefore": 12 },
+  { "name": "Bateria", "mileageChange": 60000, "mustBeDoneBefore": 36 },
+  { "name": "Correia dentada", "mileageChange": 60000, "mustBeDoneBefore": 48 },
+  { "name": "Óleo do câmbio", "mileageChange": 60000, "mustBeDoneBefore": 48 }
+]

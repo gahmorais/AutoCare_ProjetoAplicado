@@ -10,6 +10,9 @@ data class Vehicle(
   val plate: String? = null,
   val photo: String? = null,
   val averageDistanceTraveledPerMonth: Int? = null,
-  val maintenances: List<Maintenance>? = null
+  val maintenances: List<Maintenance>? = null,
+  // Dono do veiculo no armazenamento local. Opcional so enquanto o caminho do
+  // Firebase ainda existe (ate a etapa 5 do plano); o Room exige o valor.
+  val profileId: String? = null
 )
 
