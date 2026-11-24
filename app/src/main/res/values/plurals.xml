@@ -8,4 +8,13 @@
         <item quantity="one">%1$d serviço em dia</item>
         <item quantity="other">%1$d serviços em dia</item>
     </plurals>
+
+    <plurals name="profiles_vehicle_count">
+        <item quantity="one">%d veículo</item>
+        <item quantity="other">%d veículos</item>
+    </plurals>
+    <plurals name="profiles_maintenance_count">
+        <item quantity="one">%d manutenção</item>
+        <item quantity="other">%d manutenções</item>
+    </plurals>
 </resources>

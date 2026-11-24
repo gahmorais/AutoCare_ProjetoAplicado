@@ -1,7 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.main_screen
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,9 +11,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
-import br.com.gabrielmorais.autocare.ui.activities.login_screen.LoginActivity
 import br.com.gabrielmorais.autocare.ui.navigation.AutoCareApp
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import kotlinx.coroutines.flow.collectLatest
@@ -22,16 +21,20 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
- * A unica Activity do app depois da fase 3. Antes eram quatro telas ligadas por
- * Intent - inicial, minha conta, detalhe do veiculo e formulario de manutencao -
- * duas delas sem botao de voltar. Login e cadastro seguem como Activities
- * proprias: sao o fluxo anterior a ter sessao, e nao compartilham nem a barra
- * inferior nem o ViewModel da casca.
+ * A unica Activity do app e a porta de entrada: sem login, abre direto no
+ * primeiro acesso (sem perfil) ou nas abas (com perfil).
  */
 class MainActivity : ComponentActivity() {
   private val viewModel by viewModel<MainViewModel>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Antes do super: a splash precisa estar instalada antes de a janela existir.
+    // Ela segura a tela ate o banco dizer se ha perfil - sem isso o onboarding
+    // piscaria para quem ja usa o app.
+    installSplashScreen().setKeepOnScreenCondition {
+      viewModel.startState.value == StartState.LOADING
+    }
+
     super.onCreate(savedInstanceState)
     setContent {
       val notificationPermission = rememberLauncherForActivityResult(
@@ -52,15 +55,13 @@ class MainActivity : ComponentActivity() {
       }
 
       AutoCareTheme {
-        AutoCareApp(
-          shellViewModel = viewModel,
-          onLoggedOut = ::backToLogin
-        )
+        AutoCareApp(shellViewModel = viewModel)
       }
     }
 
-    // Cobre o caso de o BOOT_COMPLETED nao ter chegado (app forcado a parar,
-    // instalacao nova) mantendo os alarmes consistentes ao abrir o app.
+    // Reagenda os lembretes e recolhe fotos sem dono. Cobre o caso de o
+    // BOOT_COMPLETED nao ter chegado (app forcado a parar, instalacao nova,
+    // backup restaurado).
     BootReceiver.enqueueReschedule(this)
 
     lifecycleScope.launch {
@@ -70,22 +71,5 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-
-    // Uma vez so: o Flow do repositorio mantem as tres abas atualizadas sozinho.
-    // Antes isso rodava em onResume e cada retorno a tela deixava para tras
-    // mais um ValueEventListener ativo.
-    viewModel.observeUser()
-  }
-
-  /**
-   * LoginActivity ja tinha se finalizado ao abrir a Main, entao o finish()
-   * sozinho esvaziava a pilha e fechava o app em vez de voltar ao login.
-   */
-  private fun backToLogin() {
-    val intent = Intent(this, LoginActivity::class.java).apply {
-      flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-    }
-    startActivity(intent)
-    finish()
   }
 }

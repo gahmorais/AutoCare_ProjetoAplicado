@@ -1,5 +1,13 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
+import br.com.gabrielmorais.autocare.ui.components.rememberLocalPhoto
+import br.com.gabrielmorais.autocare.ui.components.ProfileAvatar
+import br.com.gabrielmorais.autocare.data.models.displayName
+import br.com.gabrielmorais.autocare.data.models.Profile
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.outlined.SwapHoriz
 import android.Manifest
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -66,9 +74,7 @@ import br.com.gabrielmorais.autocare.sampleData.vehicleSample
 import br.com.gabrielmorais.autocare.ui.activities.maintenance_screen.SimpleCardMaintenance
 import br.com.gabrielmorais.autocare.ui.components.CardVehicleDetails
 import com.canhub.cropper.CropImageContract
-import com.canhub.cropper.CropImageContractOptions
-import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
+import br.com.gabrielmorais.autocare.ui.components.PhotoCropOptions
 import br.com.gabrielmorais.autocare.utils.Utils
 import java.time.LocalDate
 import kotlinx.coroutines.flow.collectLatest
@@ -116,6 +122,8 @@ fun VehicleDetailsScreen(
   onEditMaintenance: (vehicleId: String, maintenanceId: Int) -> Unit
 ) {
   val vehicle = viewModel.vehicle.collectAsState()
+  val transferTargets by viewModel.transferTargets.collectAsState()
+  var showTransfer by remember { mutableStateOf(false) }
   val context = LocalContext.current
 
   // Excluir era irreversivel e invisivel: swipe sem confirmacao nem volta atras.
@@ -163,17 +171,7 @@ fun VehicleDetailsScreen(
     contract = ActivityResultContracts.RequestPermission(),
     onResult = { isGranted ->
       if (isGranted) {
-        val options = CropImageContractOptions(
-          null,
-          CropImageOptions(
-            imageSourceIncludeGallery = true,
-            imageSourceIncludeCamera = true,
-            guidelines = CropImageView.Guidelines.ON,
-            aspectRatioX = 2,
-            aspectRatioY = 1
-          )
-        )
-        takePicture.launch(options)
+        takePicture.launch(PhotoCropOptions.vehicle())
       }
     }
   )
@@ -189,6 +187,17 @@ fun VehicleDetailsScreen(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.content_desc_back)
             )
+          }
+        },
+        actions = {
+          // So com outro perfil para receber o veiculo.
+          if (transferTargets.isNotEmpty()) {
+            IconButton(onClick = { showTransfer = true }) {
+              Icon(
+                imageVector = Icons.Outlined.SwapHoriz,
+                contentDescription = stringResource(R.string.vehicle_transfer)
+              )
+            }
           }
         }
       )
@@ -274,7 +283,7 @@ fun VehicleDetailsScreen(
                 // deslize o card ate o fim da lista em vez de saltar - e
                 // tambem porque o cartao e o Spacer eram dois nos irmaos
                 // soltos no mesmo item.
-                Column(modifier = Modifier.animateItemPlacement(itemPlacementSpec())) {
+                Column(modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = itemPlacementSpec(), fadeOutSpec = null)) {
                   SwipeToDismissBox(
                     state = dismissState,
                     enableDismissFromStartToEnd = false,
@@ -318,6 +327,25 @@ fun VehicleDetailsScreen(
         }
       }
     }
+  }
+
+  if (showTransfer) {
+    val vehicleName = vehicle.value?.displayName().orEmpty()
+    TransferVehicleDialog(
+      vehicleName = vehicleName,
+      targets = transferTargets,
+      onDismiss = { showTransfer = false },
+      onSelect = { target ->
+        showTransfer = false
+        viewModel.transferVehicle(target) { novoDono ->
+          scope.launch {
+            snackbarHostState.showSnackbar(
+              context.getString(R.string.vehicle_transferred, vehicleName, novoDono.name)
+            )
+          }
+        }
+      }
+    )
   }
 }
 
@@ -375,4 +403,43 @@ private fun EmptyMaintenanceMessage(text: String) {
       textAlign = TextAlign.Center
     )
   }
+}
+
+@Composable
+private fun TransferVehicleDialog(
+  vehicleName: String,
+  targets: List<Profile>,
+  onDismiss: () -> Unit,
+  onSelect: (Profile) -> Unit
+) {
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(stringResource(R.string.vehicle_transfer_title, vehicleName)) },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+          text = stringResource(R.string.vehicle_transfer_body),
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        targets.forEach { target ->
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { onSelect(target) }
+              .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            ProfileAvatar(photo = rememberLocalPhoto(target.photoPath), size = 36.dp)
+            Text(text = target.name, style = MaterialTheme.typography.bodyLarge)
+          }
+        }
+      }
+    },
+    confirmButton = {},
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.text_cancel)) }
+    }
+  )
 }

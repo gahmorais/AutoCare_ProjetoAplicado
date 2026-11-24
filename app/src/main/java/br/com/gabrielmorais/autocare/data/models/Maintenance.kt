@@ -17,7 +17,7 @@ data class Maintenance(
   val forecastNextExchangeMileage: Int? = null,
   val forecastNextExchangeDate: Long? = null,
   val comments: String? = null,
-  // Registros gravados antes deste campo existir nao trazem a chave, e o
-  // construtor sem argumentos que o Firebase usa cai neste default.
+  // Default para registros que nao informam o campo, como um arquivo de
+  // exportacao de versao anterior (etapa 8).
   val completed: Boolean = false,
 ) : Parcelable

@@ -14,7 +14,8 @@
     <!-- Necessaria para reagendar os alarmes, que o sistema descarta no reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Sem INTERNET: os dados nao saem do aparelho. O SDK de anuncios (etapa 10)
+         adiciona a permissao pelo proprio manifesto. -->
 
     <application
         android:name=".AutoCareApplication"
@@ -46,10 +47,9 @@
 
         <!-- Detalhe do veiculo, minha conta e formulario de manutencao deixaram
              de ser Activities e viraram destinos do NavHost da MainActivity. -->
-        <activity android:name=".ui.activities.main_screen.MainActivity" />
-        <activity android:name=".ui.activities.register_screen.RegisterActivity" />
+        <!-- Sem login: a Main e a porta de entrada. -->
         <activity
-            android:name=".ui.activities.login_screen.LoginActivity"
+            android:name=".ui.activities.main_screen.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AutoCare.Splash">
             <intent-filter>

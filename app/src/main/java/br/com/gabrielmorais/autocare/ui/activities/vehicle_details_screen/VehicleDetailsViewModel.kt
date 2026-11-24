@@ -3,112 +3,107 @@ package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.gabrielmorais.autocare.data.images.ImageKind
+import br.com.gabrielmorais.autocare.data.images.LocalImageStore
+import br.com.gabrielmorais.autocare.data.local.repository.MaintenanceRepository
+import br.com.gabrielmorais.autocare.data.local.repository.ProfileRepository
+import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
-import br.com.gabrielmorais.autocare.data.repository.authorization.AuthRepository
-import br.com.gabrielmorais.autocare.data.repository.maintenance.MaintenanceRepository
-import br.com.gabrielmorais.autocare.data.repository.vehicleRepository.VehicleRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class VehicleDetailsViewModel(
   private val vehicleRepository: VehicleRepository,
-  private val authRepository: AuthRepository,
-  private val maintenanceRepository: MaintenanceRepository
+  private val maintenanceRepository: MaintenanceRepository,
+  private val imageStore: LocalImageStore,
+  private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
-  private val _vehicle = MutableStateFlow<Vehicle?>(null)
-
-  // Derivado da sessao autenticada, nao de um extra de Intent forjavel.
-  private val _userId = MutableStateFlow(authRepository.currentUserId().orEmpty())
-  val userId = _userId.asStateFlow()
+  private val vehicleId = MutableStateFlow<String?>(null)
 
   private val _message = MutableStateFlow<String?>(null)
   val message = _message.asStateFlow()
 
-  val vehicle = _vehicle.asStateFlow()
+  /**
+   * Observado, nao lido uma vez: excluir, desfazer e trocar a foto atualizam a
+   * tela sozinhos, sem a ViewModel remendar o estado na mao.
+   */
+  val vehicle: StateFlow<Vehicle?> = vehicleId
+    .filterNotNull()
+    .flatMapLatest { id -> vehicleRepository.observeVehicle(id) }
+    .catch { publishError(it) }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  fun uploadVehiclePhoto(image: Uri) {
+  /** Para quem o veiculo pode ser transferido: todos os perfis menos o dono. */
+  val transferTargets: StateFlow<List<Profile>> =
+    combine(profileRepository.observeProfiles(), vehicle) { profiles, current ->
+      profiles.filter { it.id != current?.profileId }
+    }
+      .catch { publishError(it) }
+      .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  /**
+   * Passa o veiculo, com todo o historico, para [target] - ex.: o carro do pai
+   * que ficou para o filho. Os alarmes nao mudam: o id das manutencoes e o mesmo.
+   */
+  fun transferVehicle(target: Profile, onTransferred: (Profile) -> Unit = {}) {
+    val currentId = vehicleId.value
+      ?: return publishError(IllegalStateException("Veículo não encontrado"))
     viewModelScope.launch {
-      // saveVehicleImage propaga a excecao do upload; sem o catch ela escapa
-      // do viewModelScope e derruba o app.
-      runCatching {
-        val imageUrl = vehicleRepository.saveVehicleImage(image)
-        val current = _vehicle.value ?: return@runCatching
-        updateVehicle(userId = _userId.value, vehicle = current.copy(photo = imageUrl))
-      }.onFailure(::publishError)
+      runCatching { vehicleRepository.transferVehicle(currentId, target.id) }
+        .onSuccess { onTransferred(target) }
+        .onFailure(::publishError)
     }
   }
 
   fun getVehicle(vehicleId: String) {
-    val userId = _userId.value
-    if (userId.isBlank()) {
-      publishError(IllegalStateException("Sessão expirada"))
-      return
-    }
-    vehicleRepository.getVehicleDetails(
-      userId,
-      vehicleId,
-      onSuccess = { _vehicle.value = it },
-      onError = ::publishError
-    )
+    this.vehicleId.value = vehicleId
   }
 
-  fun deleteMaintenance(maintenance: Maintenance, onDeleted: (Maintenance) -> Unit) {
-    val userId = _userId.value
-    val vehicleId = _vehicle.value?.id
-    if (userId.isBlank() || vehicleId == null) {
-      publishError(IllegalStateException("Não foi possível remover a manutenção"))
-      return
+  /** A foto anterior vira orfa e e recolhida pela limpeza de fotos. */
+  fun uploadVehiclePhoto(image: Uri) {
+    viewModelScope.launch {
+      runCatching {
+        val current = vehicle.value ?: return@runCatching
+        val path = imageStore.save(image, ImageKind.VEHICLE_PHOTO)
+        vehicleRepository.saveVehicle(current.copy(photo = path))
+      }.onFailure(::publishError)
     }
-    maintenanceRepository.delete(
-      userId = userId,
-      vehicleId = vehicleId,
-      maintenanceId = maintenance.id,
-      onSuccess = {
-        // Cancela tambem o alarme, senao a notificacao chegaria para um
-        // registro que nao existe mais.
-        onDeleted(maintenance)
-      },
-      onError = ::publishError
-    )
+  }
+
+  /** [onDeleted] cancela o alarme e oferece o desfazer. */
+  fun deleteMaintenance(maintenance: Maintenance, onDeleted: (Maintenance) -> Unit) {
+    viewModelScope.launch {
+      runCatching { maintenanceRepository.deleteMaintenance(maintenance.id) }
+        .onSuccess { onDeleted(maintenance) }
+        .onFailure(::publishError)
+    }
   }
 
   /**
-   * Desfaz uma exclusao. A gravacao ja aconteceu quando o snackbar apareceu,
-   * entao voltar atras e regravar - o [onRestored] reagenda o lembrete que o
-   * delete tinha cancelado.
+   * Desfaz uma exclusao regravando com o mesmo id - o [onRestored] reagenda o
+   * lembrete que a exclusao tinha cancelado.
    */
   fun restoreMaintenance(maintenance: Maintenance, onRestored: (Maintenance) -> Unit) {
-    val userId = _userId.value
-    val vehicleId = _vehicle.value?.id
-    if (userId.isBlank() || vehicleId == null) {
-      publishError(IllegalStateException("Não foi possível restaurar a manutenção"))
-      return
+    val currentVehicleId = vehicleId.value
+      ?: return publishError(IllegalStateException("Não foi possível restaurar a manutenção"))
+    viewModelScope.launch {
+      runCatching { maintenanceRepository.saveMaintenance(currentVehicleId, maintenance) }
+        .onSuccess { onRestored(maintenance) }
+        .onFailure(::publishError)
     }
-    maintenanceRepository.restore(
-      userId = userId,
-      vehicleId = vehicleId,
-      maintenance = maintenance,
-      onSuccess = { onRestored(maintenance) },
-      onError = ::publishError
-    )
-  }
-
-  private fun updateVehicle(userId: String, vehicle: Vehicle) {
-    val vehicleId = vehicle.id
-    if (vehicleId == null) {
-      publishError(IllegalArgumentException("Veículo sem identificador"))
-      return
-    }
-    vehicleRepository.updateVehicle(
-      userId,
-      vehicleId,
-      vehicle,
-      onSuccess = { _vehicle.value = vehicle },
-      onError = ::publishError
-    )
   }
 
   private fun publishError(error: Throwable) {

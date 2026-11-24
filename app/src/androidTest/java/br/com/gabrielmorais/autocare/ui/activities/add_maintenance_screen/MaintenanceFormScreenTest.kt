@@ -8,7 +8,6 @@ import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.fakes.FakeMaintenanceRepository
 import br.com.gabrielmorais.autocare.fakes.FakeServicesRepository
-import br.com.gabrielmorais.autocare.fakes.FakeSessionRepository
 import br.com.gabrielmorais.autocare.fakes.FakeVehicleRepository
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import org.junit.Rule
@@ -33,15 +32,14 @@ class MaintenanceFormScreenTest {
   val compose = createComposeRule()
 
   private fun viewModelCom(
-    services: List<Service?>? = emptyList(),
+    services: List<Service>? = emptyList(),
     error: Throwable? = null
   ) = AddMaintenanceViewModel(
     servicesRepository = FakeServicesRepository(services, error),
     maintenanceRepository = FakeMaintenanceRepository(),
     vehicleRepository = FakeVehicleRepository(
       Vehicle(id = "v1", nickName = "Gol", averageDistanceTraveledPerMonth = 1_000)
-    ),
-    authRepository = FakeSessionRepository()
+    )
   )
 
   private fun renderizar(viewModel: AddMaintenanceViewModel) {
@@ -54,7 +52,7 @@ class MaintenanceFormScreenTest {
 
   @Test
   fun compoe_enquanto_carrega_os_servicos() {
-    // services = null deixa o callback sem resposta: a tela fica carregando.
+    // services = null nunca responde: a tela fica carregando.
     renderizar(viewModelCom(services = null))
 
     compose.onNodeWithText("Carregando tipos de serviço…").assertIsDisplayed()
@@ -89,7 +87,7 @@ class MaintenanceFormScreenTest {
     // derrubava a tela inteira antes da validacao.
     renderizar(
       viewModelCom(
-        services = listOf(Service(name = "Servico quebrado"), null)
+        services = listOf(Service(name = "Servico quebrado"))
       )
     )
 

@@ -14,7 +14,8 @@
 .cxx
 local.properties
 
-# Configuracao do Firebase gerada pelo console - nao deve ser versionada
+# O app nao usa mais Firebase, mas copias locais antigas destes arquivos ainda
+# podem existir e carregam credenciais: continuam fora do git.
 google-services.json
 
 # Chave de service account: acesso administrativo total ao projeto

@@ -37,10 +37,6 @@ jobs:
           df -h /
 
       - uses: ./.github/actions/setup-android
-        with:
-          google-services-json-base64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
-          cloudinary-cloud-name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          cloudinary-upload-preset: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
 
       - name: Habilita a aceleracao KVM
         run: |

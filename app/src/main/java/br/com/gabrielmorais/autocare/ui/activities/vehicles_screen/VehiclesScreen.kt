@@ -49,10 +49,12 @@ import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.ui.theme.itemPlacementSpec
 import br.com.gabrielmorais.autocare.R
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
-import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialog
-import br.com.gabrielmorais.autocare.ui.activities.my_account_screen.AddVehicleDialogState
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
+import br.com.gabrielmorais.autocare.ui.components.ProfileSwitcher
+import br.com.gabrielmorais.autocare.utils.Utils
+import java.time.LocalDate
 import kotlinx.coroutines.launch
 
 /**
@@ -64,10 +66,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun VehiclesScreen(
   viewModel: MainViewModel,
-  onOpenVehicle: (String) -> Unit
+  onOpenVehicle: (String) -> Unit,
+  onManageProfiles: () -> Unit
 ) {
-  val user by viewModel.user.collectAsState(initial = null)
-  val vehicles = user?.vehicles.orEmpty()
+  // So os do perfil ativo: e o dono dos veiculos cadastrados por aqui.
+  val vehicles by viewModel.vehicles.collectAsState()
+  val profiles by viewModel.profiles.collectAsState()
+  val activeProfile by viewModel.activeProfile.collectAsState()
 
   val dialogState = remember { AddVehicleDialogState() }
   var showDialog by remember { mutableStateOf(false) }
@@ -83,6 +88,9 @@ fun VehiclesScreen(
 
   val onDeleteVehicle: (Vehicle) -> Unit = { vehicle ->
     viewModel.deleteVehicle(vehicle) { removido ->
+      // As manutencoes saem em cascata com o veiculo; os alarmes delas tambem
+      // precisam sair, senao o lembrete chegaria para um carro que nao existe.
+      removido.maintenances.orEmpty().forEach { NotificationUtils.cancelNotification(context, it) }
       scope.launch {
         val result = snackbarHostState.showSnackbar(
           message = deletedMessage,
@@ -90,13 +98,43 @@ fun VehiclesScreen(
           withDismissAction = true,
           duration = SnackbarDuration.Long
         )
-        if (result == SnackbarResult.ActionPerformed) viewModel.saveVehicle(removido)
+        if (result == SnackbarResult.ActionPerformed) {
+          // restore, nao save: volta tambem as manutencoes, com os mesmos ids.
+          viewModel.restoreVehicle(removido) { restaurado ->
+            restaurado.maintenances.orEmpty().forEach { maintenance ->
+              maintenance.forecastNextExchangeDate?.let { epochDay ->
+                NotificationUtils.rescheduleNotification(
+                  context = context,
+                  maintenance = maintenance,
+                  localDateTime = Utils.dateMinusFiveDays(LocalDate.ofEpochDay(epochDay))
+                )
+              }
+            }
+          }
+        }
       }
     }
   }
 
   Scaffold(
-    topBar = { TopAppBar(title = { Text(stringResource(R.string.text_vehicles)) }) },
+    topBar = {
+      TopAppBar(
+        title = {
+          val title = stringResource(R.string.text_vehicles)
+          // Com mais de um perfil, o titulo diz de quem e a lista.
+          val owner = activeProfile?.name?.takeIf { profiles.size > 1 }
+          Text(if (owner != null) "$title · $owner" else title)
+        },
+        actions = {
+          ProfileSwitcher(
+            active = activeProfile,
+            profiles = profiles,
+            onSelect = { viewModel.selectProfile(it.id) },
+            onManage = onManageProfiles
+          )
+        }
+      )
+    },
     snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
       FloatingActionButton(onClick = { showDialog = true }) {
@@ -194,7 +232,7 @@ private fun androidx.compose.foundation.lazy.LazyItemScope.VehicleRow(
   )
 
   SwipeToDismissBox(
-    modifier = Modifier.animateItemPlacement(itemPlacementSpec()),
+    modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = itemPlacementSpec(), fadeOutSpec = null),
     state = dismissState,
     enableDismissFromStartToEnd = false,
     backgroundContent = {

@@ -1,26 +1,17 @@
 <resources>
     <string name="app_name">AutoCare</string>
-    <string name="email_placeholder">"email@email.com.br"</string>
-    <string name="text_email">Email</string>
-    <string name="text_login">Login</string>
-    <string name="text_loading_login">Efetuando Login</string>
-    <string name="text_register">Cadastrar</string>
-    <string name="user_id_extra">user_id</string>
     <string name="does_not_have_maintenance">Nenhuma manutenção foi realizada</string>
     <string name="maintenance_text">Manutenções</string>
     <string name="add_maintenance">Adicionar manutenção</string>
     <string name="vehicle_details_text">Detalhes do veículo</string>
-    <string name="text_my_account">Minha Conta</string>
     <string name="text_name">Nome</string>
-    <string name="text_change_password">Trocar senha</string>
     <string name="text_update_user_data">Atualizar dados</string>
     <string name="text_vehicles">Veículos</string>
     <string name="text_add_vehicle">Adicionar veículo</string>
-    <string name="name_placeholder">John Doe</string>
+    <string name="name_placeholder">Ex.: Maria</string>
     <string name="text_any_car_registered">Nenhum veículo cadastrado</string>
-    <string name="profile_image_description">Profile Image</string>
+    <string name="profile_image_description">Foto do perfil. Toque para trocar</string>
     <string name="text_maintenance">Manutenções</string>
-    <string name="text_exit">Sair</string>
     <string name="text_unknow">Desconhecido</string>
     <string name="text_description">Descrição:</string>
     <string name="text_date">Data:</string>
@@ -38,11 +29,6 @@
     <string name="text_plate">Placa</string>
     <string name="placeholder_plate">abc1234</string>
     <string name="text_save">Salvar</string>
-    <string name="text_loading_register_user">Registrando usuário</string>
-    <string name="placeeholder_email">email@email.com.br</string>
-    <string name="text_password">Senha</string>
-    <string name="text_confirm_password">Confirme a senha</string>
-    <string name="text_register_user">Cadastrar</string>
     <string name="text_close">Fechar</string>
     <string name="text_placeholder_loading_page">Carregando</string>
     <string name="text_average_distace_traveled_per_month">Média de distância viajada por mês</string>
@@ -54,7 +40,7 @@
     <string name="channel_name">notification_channel</string>
     <string name="MAINTENANCE_INTENT">maintenance_data</string>
     <string name="channel_description">channel_autocare</string>
-    <string name="maintenance_coming">Faltam cinco dias para a manutenção</string>
+    <string name="maintenance_coming">Lembrete de manutenção</string>
     <string name="notify_again">Avisar novamente?</string>
     <string name="text_loading_services">Carregando tipos de serviço…</string>
     <string name="text_services_unavailable">Não foi possível carregar os tipos de serviço. Verifique sua conexão e tente novamente.</string>
@@ -84,15 +70,43 @@
     <string name="text_estimated_mileage">≈%1$s km</string>
     <string name="nav_home">Início</string>
     <string name="nav_vehicles">Veículos</string>
-    <string name="nav_account">Eu</string>
+    <string name="nav_account">Perfil</string>
     <string name="content_desc_back">Voltar</string>
     <string name="text_all_on_track">Tudo em dia</string>
     <string name="text_empty_maintenances_hint">Abra um veículo e registre a primeira manutenção para acompanhar os vencimentos.</string>
     <string name="text_undo">Desfazer</string>
     <string name="text_vehicle_deleted">Veículo excluído</string>
     <string name="text_maintenance_deleted">Manutenção excluída</string>
-    <string name="content_desc_show_password">Mostrar senha</string>
-    <string name="content_desc_hide_password">Ocultar senha</string>
     <string name="content_desc_pick_date">Escolher a data do serviço</string>
     <string name="content_desc_pick_next_date">Escolher a data da próxima manutenção</string>
+
+    <!-- Perfil local e primeiro acesso (etapa 4 do plano) -->
+    <string name="text_profile">Perfil</string>
+    <string name="onboarding_title">Bem-vindo ao AutoCare</string>
+    <string name="onboarding_body">Como você se chama? Seus veículos e manutenções ficam salvos só neste aparelho, sem cadastro nem senha.</string>
+    <string name="onboarding_photo_hint">Toque no círculo para adicionar uma foto (opcional)</string>
+    <string name="onboarding_start">Começar</string>
+
+    <!-- Multiplos perfis (etapa 6 do plano) -->
+    <string name="content_desc_switch_profile">Perfil ativo: %1$s. Toque para trocar</string>
+    <string name="content_desc_active_profile">Perfil ativo</string>
+    <string name="profiles_manage">Gerenciar perfis</string>
+    <string name="profiles_title">Perfis neste aparelho</string>
+    <string name="profiles_hint">Separe os veículos de cada pessoa da família. O perfil ativo é o dono dos veículos que você cadastrar.</string>
+    <string name="profiles_add">Adicionar perfil</string>
+    <string name="profiles_add_confirm">Criar</string>
+    <string name="profiles_active_label">Em uso</string>
+    <string name="profiles_use">Usar este perfil</string>
+    <string name="profiles_delete">Excluir perfil %1$s</string>
+    <string name="profiles_delete_title">Excluir %1$s?</string>
+    <string name="profiles_delete_body">Também serão apagados %1$s e %2$s deste perfil. Não é possível desfazer.</string>
+    <string name="profiles_delete_body_empty">Este perfil não tem veículos. Não é possível desfazer.</string>
+    <string name="profiles_deleted">Perfil %1$s excluído</string>
+    <string name="text_cancel">Cancelar</string>
+    <string name="text_delete">Excluir</string>
+    <string name="home_filter_all">Todos</string>
+    <string name="vehicle_transfer">Transferir para outro perfil</string>
+    <string name="vehicle_transfer_title">Transferir %1$s para</string>
+    <string name="vehicle_transfer_body">O veículo vai com todo o histórico de manutenções e os lembretes.</string>
+    <string name="vehicle_transferred">%1$s agora é de %2$s</string>
 </resources>

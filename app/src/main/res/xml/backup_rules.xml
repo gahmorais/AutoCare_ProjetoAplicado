@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Regras de backup para dispositivos anteriores ao Android 12.
-   Ver o comentario em data_extraction_rules.xml: o objetivo e manter o token
-   de sessao do Firebase Auth fora de qualquer backup.
+   Regras de backup para Android 9-11. O porque de cada item esta em
+   data_extraction_rules.xml, que vale do Android 12 em diante - mantenha os
+   dois iguais (BackupRulesTest confere).
 -->
 <full-backup-content>
-    <exclude
-        domain="sharedpref"
-        path="com.google.firebase.auth.api.Store.xml" />
-    <exclude
-        domain="sharedpref"
-        path="com.google.android.gms.appid.xml" />
-    <exclude domain="database" />
-    <exclude domain="file" />
+    <include domain="database" path="autocare.db" />
+    <include domain="database" path="autocare.db-wal" />
+    <include domain="database" path="autocare.db-shm" />
+    <include domain="file" path="images/" />
+    <include domain="file" path="datastore/" />
 </full-backup-content>

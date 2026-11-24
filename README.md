@@ -7,144 +7,69 @@
 ![image](./imgs/car-details.png)
 ![image](./imgs/add_maintenance.png)
 
-## Configuração
+## Como funciona
 
-O projeto depende de um projeto Firebase (Authentication e Realtime Database).
-O armazenamento de imagens **não** usa Firebase Storage — ver *Imagens* abaixo.
+Todos os dados ficam **no aparelho**: não há conta, login nem servidor. O app abre direto, pede
+um nome no primeiro acesso e funciona offline.
 
-1. Crie o projeto no [Firebase Console](https://console.firebase.google.com/) e registre o app
-   com o applicationId `br.com.gabrielmorais.autocare`.
-2. Baixe o `google-services.json` e coloque-o em `app/google-services.json`.
-   **Esse arquivo não é versionado** — sem ele o build falha no plugin `com.google.gms.google-services`.
-3. Habilite o provedor *E-mail/senha* em Authentication.
-4. Publique as regras de segurança versionadas neste repositório:
+| O quê | Onde fica |
+| --- | --- |
+| Perfis, veículos e manutenções | Banco Room (`autocare.db`), esquema versionado em [`app/schemas/`](app/schemas/) |
+| Fotos de perfil e de veículo | `filesDir/images/<uuid>.jpg` — o banco guarda só o caminho relativo |
+| Perfil ativo | DataStore (`settings`) |
+| Catálogo de tipos de serviço | [`app/src/main/assets/services.json`](app/src/main/assets/services.json), embarcado no APK |
 
-   ```sh
-   npm install -g firebase-tools   # se ainda não tiver
-   firebase login
-   firebase deploy --only database
-   ```
+O plano completo da migração para dados locais e da publicação na Play Store está em
+[`docs/plano-publicacao.md`](docs/plano-publicacao.md).
 
-   O [`firebase.json`](./firebase.json) aponta o serviço para o arquivo de regras e o
-   [`.firebaserc`](./.firebaserc) fixa o projeto padrão — sem eles o CLI responde
-   *"Not in a Firebase app directory"*. Para apontar para outro projeto: `firebase use --add`.
+### Fotos
 
-   [`database.rules.json`](./database.rules.json) restringe `Usuarios/{uid}` e `vehicles/{uid}`
-   ao próprio usuário autenticado e deixa `lista-servicos` como somente leitura.
+Toda foto passa pelo [`ImageCompressor`](app/src/main/java/br/com/gabrielmorais/autocare/data/images/ImageCompressor.kt)
+antes de ser salva — o arquivo original nunca é guardado:
 
-   > ⚠️ Conceder `".read": "auth != null"` **no nó pai** (`Usuarios`, `vehicles`) expõe os dados
-   > de todos os usuários: as regras cascateiam para baixo e não podem ser revogadas no filho.
-   > Como o cadastro é self-service, qualquer pessoa cria uma conta e lê o banco inteiro via
-   > REST. A permissão precisa ficar no nível `$uid`, como no arquivo versionado.
+| | Veículo | Perfil |
+| --- | --- | --- |
+| Formato | JPEG, qualidade 75 | JPEG, qualidade 75 |
+| Maior lado | 1280 px | 512 px |
 
-   **Compatibilidade com versões já instaladas:** o escopo por `$uid` não quebra clientes
-   antigos — todo acesso do app sempre foi em ou abaixo do próprio uid. As regras
-   propositalmente **não** incluem `.validate`: elas seriam restrições novas sobre a escrita,
-   e versões anteriores à correção de tratamento de erro lançam exceção de dentro dos
-   callbacks do Firebase, transformando uma rejeição em crash em vez de mensagem.
-   Se quiser adicionar `.validate` depois, confirme antes que todo registro em
-   `Usuarios/{uid}` tem `id` presente e igual ao uid, e valide no *Rules Playground*.
+A recompressão aplica a orientação do EXIF e descarta os metadados da origem, inclusive a
+localização GPS. Não existe "apagar foto": a foto que perde o dono (trocada, veículo ou perfil
+excluído) é recolhida por [`PhotoHousekeeping`](app/src/main/java/br/com/gabrielmorais/autocare/data/images/PhotoHousekeeping.kt)
+na abertura do app, com carência de 1 hora — é o que mantém o *desfazer* do snackbar funcionando.
 
-5. Popule o nó `lista-servicos` do Realtime Database com os tipos de serviço:
+### Catálogo de serviços
 
-   ```json
-   {
-     "lista-servicos": {
-       "0": { "name": "Troca de óleo", "mileageChange": 10000, "mustBeDoneBefore": 12 }
-     }
-   }
-   ```
+`mileageChange` é o intervalo em km e `mustBeDoneBefore` o prazo mínimo em meses. Prazo `0` é o
+caso comum e significa "sem prazo por tempo": o formulário usa
+`maxOf(meses pela quilometragem, mustBeDoneBefore)`. O teste
+`ServicesCatalogParserTest` valida o arquivo real a cada build.
 
-### Imagens (Cloudinary)
+## Compilando
 
-As fotos de perfil e de veículo são hospedadas no [Cloudinary](https://cloudinary.com/) —
-o Firebase encerrou o tier gratuito de Storage. O upload é **não assinado**, via
-*upload preset*, porque assinar exigiria o `api_secret` no cliente (inaceitável) ou um
-backend (o projeto não tem).
-
-Declare as credenciais em `local.properties` — arquivo não versionado:
-
-```properties
-cloudinary.cloudName=seu-cloud-name
-cloudinary.uploadPreset=seu-preset
-```
-
-Sem elas o app compila, mas o upload falha com mensagem explícita apontando para cá.
-
-O preset precisa ser criado como **Unsigned** no console, com estas restrições:
-
-| Configuração | Valor | Por quê |
-|---|---|---|
-| Folder | `autocare` | Escopo fixo |
-| Use filename / Unique filename | `false` / auto | **Ver aviso abaixo** |
-| Allowed formats | `jpg, png, webp` | Impede upload arbitrário |
-| Incoming transformation | `c_limit,w_1600,h_1600` | Reduz custo de storage |
-
-> **Limite de tamanho:** não é configurável por preset no plano gratuito — vale o limite
-> da conta. O `c_limit` acima já contém o custo de storage (corta as dimensões antes de
-> armazenar), e o app rejeita arquivos acima de 5 MB antes de enviar
-> (`CloudinaryUploadApi.DEFAULT_MAX_FILE_SIZE_BYTES`). Para conferir o que o preset tem
-> gravado de fato: `curl -u API_KEY:API_SECRET https://api.cloudinary.com/v1_1/<cloud>/upload_presets/<preset>`.
-
-> ⚠️ **O `public_id` deve ser gerado pelo Cloudinary.** Se o preset permitir que o cliente
-> defina o `public_id`, um atacante pode sobrescrever a imagem de outro usuário passando o
-> id dela. Por isso o app não envia esse campo e guarda a `secure_url` retornada.
-
-**Limitações conhecidas deste modelo:**
-
-- O `cloud_name` e o preset são extraíveis do APK — quem fizer isso pode subir imagens
-  nesta conta. As restrições do preset limitam o estrago, mas não eliminam o vetor.
-- **Não há como deletar** pelo app: a Admin API é assinada. Trocar a foto de perfil ou
-  excluir um veículo deixa o asset órfão.
-
-Ambos deixam de valer se algum dia houver um backend para assinar as requisições — nesse
-caso só a implementação de `ImageUploader` muda.
-
-### Limpando as fotos antigas do Firebase Storage
-
-URLs de foto gravadas antes da migração apontam para `firebasestorage.googleapis.com` e
-nunca mais vão resolver. Elas não quebram o app — cai no placeholder —, mas cada render
-dispara uma requisição condenada a falhar. [`scripts/clear-legacy-photos.js`](./scripts/clear-legacy-photos.js)
-anula esses campos em `Usuarios/{uid}/photo` e `vehicles/{uid}/{id}/photo`.
-
-Precisa de uma chave de service account: *Firebase Console → Configurações do projeto →
-Contas de serviço → Gerar nova chave privada*.
+Nenhuma configuração externa: clone e rode.
 
 ```sh
-cd scripts
-npm install
-export GOOGLE_APPLICATION_CREDENTIALS=/caminho/da/service-account.json
-export FIREBASE_DATABASE_URL=https://<project-id>-default-rtdb.firebaseio.com
-
-npm run clear-legacy-photos          # simulação: lista o que seria apagado
-npm run clear-legacy-photos:apply    # grava
+./gradlew assembleDebug
 ```
 
-O script roda em **modo simulação por padrão** — só apaga com `--apply`.
-
-> ⚠️ A chave de service account dá acesso administrativo total ao projeto e ignora as
-> regras de segurança. O `.gitignore` cobre `service-account*.json`, mas confira antes de
-> commitar.
-
-É uma tarefa de uma vez só: fotos novas já nascem no Cloudinary.
+O build requer **JDK 17** ou superior (AGP 8.13). O JDK embutido no Android Studio serve.
 
 ## Testes
 
 ```sh
-./gradlew testDebugUnitTest      # 90 testes JVM
+./gradlew testDebugUnitTest          # testes JVM
+./gradlew connectedDebugAndroidTest  # instrumentados: banco, compressão de imagem e telas
 ```
 
-`ImageCompressor` só tem cobertura instrumentada: `BitmapFactory` e `Bitmap` são stubs no
-android.jar de teste e qualquer asserção passaria sem exercitar nada.
+`ImageCompressor` e os DAOs do Room só têm cobertura instrumentada: `BitmapFactory`, `Bitmap` e o
+SQLite são stubs no android.jar de teste e qualquer asserção passaria sem exercitar nada.
 
-```sh
-./gradlew connectedDebugAndroidTest
-```
+> ⚠️ `connectedDebugAndroidTest` **desinstala o app no fim**. Rode em emulador, ou num aparelho
+> cujos dados do AutoCare você possa perder.
 
 > Se o aparelho estiver pareado **sem fio** (serial no formato `adb-XXXX._adb-tls-connect._tcp`),
-> o AGP 8.0.2 coletava 0 testes e falhava a task sem executar nada (não reverificado desde o
-> upgrade para o 8.3.2). Conecte por USB, ou rode a
-> instrumentação direto:
+> versões antigas do AGP coletavam 0 testes e falhavam a task. Se acontecer, conecte por USB ou
+> rode a instrumentação direto:
 >
 > ```sh
 > ./gradlew installDebug installDebugAndroidTest
@@ -153,43 +78,31 @@ android.jar de teste e qualquer asserção passaria sem exercitar nada.
 >   br.com.gabrielmorais.autocare.test/androidx.test.runner.AndroidJUnitRunner
 > ```
 
-O build requer **JDK 17** (AGP 8.3.2).
-
 ## CI/CD
 
-Quatro workflows em [`.github/workflows/`](.github/workflows/). O setup comum — JDK 17, cache do
-Gradle e os arquivos não versionados que o build exige — está na action composta
-[`.github/actions/setup-android`](.github/actions/setup-android/action.yml).
+Três workflows em [`.github/workflows/`](.github/workflows/). O setup comum — JDK 17 e cache do
+Gradle — está na action composta [`.github/actions/setup-android`](.github/actions/setup-android/action.yml).
 
 | Workflow | Dispara em | O que faz |
 | --- | --- | --- |
 | [`ci.yml`](.github/workflows/ci.yml) | push na `main`, todo PR | `testDebugUnitTest`, `lintDebug`, `assembleDebug` |
 | [`instrumented-tests.yml`](.github/workflows/instrumented-tests.yml) | 03:00 BRT, manual | `connectedDebugAndroidTest` em emulador, API 28 e 34 |
 | [`release.yml`](.github/workflows/release.yml) | tag `v*`, manual | APK + AAB assinados e GitHub Release |
-| [`deploy-database-rules.yml`](.github/workflows/deploy-database-rules.yml) | push na `main` que toque nas regras | `firebase deploy --only database` |
 
 ### Secrets
 
-Em *Settings → Secrets and variables → Actions*. Nenhum é obrigatório para o `ci.yml` passar:
-sem `GOOGLE_SERVICES_JSON_BASE64` a action escreve um `google-services.json` **placeholder**, que
-só existe para o plugin `com.google.gms.google-services` não abortar o build. Com ele o app compila
-e os testes JVM rodam, mas nada conecta no Firebase — é o que mantém PR de fork verde.
+Só o `release.yml` usa secrets — CI e testes instrumentados rodam sem nenhum, inclusive em PR de
+fork. Configure em *Settings → Secrets and variables → Actions*:
 
-| Secret | Usado por | Como obter |
-| --- | --- | --- |
-| `GOOGLE_SERVICES_JSON_BASE64` | todos | `base64 -w0 app/google-services.json` |
-| `RELEASE_KEYSTORE_BASE64` | release | `base64 -w0 release.jks` |
-| `RELEASE_KEYSTORE_PASSWORD` | release | senha do keystore |
-| `RELEASE_KEY_ALIAS` | release | alias da chave |
-| `RELEASE_KEY_PASSWORD` | release | senha da chave |
-| `CLOUDINARY_CLOUD_NAME` | todos | ver *Imagens* acima |
-| `CLOUDINARY_UPLOAD_PRESET` | todos | ver *Imagens* acima |
-| `FIREBASE_SERVICE_ACCOUNT` | deploy das regras | JSON da service account, colado inteiro |
+| Secret | Como obter |
+| --- | --- |
+| `RELEASE_KEYSTORE_BASE64` | `base64 -w0 release.jks` |
+| `RELEASE_KEYSTORE_PASSWORD` | senha do keystore |
+| `RELEASE_KEY_ALIAS` | alias da chave |
+| `RELEASE_KEY_PASSWORD` | senha da chave |
 
-> ⚠️ `FIREBASE_SERVICE_ACCOUNT` é a mesma chave administrativa descrita em *Limpando as fotos
-> antigas*: ignora as regras de segurança. O `deploy-database-rules.yml` roda no environment
-> `production` — dá para exigir aprovação manual em *Settings → Environments* se o deploy
-> automático a cada push incomodar.
+Os secrets antigos `GOOGLE_SERVICES_JSON_BASE64`, `CLOUDINARY_CLOUD_NAME`,
+`CLOUDINARY_UPLOAD_PRESET` e `FIREBASE_SERVICE_ACCOUNT` não são mais lidos e podem ser apagados.
 
 ### Publicando uma versão
 
@@ -203,36 +116,37 @@ O workflow roda testes e `lintRelease` antes de assinar — a tag pode apontar p
 nunca passou no CI. Depois de assinar, confere com `apksigner verify` antes de publicar.
 
 Para isso funcionar, [`app/build.gradle`](app/build.gradle) lê assinatura e versão de variáveis de
-ambiente (`RELEASE_KEYSTORE_PATH`, `VERSION_NAME`, `VERSION_CODE`). **Sem elas o build local é
-exatamente o de antes**: versão `1`/`1.0` e `app-release-unsigned.apk`.
+ambiente (`RELEASE_KEYSTORE_PATH`, `VERSION_NAME`, `VERSION_CODE`). **Sem elas o build local
+continua funcionando**: versão `1`/`1.0` e `app-release-unsigned.apk`.
 
 O `mapping.txt` do R8 vai só para os artefatos da execução (90 dias), fora da Release — é anexo
 público e serve para desofuscar o APK. Sem ele, as stack traces daquela versão ficam ilegíveis
-para sempre, então baixe e guarde antes de expirar.
+para sempre, então baixe e guarde antes de expirar (e envie junto com o AAB ao Play Console).
 
 ## Atualizando versões
 
-Kotlin, o compilador do Compose e a BOM do Compose andam juntos — cada versão do compilador aceita
-exatamente uma versão do Kotlin (tabela em
-[Compose ↔ Kotlin](https://developer.android.com/jetpack/androidx/releases/compose-kotlin)).
-As três ficam no `ext` do [`build.gradle`](build.gradle) raiz; o plugin
-`org.jetbrains.kotlin.android` do mesmo arquivo precisa repetir a versão do Kotlin.
+Desde o Kotlin 2.0 o compilador do Compose é um plugin do próprio Kotlin e sai na mesma versão
+dele. Ao subir o Kotlin, suba junto no [`build.gradle`](build.gradle) raiz:
+
+- `kotlin_version` e os plugins `org.jetbrains.kotlin.android` e `org.jetbrains.kotlin.plugin.compose`;
+- o plugin `com.google.devtools.ksp`, cujo prefixo de versão tem de ser igual ao do Kotlin;
+- `room_version` e o plugin `androidx.room` andam juntos.
 
 Combinação atual:
 
 ```
-Kotlin 1.9.24  ->  compilador do Compose 1.5.14  ->  compose-bom 2024.06.00 (ui 1.6.8 / material3 1.2.1)
-AGP 8.3.2 / Gradle 8.4                            ->  navigation-compose 2.7.7
+Kotlin 2.2.21 (+ plugin do compilador do Compose) / KSP 2.2.21-2.0.4  ->  compose-bom 2025.10.01
+AGP 8.13.0 / Gradle 8.14.3  ->  compileSdk 36, Room 2.8.3, navigation-compose 2.9.5
 ```
 
+Toda mudança de entidade do Room sobe a `version` do banco e precisa de uma `Migration` testada —
+o banco é o único lugar onde os dados do usuário existem, então nada de
+`fallbackToDestructiveMigration`.
+
 > ⚠️ **Confira se o lint continua de pé depois de subir qualquer uma delas.** O lint pode
-> *passar* sem estar analisando nada:
->
-> - com AGP 8.0.2 e Kotlin 1.9, o analisador embutido (Kotlin 1.7) não lê os metadados e as
->   regras do Compose deixam de enxergar o código;
-> - com AGP 8.2.x e Compose 1.6, as regras do `compose-runtime` referenciam uma API de análise
->   que o lint não tem e são **descartadas** — só sobra um aviso `ObsoleteLintCustomCheck` no
->   relatório.
+> *passar* sem estar analisando nada: já aconteceu de o analisador embutido não ler os metadados
+> do Kotlin, e de as regras do `compose-runtime` serem **descartadas** por referenciar uma API
+> que o lint não tinha — só sobrava um aviso `ObsoleteLintCustomCheck` no relatório.
 >
 > Nos dois casos `lintDebug` termina verde, mas `UnrememberedMutableState` e
 > `CoroutineCreationDuringComposition` — fatais neste projeto — viram letra morta. Para checar,

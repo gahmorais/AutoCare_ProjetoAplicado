@@ -81,7 +81,7 @@ fun MaintenanceFormRoute(
 }
 
 /**
- * Servico ja validado: os campos vindos do Firebase sao nulaveis e um registro
+ * Servico ja validado: os campos do modelo sao nulaveis e um registro
  * incompleto derrubava a tela inteira.
  */
 private data class ServiceOption(
@@ -95,7 +95,6 @@ private data class ServiceOption(
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit) {
   val services by viewModel.services.collectAsState()
   val servicesLoading by viewModel.servicesLoading.collectAsState()
-  val userId by viewModel.userId.collectAsState()
   val vehicle by viewModel.vehicle.collectAsState()
   val editing by viewModel.editingMaintenance.collectAsState()
 
@@ -109,9 +108,9 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
 
   val options = remember(services) {
     services.mapNotNull { service ->
-      val name = service?.name
-      val mileageChange = service?.mileageChange
-      val mustBeDoneBefore = service?.mustBeDoneBefore
+      val name = service.name
+      val mileageChange = service.mileageChange
+      val mustBeDoneBefore = service.mustBeDoneBefore
       if (name != null && mileageChange != null && mustBeDoneBefore != null) {
         ServiceOption(name, mileageChange, mustBeDoneBefore)
       } else {
@@ -177,7 +176,6 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
             options = options,
             vehicle = vehicle,
             editing = editing,
-            canSave = userId.isNotBlank(),
             onSave = { vehicleId, maintenance ->
               // Retorno antecipado aqui e seguro: onSave e lambda de evento.
               val onSaved: () -> Unit = {
@@ -189,23 +187,12 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
                 onBack()
               }
 
-              if (editing != null) {
-                viewModel.updateMaintenance(
-                  vehicleId = vehicleId,
-                  maintenance = maintenance,
-                  onSaved = onSaved
-                )
-              } else {
-                val current = vehicle ?: return@MaintenanceForm
-                viewModel.saveMaintenance(
-                  userId = userId,
-                  vehicleId = vehicleId,
-                  updatedVehicle = current.copy(
-                    maintenances = current.maintenances.orEmpty() + maintenance
-                  ),
-                  onSaved = onSaved
-                )
-              }
+              // Criar e editar sao o mesmo upsert pelo id da manutencao.
+              viewModel.saveMaintenance(
+                vehicleId = vehicleId,
+                maintenance = maintenance,
+                onSaved = onSaved
+              )
             }
           )
         }
@@ -220,7 +207,6 @@ private fun MaintenanceForm(
   options: List<ServiceOption>,
   vehicle: Vehicle?,
   editing: Maintenance?,
-  canSave: Boolean,
   onSave: (vehicleId: String, maintenance: Maintenance) -> Unit
 ) {
   val isEditing = editing != null
@@ -377,7 +363,7 @@ private fun MaintenanceForm(
 
   Button(
     modifier = Modifier.fillMaxWidth(),
-    enabled = canSave && vehicle?.id != null && currentMileage != null,
+    enabled = vehicle?.id != null && currentMileage != null,
     onClick = {
       // Retorno antecipado aqui e seguro: onClick e lambda de evento, nao de
       // composicao.
