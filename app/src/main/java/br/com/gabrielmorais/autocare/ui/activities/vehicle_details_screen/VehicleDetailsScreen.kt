@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -33,11 +31,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.runtime.Composable
@@ -187,7 +186,7 @@ fun VehicleDetailsScreen(
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(
-              imageVector = Icons.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.content_desc_back)
             )
           }
@@ -222,7 +221,7 @@ fun VehicleDetailsScreen(
           launcherRequestCameraPermisison.launch(Manifest.permission.CAMERA)
         }
       )
-      Divider(modifier = Modifier.padding(vertical = 16.dp))
+      HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
       Text(
         modifier = Modifier
           .padding(bottom = 8.dp)
@@ -260,11 +259,11 @@ fun VehicleDetailsScreen(
           } else {
             LazyColumn {
               items(visibleMaintenances, key = { it.id }) { maintenance ->
-                // No M3 o limiar saiu do SwipeToDismiss e virou positionalThreshold
+                // No M3 o limiar saiu do componente e virou positionalThreshold
                 // do proprio estado, e confirmStateChange virou confirmValueChange.
-                val dismissState = rememberDismissState(
+                val dismissState = rememberSwipeToDismissBoxState(
                   confirmValueChange = { value ->
-                    if (value == DismissValue.DismissedToStart) {
+                    if (value == SwipeToDismissBoxValue.EndToStart) {
                       onDeleteMaintenance(maintenance)
                     }
                     true
@@ -276,13 +275,13 @@ fun VehicleDetailsScreen(
                 // tambem porque o cartao e o Spacer eram dois nos irmaos
                 // soltos no mesmo item.
                 Column(modifier = Modifier.animateItemPlacement(itemPlacementSpec())) {
-                  SwipeToDismiss(
+                  SwipeToDismissBox(
                     state = dismissState,
-                    directions = setOf(DismissDirection.EndToStart),
-                    background = {
+                    enableDismissFromStartToEnd = false,
+                    backgroundContent = {
                       // So desenha enquanto o swipe acontece: fora dele nao ha
                       // nada atras do cartao para vazar por transparencia.
-                      if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                      if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
                       Box(
                         modifier = Modifier
                           .fillMaxSize()
@@ -300,18 +299,17 @@ fun VehicleDetailsScreen(
                         )
                       }
                       }
-                    },
-                    dismissContent = {
-                      SimpleCardMaintenance(
-                        modifier = Modifier.fillMaxWidth(),
-                        maintenance = maintenance,
-                        averageDistancePerMonth = vehicle.value?.averageDistanceTraveledPerMonth,
-                        onClick = {
-                          vehicle.value?.id?.let { onEditMaintenance(it, maintenance.id) }
-                        }
-                      )
                     }
-                  )
+                  ) {
+                    SimpleCardMaintenance(
+                      modifier = Modifier.fillMaxWidth(),
+                      maintenance = maintenance,
+                      averageDistancePerMonth = vehicle.value?.averageDistanceTraveledPerMonth,
+                      onClick = {
+                        vehicle.value?.id?.let { onEditMaintenance(it, maintenance.id) }
+                      }
+                    )
+                  }
                   Spacer(modifier = Modifier.padding(bottom = 8.dp))
                 }
               }

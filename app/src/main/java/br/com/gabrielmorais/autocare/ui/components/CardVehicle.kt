@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -96,7 +96,7 @@ fun CardVehicle(
           text = vehicle.plate ?: "",
           style = MaterialTheme.typography.titleLarge,
         )
-        Divider(thickness = 2.dp)
+        HorizontalDivider(thickness = 2.dp)
         Text(text = "Distância por mês: ")
         Row {
           Text(

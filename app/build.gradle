@@ -74,7 +74,7 @@ android {
         buildConfig true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.2'
+        kotlinCompilerExtensionVersion compose_compiler_version
     }
     packagingOptions {
         resources {
@@ -144,9 +144,13 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.activity:activity-compose:1.7.2'
 
-    // BOM alinha ui/foundation/material3 numa combinacao testada entre si. Esta
-    // versao e a que casa com o kotlinCompilerExtensionVersion 1.4.2 / Kotlin 1.8.10.
-    implementation platform('androidx.compose:compose-bom:2023.06.01')
+    // BOM alinha ui/foundation/material3 numa combinacao testada entre si. Vale
+    // tambem para teste e tooling: fora dela eles ficavam presos no 1.3.3 enquanto
+    // o app rodava 1.4.3.
+    def composeBom = platform("androidx.compose:compose-bom:$compose_bom_version")
+    implementation composeBom
+    androidTestImplementation composeBom
+    debugImplementation composeBom
     implementation "androidx.compose.ui:ui"
     implementation "androidx.compose.ui:ui-tooling-preview"
     implementation 'androidx.compose.material3:material3'
@@ -167,7 +171,7 @@ dependencies {
     testImplementation 'org.json:json:20231013'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+    debugImplementation "androidx.compose.ui:ui-tooling"
+    debugImplementation "androidx.compose.ui:ui-test-manifest"
 }
