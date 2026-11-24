@@ -103,6 +103,26 @@
     <string name="profiles_delete_body_empty">Este perfil não tem veículos. Não é possível desfazer.</string>
     <string name="profiles_deleted">Perfil %1$s excluído</string>
     <string name="text_cancel">Cancelar</string>
+    <string name="text_ok">OK</string>
+
+    <string name="backup_title">Backup</string>
+    <string name="backup_hint">Guarde uma cópia dos perfis, veículos, manutenções e fotos num arquivo .zip, ou traga os dados de outro aparelho. A importação junta os dados do arquivo aos deste aparelho e não apaga nada.</string>
+    <string name="backup_export">Exportar dados</string>
+    <string name="backup_import">Importar dados</string>
+    <string name="backup_exporting">Exportando…</string>
+    <string name="backup_reading">Lendo o arquivo…</string>
+    <string name="backup_importing">Importando…</string>
+    <string name="backup_preview_title">Importar este backup?</string>
+    <string name="backup_preview_new">Novos: %1$s</string>
+    <string name="backup_preview_updated">Atualizados: %1$s</string>
+    <string name="backup_preview_merge_note">Os registros com o mesmo identificador são substituídos pelos do arquivo. O que existe só neste aparelho continua como está.</string>
+    <string name="backup_import_confirm">Importar</string>
+    <string name="backup_exported_title">Dados exportados</string>
+    <string name="backup_exported_body">O arquivo tem %1$s.</string>
+    <string name="backup_imported_title">Dados importados</string>
+    <string name="backup_nothing_title">Nada a importar</string>
+    <string name="backup_nothing_body">Tudo o que está no arquivo já está neste aparelho.</string>
+    <string name="backup_failed_title">Não deu certo</string>
     <string name="text_delete">Excluir</string>
     <string name="home_filter_all">Todos</string>
     <string name="vehicle_transfer">Transferir para outro perfil</string>

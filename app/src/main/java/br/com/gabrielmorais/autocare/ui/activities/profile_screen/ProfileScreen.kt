@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -54,10 +56,13 @@ import br.com.gabrielmorais.autocare.ui.components.rememberLocalPhoto
 /**
  * Perfil ativo (nome e foto) e os demais perfis do aparelho. Nao ha conta,
  * senha nem sair - os dados ficam no aparelho, separados por pessoa.
+ *
+ * @param backupSection a secao de exportar e importar ([BackupSection]). E um
+ * slot para a tela continuar testavel so com a [MainViewModel].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: MainViewModel) {
+fun ProfileScreen(viewModel: MainViewModel, backupSection: @Composable () -> Unit = {}) {
   val profile by viewModel.activeProfile.collectAsState()
   val profiles by viewModel.profiles.collectAsState()
   val vehicles by viewModel.allVehicles.collectAsState()
@@ -128,14 +133,16 @@ fun ProfileScreen(viewModel: MainViewModel) {
       }
 
       OutlinedButton(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(bottom = 24.dp),
+        modifier = Modifier.fillMaxWidth(),
         onClick = { showAddDialog = true }
       ) {
         Icon(Icons.Filled.Add, contentDescription = null)
         Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.profiles_add))
       }
+
+      HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+      backupSection()
+      Spacer(modifier = Modifier.height(24.dp))
     }
   }
 

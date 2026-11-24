@@ -28,9 +28,16 @@ interface VehicleDao {
   @Query("SELECT * FROM vehicles WHERE id = :id")
   suspend fun get(id: String): VehicleWithMaintenances?
 
+  @Transaction
+  @Query("SELECT * FROM vehicles")
+  suspend fun getAll(): List<VehicleWithMaintenances>
+
   /** Ver [ProfileDao.upsert]: REPLACE apagaria as manutencoes em cascata. */
   @Upsert
   suspend fun upsert(vehicle: VehicleEntity)
+
+  @Upsert
+  suspend fun upsertAll(vehicles: List<VehicleEntity>)
 
   @Query("DELETE FROM vehicles WHERE id = :id")
   suspend fun delete(id: String)
