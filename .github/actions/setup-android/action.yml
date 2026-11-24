@@ -24,7 +24,7 @@ runs:
   using: composite
   steps:
     - name: Configura o JDK 17
-      # AGP 8.3.2 nao roda em JDK menor que 17.
+      # AGP 8.x nao roda em JDK menor que 17, e o bytecode do app agora e 17.
       uses: actions/setup-java@v4
       with:
         distribution: temurin

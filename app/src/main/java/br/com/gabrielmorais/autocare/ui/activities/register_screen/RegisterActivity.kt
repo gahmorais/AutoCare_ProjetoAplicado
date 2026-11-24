@@ -3,6 +3,7 @@ package br.com.gabrielmorais.autocare.ui.activities.register_screen
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,7 +53,9 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   val state = viewModel.registerState.collectAsState(initial = null)
-  val context = LocalContext.current as ComponentActivity
+  val context = LocalContext.current
+  // LocalActivity e nulo fora de uma Activity (Preview), em vez do cast que lancava.
+  val activity = LocalActivity.current
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   var confirmPassword by remember { mutableStateOf("") }
@@ -156,7 +159,7 @@ fun RegisterScreen(viewModel: RegisterViewModel) {
       if (state.value?.isSuccess?.isNotEmpty() == true) {
         val success = state.value?.isSuccess
         Toast.makeText(context, "$success", Toast.LENGTH_SHORT).show()
-        context.finish()
+        activity?.finish()
       }
     }
   }

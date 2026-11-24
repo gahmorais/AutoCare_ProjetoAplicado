@@ -194,7 +194,7 @@ private fun androidx.compose.foundation.lazy.LazyItemScope.VehicleRow(
   )
 
   SwipeToDismissBox(
-    modifier = Modifier.animateItemPlacement(itemPlacementSpec()),
+    modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = itemPlacementSpec(), fadeOutSpec = null),
     state = dismissState,
     enableDismissFromStartToEnd = false,
     backgroundContent = {

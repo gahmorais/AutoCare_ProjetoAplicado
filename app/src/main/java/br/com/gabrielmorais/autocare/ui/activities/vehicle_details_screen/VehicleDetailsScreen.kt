@@ -274,7 +274,7 @@ fun VehicleDetailsScreen(
                 // deslize o card ate o fim da lista em vez de saltar - e
                 // tambem porque o cartao e o Spacer eram dois nos irmaos
                 // soltos no mesmo item.
-                Column(modifier = Modifier.animateItemPlacement(itemPlacementSpec())) {
+                Column(modifier = Modifier.animateItem(fadeInSpec = null, placementSpec = itemPlacementSpec(), fadeOutSpec = null)) {
                   SwipeToDismissBox(
                     state = dismissState,
                     enableDismissFromStartToEnd = false,

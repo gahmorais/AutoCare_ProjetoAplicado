@@ -1,21 +1,19 @@
 buildscript {
 
     ext {
-        // Kotlin, compilador do Compose e BOM andam juntos: cada versao do
-        // compilador aceita exatamente uma versao do Kotlin. Ao subir um, confira
-        // a tabela em developer.android.com/jetpack/androidx/releases/compose-kotlin
-        // e mantenha o plugin org.jetbrains.kotlin.android abaixo na mesma versao.
-        kotlin_version = '1.9.24'
-        compose_compiler_version = '1.5.14'
-        compose_bom_version = '2024.06.00'
+        // Desde o Kotlin 2.0 o compilador do Compose e um plugin do proprio
+        // Kotlin e sai na mesma versao dele: basta manter kotlin_version e os
+        // plugins abaixo alinhados. A BOM do Compose fica independente.
+        kotlin_version = '2.2.21'
+        compose_bom_version = '2025.10.01'
         koin_version = '3.4.2'
         koin_compose_version = '3.4.6'
         // 2.7+ e o que aceita enter/exitTransition no NavHost.
-        navigation_version = '2.7.7'
+        navigation_version = '2.9.5'
         material_dialog_version = "0.8.1-rc"
     }
     dependencies {
-        classpath 'com.google.gms:google-services:4.3.15'
+        classpath 'com.google.gms:google-services:4.4.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
     repositories {
@@ -23,8 +21,9 @@ buildscript {
     }
 }// Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id 'com.android.application' version '8.3.2' apply false
-    id 'com.android.library' version '8.3.2' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+    id 'com.android.application' version '8.13.0' apply false
+    id 'com.android.library' version '8.13.0' apply false
+    id 'org.jetbrains.kotlin.android' version '2.2.21' apply false
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.2.21' apply false
 }
 
