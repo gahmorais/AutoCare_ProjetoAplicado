@@ -1,6 +1,7 @@
 package br.com.gabrielmorais.autocare.data.local.repository
 
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.MaintenanceReminder
 import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
@@ -67,6 +68,12 @@ interface MaintenanceRepository {
 
   /** Nao concluidas e com data prevista, de todos os perfis. */
   suspend fun getPendingWithForecast(): List<Maintenance>
+
+  /**
+   * Manutencao com o veiculo e o dono, para o texto do lembrete. null se ela
+   * foi excluida depois de agendada - o alarme chegou tarde e nao ha o que avisar.
+   */
+  suspend fun getReminder(maintenanceId: Int): MaintenanceReminder?
 }
 
 interface ServicesRepository {

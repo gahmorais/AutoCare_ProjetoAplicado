@@ -45,7 +45,7 @@ fun AutoCareApp(shellViewModel: MainViewModel) {
   when (startState) {
     // A splash continua na tela enquanto o banco nao responde (ver MainActivity).
     StartState.LOADING -> Unit
-    StartState.NEEDS_ONBOARDING -> OnboardingScreen(onStart = shellViewModel::createFirstProfile)
+    StartState.NEEDS_ONBOARDING -> OnboardingScreen(onStart = shellViewModel::createProfile)
     StartState.READY -> AutoCareShell(shellViewModel)
   }
 }
@@ -116,14 +116,16 @@ private fun AutoCareShell(
           onOpenMaintenance = { vehicleId, maintenanceId ->
             navController.navigate(Routes.maintenanceForm(vehicleId, maintenanceId))
           },
-          onAddVehicle = { navController.navigateToTopLevel(TopLevelDestination.VEICULOS) }
+          onAddVehicle = { navController.navigateToTopLevel(TopLevelDestination.VEICULOS) },
+          onManageProfiles = { navController.navigateToTopLevel(TopLevelDestination.EU) }
         )
       }
 
       composable(TopLevelDestination.VEICULOS.route) {
         VehiclesScreen(
           viewModel = shellViewModel,
-          onOpenVehicle = { navController.navigate(Routes.vehicleDetails(it)) }
+          onOpenVehicle = { navController.navigate(Routes.vehicleDetails(it)) },
+          onManageProfiles = { navController.navigateToTopLevel(TopLevelDestination.EU) }
         )
       }
 

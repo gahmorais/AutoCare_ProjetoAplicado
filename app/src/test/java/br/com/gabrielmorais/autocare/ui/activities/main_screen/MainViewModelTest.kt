@@ -98,7 +98,7 @@ internal class MainViewModelTest {
   fun `primeiro acesso cria o perfil, ativa e libera o app`() = runTest(dispatcher) {
     val vm = viewModel()
 
-    vm.createFirstProfile("  Maria  ")
+    vm.createProfile("  Maria  ")
     advanceUntilIdle()
 
     val created = profiles.profiles.value.single()
@@ -112,7 +112,7 @@ internal class MainViewModelTest {
   fun `primeiro acesso com foto guarda o caminho local`() = runTest(dispatcher) {
     val vm = viewModel()
 
-    vm.createFirstProfile("Maria", anyImage)
+    vm.createProfile("Maria", anyImage)
     advanceUntilIdle()
 
     val path = profiles.profiles.value.single().photoPath
@@ -124,7 +124,7 @@ internal class MainViewModelTest {
     photoFailure = ioFailure("Não foi possível ler a imagem selecionada")
     val vm = viewModel()
 
-    vm.createFirstProfile("Maria", anyImage)
+    vm.createProfile("Maria", anyImage)
     advanceUntilIdle()
 
     assertNull(profiles.profiles.value.single().photoPath)
@@ -135,7 +135,7 @@ internal class MainViewModelTest {
   fun `nome em branco nao cria perfil`() = runTest(dispatcher) {
     val vm = viewModel()
 
-    vm.createFirstProfile("   ")
+    vm.createProfile("   ")
     advanceUntilIdle()
 
     assertTrue(profiles.profiles.value.isEmpty())
@@ -230,5 +230,105 @@ internal class MainViewModelTest {
 
     assertEquals("images/0b6f6a3e-2a7d-4d3b-9a43-1f3d7c1b2e4a.jpg", vm.activeProfile.value?.photoPath)
     assertEquals("O arquivo selecionado não é uma imagem válida", vm.lastMessage())
+  }
+
+  // --- Multiplos perfis (etapa 6) ---
+
+  private fun TestScope.twoProfilesWithCars(): MainViewModel {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "ana"
+    vehicles.vehicles.value = listOf(
+      Vehicle(id = "gol", profileId = "ana", maintenances = listOf(Maintenance(id = 1), Maintenance(id = 2))),
+      Vehicle(id = "uno", profileId = "pedro", maintenances = listOf(Maintenance(id = 3)))
+    )
+    return viewModel()
+  }
+
+  @Test
+  fun `trocar o perfil ativo troca a lista de veiculos`() = runTest(dispatcher) {
+    val vm = twoProfilesWithCars()
+    assertEquals(listOf("gol"), vm.vehicles.value.map { it.id })
+
+    vm.selectProfile("pedro")
+    advanceUntilIdle()
+
+    assertEquals("pedro", vm.activeProfile.value?.id)
+    assertEquals(listOf("uno"), vm.vehicles.value.map { it.id })
+  }
+
+  @Test
+  fun `inicio mostra todos os perfis e o filtro restringe a um`() = runTest(dispatcher) {
+    val vm = twoProfilesWithCars()
+    assertEquals(setOf("gol", "uno"), vm.homeVehicles.value.map { it.id }.toSet())
+
+    vm.setHomeFilter("pedro")
+    advanceUntilIdle()
+    assertEquals(listOf("uno"), vm.homeVehicles.value.map { it.id })
+
+    vm.setHomeFilter(null)
+    advanceUntilIdle()
+    assertEquals(2, vm.homeVehicles.value.size)
+  }
+
+  @Test
+  fun `nome do dono so entra com mais de um perfil`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val vm = viewModel()
+    assertTrue(vm.ownerNames.value.isEmpty())
+
+    profiles.profiles.value = listOf(ana, pedro)
+    advanceUntilIdle()
+    assertEquals(mapOf("ana" to "Ana", "pedro" to "Pedro"), vm.ownerNames.value)
+  }
+
+  @Test
+  fun `perfil novo vira o ativo`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val vm = viewModel()
+
+    vm.createProfile("Pedro")
+    advanceUntilIdle()
+
+    assertEquals(2, vm.profiles.value.size)
+    assertEquals("Pedro", vm.activeProfile.value?.name)
+  }
+
+  @Test
+  fun `o ultimo perfil nao pode ser excluido`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana)
+    val vm = viewModel()
+
+    vm.deleteProfile("ana")
+    advanceUntilIdle()
+
+    assertEquals(listOf(ana), profiles.profiles.value)
+    assertEquals("É preciso manter ao menos um perfil", vm.lastMessage())
+  }
+
+  @Test
+  fun `excluir o perfil ativo ativa outro e devolve os veiculos removidos`() = runTest(dispatcher) {
+    val vm = twoProfilesWithCars()
+    var removed: List<Vehicle>? = null
+
+    vm.deleteProfile("ana") { removed = it }
+    advanceUntilIdle()
+
+    assertEquals(listOf("pedro"), vm.profiles.value.map { it.id })
+    assertEquals("pedro", activeStore.activeProfileId.value)
+    assertEquals("pedro", vm.activeProfile.value?.id)
+    // Os veiculos removidos vem com as manutencoes, para cancelar os alarmes.
+    assertEquals(listOf(1, 2), removed!!.single().maintenances!!.map { it.id })
+  }
+
+  @Test
+  fun `excluir o perfil filtrado no inicio volta o filtro para todos`() = runTest(dispatcher) {
+    val vm = twoProfilesWithCars()
+    vm.setHomeFilter("pedro")
+
+    vm.deleteProfile("pedro")
+    advanceUntilIdle()
+
+    assertNull(vm.homeFilter.value)
+    assertEquals("ana", vm.activeProfile.value?.id)
   }
 }

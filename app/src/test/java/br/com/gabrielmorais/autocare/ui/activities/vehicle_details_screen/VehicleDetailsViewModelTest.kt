@@ -3,8 +3,10 @@ package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 import android.net.Uri
 import br.com.gabrielmorais.autocare.data.images.ImagePaths
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.fakes.FakeMaintenanceRepository
+import br.com.gabrielmorais.autocare.fakes.FakeProfileRepository
 import br.com.gabrielmorais.autocare.fakes.FakeVehicleRepository
 import br.com.gabrielmorais.autocare.fakes.fakeImageStore
 import br.com.gabrielmorais.autocare.fakes.ioFailure
@@ -36,6 +38,9 @@ internal class VehicleDetailsViewModelTest {
   private val oleo = Maintenance(id = 1, description = "Óleo")
   private lateinit var vehicles: FakeVehicleRepository
   private lateinit var maintenances: FakeMaintenanceRepository
+  private val ana = Profile(id = "ana", name = "Ana", createdAt = 1L)
+  private val pedro = Profile(id = "pedro", name = "Pedro", createdAt = 2L)
+  private val profiles = FakeProfileRepository(listOf(ana, pedro))
 
   @Before
   fun setUp() {
@@ -54,7 +59,8 @@ internal class VehicleDetailsViewModelTest {
   private fun TestScope.viewModel() = VehicleDetailsViewModel(
     vehicleRepository = vehicles,
     maintenanceRepository = maintenances,
-    imageStore = fakeImageStore(tmp.root, dispatcher)
+    imageStore = fakeImageStore(tmp.root, dispatcher),
+    profileRepository = profiles
   ).apply {
     getVehicle("gol")
     advanceUntilIdle()
@@ -104,5 +110,24 @@ internal class VehicleDetailsViewModelTest {
 
     assertNull(deleted)
     assertEquals("Falha ao gravar", vm.message.value)
+  }
+
+  @Test
+  fun `transferencia oferece todos os perfis menos o dono`() = runTest(dispatcher) {
+    assertEquals(listOf(pedro), viewModel().transferTargets.value)
+  }
+
+  @Test
+  fun `transferir muda o dono e mantem as manutencoes`() = runTest(dispatcher) {
+    val vm = viewModel()
+    var newOwner: Profile? = null
+
+    vm.transferVehicle(pedro) { newOwner = it }
+    advanceUntilIdle()
+
+    assertEquals(pedro, newOwner)
+    assertEquals("pedro", vm.vehicle.value?.profileId)
+    assertEquals(listOf(oleo), vm.vehicle.value?.maintenances)
+    assertEquals(listOf(ana), vm.transferTargets.value)
   }
 }

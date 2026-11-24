@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import br.com.gabrielmorais.autocare.data.images.ImageKind
 import br.com.gabrielmorais.autocare.data.images.LocalImageStore
 import br.com.gabrielmorais.autocare.data.local.repository.MaintenanceRepository
+import br.com.gabrielmorais.autocare.data.local.repository.ProfileRepository
 import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -24,7 +27,8 @@ import kotlinx.coroutines.launch
 class VehicleDetailsViewModel(
   private val vehicleRepository: VehicleRepository,
   private val maintenanceRepository: MaintenanceRepository,
-  private val imageStore: LocalImageStore
+  private val imageStore: LocalImageStore,
+  private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
   private val vehicleId = MutableStateFlow<String?>(null)
@@ -41,6 +45,28 @@ class VehicleDetailsViewModel(
     .flatMapLatest { id -> vehicleRepository.observeVehicle(id) }
     .catch { publishError(it) }
     .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  /** Para quem o veiculo pode ser transferido: todos os perfis menos o dono. */
+  val transferTargets: StateFlow<List<Profile>> =
+    combine(profileRepository.observeProfiles(), vehicle) { profiles, current ->
+      profiles.filter { it.id != current?.profileId }
+    }
+      .catch { publishError(it) }
+      .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  /**
+   * Passa o veiculo, com todo o historico, para [target] - ex.: o carro do pai
+   * que ficou para o filho. Os alarmes nao mudam: o id das manutencoes e o mesmo.
+   */
+  fun transferVehicle(target: Profile, onTransferred: (Profile) -> Unit = {}) {
+    val currentId = vehicleId.value
+      ?: return publishError(IllegalStateException("Veículo não encontrado"))
+    viewModelScope.launch {
+      runCatching { vehicleRepository.transferVehicle(currentId, target.id) }
+        .onSuccess { onTransferred(target) }
+        .onFailure(::publishError)
+    }
+  }
 
   fun getVehicle(vehicleId: String) {
     this.vehicleId.value = vehicleId

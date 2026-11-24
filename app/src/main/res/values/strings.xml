@@ -40,7 +40,7 @@
     <string name="channel_name">notification_channel</string>
     <string name="MAINTENANCE_INTENT">maintenance_data</string>
     <string name="channel_description">channel_autocare</string>
-    <string name="maintenance_coming">Faltam cinco dias para a manutenção</string>
+    <string name="maintenance_coming">Lembrete de manutenção</string>
     <string name="notify_again">Avisar novamente?</string>
     <string name="text_loading_services">Carregando tipos de serviço…</string>
     <string name="text_services_unavailable">Não foi possível carregar os tipos de serviço. Verifique sua conexão e tente novamente.</string>
@@ -86,4 +86,27 @@
     <string name="onboarding_body">Como você se chama? Seus veículos e manutenções ficam salvos só neste aparelho, sem cadastro nem senha.</string>
     <string name="onboarding_photo_hint">Toque no círculo para adicionar uma foto (opcional)</string>
     <string name="onboarding_start">Começar</string>
+
+    <!-- Multiplos perfis (etapa 6 do plano) -->
+    <string name="content_desc_switch_profile">Perfil ativo: %1$s. Toque para trocar</string>
+    <string name="content_desc_active_profile">Perfil ativo</string>
+    <string name="profiles_manage">Gerenciar perfis</string>
+    <string name="profiles_title">Perfis neste aparelho</string>
+    <string name="profiles_hint">Separe os veículos de cada pessoa da família. O perfil ativo é o dono dos veículos que você cadastrar.</string>
+    <string name="profiles_add">Adicionar perfil</string>
+    <string name="profiles_add_confirm">Criar</string>
+    <string name="profiles_active_label">Em uso</string>
+    <string name="profiles_use">Usar este perfil</string>
+    <string name="profiles_delete">Excluir perfil %1$s</string>
+    <string name="profiles_delete_title">Excluir %1$s?</string>
+    <string name="profiles_delete_body">Também serão apagados %1$s e %2$s deste perfil. Não é possível desfazer.</string>
+    <string name="profiles_delete_body_empty">Este perfil não tem veículos. Não é possível desfazer.</string>
+    <string name="profiles_deleted">Perfil %1$s excluído</string>
+    <string name="text_cancel">Cancelar</string>
+    <string name="text_delete">Excluir</string>
+    <string name="home_filter_all">Todos</string>
+    <string name="vehicle_transfer">Transferir para outro perfil</string>
+    <string name="vehicle_transfer_title">Transferir %1$s para</string>
+    <string name="vehicle_transfer_body">O veículo vai com todo o histórico de manutenções e os lembretes.</string>
+    <string name="vehicle_transferred">%1$s agora é de %2$s</string>
 </resources>

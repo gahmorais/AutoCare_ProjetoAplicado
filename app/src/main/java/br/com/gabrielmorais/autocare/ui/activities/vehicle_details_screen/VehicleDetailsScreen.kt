@@ -1,5 +1,13 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
+import br.com.gabrielmorais.autocare.ui.components.rememberLocalPhoto
+import br.com.gabrielmorais.autocare.ui.components.ProfileAvatar
+import br.com.gabrielmorais.autocare.data.models.displayName
+import br.com.gabrielmorais.autocare.data.models.Profile
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.outlined.SwapHoriz
 import android.Manifest
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -114,6 +122,8 @@ fun VehicleDetailsScreen(
   onEditMaintenance: (vehicleId: String, maintenanceId: Int) -> Unit
 ) {
   val vehicle = viewModel.vehicle.collectAsState()
+  val transferTargets by viewModel.transferTargets.collectAsState()
+  var showTransfer by remember { mutableStateOf(false) }
   val context = LocalContext.current
 
   // Excluir era irreversivel e invisivel: swipe sem confirmacao nem volta atras.
@@ -177,6 +187,17 @@ fun VehicleDetailsScreen(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.content_desc_back)
             )
+          }
+        },
+        actions = {
+          // So com outro perfil para receber o veiculo.
+          if (transferTargets.isNotEmpty()) {
+            IconButton(onClick = { showTransfer = true }) {
+              Icon(
+                imageVector = Icons.Outlined.SwapHoriz,
+                contentDescription = stringResource(R.string.vehicle_transfer)
+              )
+            }
           }
         }
       )
@@ -307,6 +328,25 @@ fun VehicleDetailsScreen(
       }
     }
   }
+
+  if (showTransfer) {
+    val vehicleName = vehicle.value?.displayName().orEmpty()
+    TransferVehicleDialog(
+      vehicleName = vehicleName,
+      targets = transferTargets,
+      onDismiss = { showTransfer = false },
+      onSelect = { target ->
+        showTransfer = false
+        viewModel.transferVehicle(target) { novoDono ->
+          scope.launch {
+            snackbarHostState.showSnackbar(
+              context.getString(R.string.vehicle_transferred, vehicleName, novoDono.name)
+            )
+          }
+        }
+      }
+    )
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -363,4 +403,43 @@ private fun EmptyMaintenanceMessage(text: String) {
       textAlign = TextAlign.Center
     )
   }
+}
+
+@Composable
+private fun TransferVehicleDialog(
+  vehicleName: String,
+  targets: List<Profile>,
+  onDismiss: () -> Unit,
+  onSelect: (Profile) -> Unit
+) {
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(stringResource(R.string.vehicle_transfer_title, vehicleName)) },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+          text = stringResource(R.string.vehicle_transfer_body),
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        targets.forEach { target ->
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { onSelect(target) }
+              .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            ProfileAvatar(photo = rememberLocalPhoto(target.photoPath), size = 36.dp)
+            Text(text = target.name, style = MaterialTheme.typography.bodyLarge)
+          }
+        }
+      }
+    },
+    confirmButton = {},
+    dismissButton = {
+      TextButton(onClick = onDismiss) { Text(stringResource(R.string.text_cancel)) }
+    }
+  )
 }

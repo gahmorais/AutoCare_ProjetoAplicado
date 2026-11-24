@@ -4,6 +4,7 @@ import br.com.gabrielmorais.autocare.data.local.repository.MaintenanceRepository
 import br.com.gabrielmorais.autocare.data.local.repository.ServicesRepository
 import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.MaintenanceReminder
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import kotlinx.coroutines.awaitCancellation
@@ -42,4 +43,5 @@ class FakeMaintenanceRepository : MaintenanceRepository {
   override suspend fun getMaintenance(id: Int): Maintenance? = null
   override suspend fun deleteMaintenance(id: Int) = Unit
   override suspend fun getPendingWithForecast(): List<Maintenance> = emptyList()
+  override suspend fun getReminder(maintenanceId: Int): MaintenanceReminder? = null
 }

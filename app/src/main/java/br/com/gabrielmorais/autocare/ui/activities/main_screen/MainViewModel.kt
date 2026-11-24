@@ -53,14 +53,19 @@ class MainViewModel(
   val message: Flow<String> = _message
 
   /** null enquanto a primeira leitura do banco nao chega. */
-  private val profiles: StateFlow<List<Profile>?> = profileRepository.observeProfiles()
+  private val loadedProfiles: StateFlow<List<Profile>?> = profileRepository.observeProfiles()
     .catch { error ->
       publishError(error)
       emit(emptyList())
     }
     .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  val startState: StateFlow<StartState> = profiles
+  /** Todos os perfis do aparelho, em ordem de criacao. */
+  val profiles: StateFlow<List<Profile>> = loadedProfiles
+    .map { it.orEmpty() }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  val startState: StateFlow<StartState> = loadedProfiles
     .map { list ->
       when {
         list == null -> StartState.LOADING
@@ -75,7 +80,7 @@ class MainViewModel(
    * um id orfao no DataStore nunca deixa o app sem dono.
    */
   val activeProfile: StateFlow<Profile?> =
-    combine(profiles, activeProfileStore.activeProfileId) { list, activeId ->
+    combine(loadedProfiles, activeProfileStore.activeProfileId) { list, activeId ->
       list.orEmpty().let { all -> all.firstOrNull { it.id == activeId } ?: all.firstOrNull() }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -91,11 +96,49 @@ class MainViewModel(
     }
     .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+  /** Veiculos de todos os perfis: alimenta o Inicio e as contagens dos perfis. */
+  val allVehicles: StateFlow<List<Vehicle>> = vehicleRepository.observeAllVehicles()
+    .catch { error ->
+      publishError(error)
+      emit(emptyList())
+    }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  private val _homeFilter = MutableStateFlow<String?>(null)
+
+  /** Perfil filtrado no Inicio; null e "Todos", o padrao. */
+  val homeFilter: StateFlow<String?> = _homeFilter
+
   /**
-   * Primeiro acesso. A foto e opcional e, se falhar, o perfil e criado sem ela:
-   * perder a foto e melhor do que prender a pessoa no onboarding.
+   * O Inicio mostra as pendencias de todos os perfis: quem cuida dos carros da
+   * familia quer ver tudo o que vence num lugar so. O filtro restringe a um.
    */
-  fun createFirstProfile(name: String, photo: Uri? = null) {
+  val homeVehicles: StateFlow<List<Vehicle>> =
+    combine(allVehicles, _homeFilter) { vehicles, filter ->
+      if (filter == null) vehicles else vehicles.filter { it.profileId == filter }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  /** Nome de cada perfil por id - vazio com um perfil so, quando o dono e obvio. */
+  val ownerNames: StateFlow<Map<String, String>> = profiles
+    .map { list -> if (list.size > 1) list.associate { it.id to it.name } else emptyMap() }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+  fun setHomeFilter(profileId: String?) {
+    _homeFilter.value = profileId
+  }
+
+  fun selectProfile(profileId: String) {
+    viewModelScope.launch {
+      runCatching { activeProfileStore.setActiveProfileId(profileId) }.onFailure(::publishError)
+    }
+  }
+
+  /**
+   * Cria um perfil e o torna ativo - no primeiro acesso e ao adicionar outro.
+   * A foto e opcional e, se falhar, o perfil e criado sem ela: perder a foto e
+   * melhor do que prender a pessoa no formulario.
+   */
+  fun createProfile(name: String, photo: Uri? = null) {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) return publishError(IllegalArgumentException("Informe seu nome"))
     viewModelScope.launch {
@@ -109,6 +152,29 @@ class MainViewModel(
         profileRepository.saveProfile(profile)
         activeProfileStore.setActiveProfileId(profile.id)
       }.onFailure(::publishError)
+    }
+  }
+
+  /**
+   * Exclui o perfil com os veiculos e manutencoes dele. O ultimo perfil nao pode
+   * sair: o app sempre precisa de um dono para os dados.
+   *
+   * [onDeleted] recebe os veiculos que sairam junto, para cancelar os alarmes
+   * das manutencoes deles. Nao ha desfazer - a tela confirma antes.
+   */
+  fun deleteProfile(profileId: String, onDeleted: (List<Vehicle>) -> Unit = {}) {
+    val all = profiles.value
+    if (all.size <= 1) return publishError(IllegalStateException("É preciso manter ao menos um perfil"))
+    val removedVehicles = allVehicles.value.filter { it.profileId == profileId }
+    val wasActive = activeProfile.value?.id == profileId
+    viewModelScope.launch {
+      runCatching {
+        profileRepository.deleteProfile(profileId)
+        if (wasActive) all.firstOrNull { it.id != profileId }?.let { activeProfileStore.setActiveProfileId(it.id) }
+        if (_homeFilter.value == profileId) _homeFilter.value = null
+      }
+        .onSuccess { onDeleted(removedVehicles) }
+        .onFailure(::publishError)
     }
   }
 

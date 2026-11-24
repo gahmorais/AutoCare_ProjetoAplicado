@@ -17,3 +17,15 @@ data class Vehicle(
   val profileId: String? = null
 )
 
+/**
+ * Apelido, ou marca e modelo, ou placa - o primeiro que existir. Um veiculo
+ * cadastrado so com placa nao pode virar uma linha em branco na lista nem uma
+ * notificacao sem nome.
+ */
+fun Vehicle.displayName(): String =
+  nickName?.takeIf { it.isNotBlank() }
+    ?: listOfNotNull(brand?.takeIf { it.isNotBlank() }, model?.takeIf { it.isNotBlank() })
+      .takeIf { it.isNotEmpty() }
+      ?.joinToString(" ")
+    ?: plate?.takeIf { it.isNotBlank() }
+    ?: "Veículo sem nome"

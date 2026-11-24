@@ -52,6 +52,7 @@ import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
 import br.com.gabrielmorais.autocare.ui.activities.main_screen.MainViewModel
 import br.com.gabrielmorais.autocare.ui.components.CardVehicle
+import br.com.gabrielmorais.autocare.ui.components.ProfileSwitcher
 import br.com.gabrielmorais.autocare.utils.Utils
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -65,9 +66,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun VehiclesScreen(
   viewModel: MainViewModel,
-  onOpenVehicle: (String) -> Unit
+  onOpenVehicle: (String) -> Unit,
+  onManageProfiles: () -> Unit
 ) {
+  // So os do perfil ativo: e o dono dos veiculos cadastrados por aqui.
   val vehicles by viewModel.vehicles.collectAsState()
+  val profiles by viewModel.profiles.collectAsState()
+  val activeProfile by viewModel.activeProfile.collectAsState()
 
   val dialogState = remember { AddVehicleDialogState() }
   var showDialog by remember { mutableStateOf(false) }
@@ -112,7 +117,24 @@ fun VehiclesScreen(
   }
 
   Scaffold(
-    topBar = { TopAppBar(title = { Text(stringResource(R.string.text_vehicles)) }) },
+    topBar = {
+      TopAppBar(
+        title = {
+          val title = stringResource(R.string.text_vehicles)
+          // Com mais de um perfil, o titulo diz de quem e a lista.
+          val owner = activeProfile?.name?.takeIf { profiles.size > 1 }
+          Text(if (owner != null) "$title · $owner" else title)
+        },
+        actions = {
+          ProfileSwitcher(
+            active = activeProfile,
+            profiles = profiles,
+            onSelect = { viewModel.selectProfile(it.id) },
+            onManage = onManageProfiles
+          )
+        }
+      )
+    },
     snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
       FloatingActionButton(onClick = { showDialog = true }) {

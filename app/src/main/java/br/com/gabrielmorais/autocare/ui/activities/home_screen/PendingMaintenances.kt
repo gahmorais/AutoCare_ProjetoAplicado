@@ -4,11 +4,15 @@ import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.MaintenanceProgress
 import br.com.gabrielmorais.autocare.data.models.MaintenanceStatus
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.models.displayName
 import br.com.gabrielmorais.autocare.data.models.progress
 import java.time.LocalDate
 
 data class VehicleMaintenance(
   val vehicleId: String,
+  /** Perfil dono do veiculo: tocar no card torna esse perfil o ativo. */
+  val ownerId: String?,
+  /** Nome do veiculo e, com mais de um perfil, o do dono ("Gol · Ana"). */
   val vehicleLabel: String,
   val maintenance: Maintenance,
   val progress: MaintenanceProgress,
@@ -29,18 +33,6 @@ data class HomeSummary(
   val totalCount: Int
 )
 
-/**
- * Apelido, ou marca e modelo, ou placa - o primeiro que existir. Um veiculo
- * cadastrado so com placa nao pode virar uma linha em branco na lista.
- */
-internal fun Vehicle.label(): String =
-  nickName?.takeIf { it.isNotBlank() }
-    ?: listOfNotNull(brand?.takeIf { it.isNotBlank() }, model?.takeIf { it.isNotBlank() })
-      .takeIf { it.isNotEmpty() }
-      ?.joinToString(" ")
-    ?: plate?.takeIf { it.isNotBlank() }
-    ?: "Veículo sem nome"
-
 private fun MaintenanceStatus.severity(): Int = when (this) {
   MaintenanceStatus.VENCIDA -> 0
   MaintenanceStatus.VENCE_EM_BREVE -> 1
@@ -53,13 +45,22 @@ private fun MaintenanceStatus.severity(): Int = when (this) {
  * so era respondida entrando veiculo por veiculo - a tela inicial listava
  * carros e nao dizia nada sobre o que estava vencendo.
  */
-fun List<Vehicle>.homeSummary(today: LocalDate = LocalDate.now()): HomeSummary {
+fun List<Vehicle>.homeSummary(
+  today: LocalDate = LocalDate.now(),
+  /**
+   * Nome de cada perfil por id. Vazio com um perfil so: ai o dono e obvio e o
+   * nome so ocuparia espaco no card.
+   */
+  ownerNames: Map<String, String> = emptyMap()
+): HomeSummary {
   val todas = flatMap { vehicle ->
     val vehicleId = vehicle.id ?: return@flatMap emptyList()
-    val label = vehicle.label()
+    val owner = vehicle.profileId?.let(ownerNames::get)
+    val label = if (owner != null) "${vehicle.displayName()} · $owner" else vehicle.displayName()
     vehicle.maintenances.orEmpty().map { maintenance ->
       VehicleMaintenance(
         vehicleId = vehicleId,
+        ownerId = vehicle.profileId,
         vehicleLabel = label,
         maintenance = maintenance,
         progress = maintenance.progress(vehicle.averageDistanceTraveledPerMonth, today),

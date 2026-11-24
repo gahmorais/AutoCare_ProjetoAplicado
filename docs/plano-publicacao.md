@@ -214,7 +214,9 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 
 ---
 
-## Etapa 6 — Múltiplos perfis
+## Etapa 6 — Múltiplos perfis ✅
+
+> Feita depois da etapa 7. Diferenças em relação ao planejado: tocar numa pendência do Início abre o formulário dela (como já era) e torna o dono o perfil ativo; e o texto da notificação é montado **na hora em que o alarme dispara**, lendo veículo e dono do banco. Assim um veículo renomeado ou transferido avisa com os dados atuais, e um lembrete de manutenção excluída não chega.
 
 **Comportamento**
 - O perfil ativo aparece no topo da tela de Perfil e num seletor (avatar) na barra superior do Início e de Veículos.

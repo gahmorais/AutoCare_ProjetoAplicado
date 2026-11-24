@@ -5,8 +5,10 @@ import br.com.gabrielmorais.autocare.data.local.AutoCareDatabase
 import br.com.gabrielmorais.autocare.data.local.toDomain
 import br.com.gabrielmorais.autocare.data.local.toEntity
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.MaintenanceReminder
 import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.data.models.displayName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -61,7 +63,7 @@ class RoomVehicleRepository(private val database: AutoCareDatabase) : VehicleRep
   }
 }
 
-class RoomMaintenanceRepository(database: AutoCareDatabase) : MaintenanceRepository {
+class RoomMaintenanceRepository(private val database: AutoCareDatabase) : MaintenanceRepository {
   private val dao = database.maintenanceDao()
 
   override suspend fun saveMaintenance(vehicleId: String, maintenance: Maintenance) =
@@ -73,4 +75,17 @@ class RoomMaintenanceRepository(database: AutoCareDatabase) : MaintenanceReposit
 
   override suspend fun getPendingWithForecast(): List<Maintenance> =
     dao.getPendingWithForecast().map { it.toDomain() }
+
+  override suspend fun getReminder(maintenanceId: Int): MaintenanceReminder? =
+    database.withTransaction {
+      val maintenance = dao.get(maintenanceId) ?: return@withTransaction null
+      val vehicle = database.vehicleDao().get(maintenance.vehicleId) ?: return@withTransaction null
+      val owner = database.profileDao().get(vehicle.vehicle.profileId) ?: return@withTransaction null
+      MaintenanceReminder(
+        maintenance = maintenance.toDomain(),
+        vehicleName = vehicle.toDomain().displayName(),
+        ownerName = owner.name,
+        profileCount = database.profileDao().count()
+      )
+    }
 }

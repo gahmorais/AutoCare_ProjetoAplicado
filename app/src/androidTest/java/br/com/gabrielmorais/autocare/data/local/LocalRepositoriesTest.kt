@@ -209,4 +209,36 @@ class LocalRepositoriesTest {
     val services = AssetServicesRepository(context.assets).getServices()
     assertTrue(services.isNotEmpty())
   }
+
+  @Test
+  fun lembreteTrazVeiculoDonoEContagemDePerfis() = runBlocking {
+    vehicles.saveVehicle(vehicle("gol", "ana", name = "Gol"))
+    maintenances.saveMaintenance("gol", maintenance(1))
+
+    val reminder = maintenances.getReminder(1)!!
+
+    assertEquals(1, reminder.maintenance.id)
+    assertEquals("Gol", reminder.vehicleName)
+    assertEquals("Ana", reminder.ownerName)
+    assertEquals(2, reminder.profileCount)
+  }
+
+  @Test
+  fun lembreteAcompanhaTransferenciaDePerfil() = runBlocking {
+    vehicles.saveVehicle(vehicle("gol", "ana", name = "Gol"))
+    maintenances.saveMaintenance("gol", maintenance(1))
+
+    vehicles.transferVehicle("gol", toProfileId = "pedro")
+
+    assertEquals("Pedro", maintenances.getReminder(1)!!.ownerName)
+  }
+
+  @Test
+  fun lembreteDeManutencaoExcluidaENulo() = runBlocking {
+    vehicles.saveVehicle(vehicle("gol", "ana"))
+    maintenances.saveMaintenance("gol", maintenance(1))
+    maintenances.deleteMaintenance(1)
+
+    assertNull(maintenances.getReminder(1))
+  }
 }

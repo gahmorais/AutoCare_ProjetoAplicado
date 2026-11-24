@@ -9,6 +9,7 @@ import br.com.gabrielmorais.autocare.data.local.repository.ProfileRepository
 import br.com.gabrielmorais.autocare.data.local.repository.ServicesRepository
 import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
 import br.com.gabrielmorais.autocare.data.models.Maintenance
+import br.com.gabrielmorais.autocare.data.models.MaintenanceReminder
 import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
@@ -115,6 +116,9 @@ class FakeMaintenanceRepository(private val vehicles: FakeVehicleRepository) : M
   override suspend fun getPendingWithForecast(): List<Maintenance> =
     vehicles.vehicles.value.flatMap { it.maintenances.orEmpty() }
       .filter { !it.completed && it.forecastNextExchangeDate != null }
+
+  // Sem perfis no fake: o lembrete e coberto pelo teste instrumentado do Room.
+  override suspend fun getReminder(maintenanceId: Int): MaintenanceReminder? = null
 }
 
 class FakeActiveProfileStore(initial: String? = null) : ActiveProfileStore {

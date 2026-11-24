@@ -50,6 +50,27 @@ fun ProfileAvatarPicker(
     onResult = { granted -> if (granted) cropImage.launch(PhotoCropOptions.profile()) }
   )
 
+  ProfileAvatar(
+    modifier = modifier,
+    photo = photo,
+    size = size,
+    contentDescription = stringResource(R.string.profile_image_description),
+    onClick = { requestCamera.launch(Manifest.permission.CAMERA) }
+  )
+}
+
+/**
+ * Avatar redondo, sem acao propria. [photo] e o que o Coil exibe: File, Uri ou
+ * null para o icone de pessoa.
+ */
+@Composable
+fun ProfileAvatar(
+  photo: Any?,
+  modifier: Modifier = Modifier,
+  size: Dp = 40.dp,
+  contentDescription: String? = null,
+  onClick: (() -> Unit)? = null
+) {
   // Painter unico para os tres estados: sem foto, carregando e falha. Sem ele o
   // AsyncImage sem tamanho colapsava para 0x0 e a area ficava visualmente vazia.
   val fallback = rememberVectorPainter(Icons.Outlined.Person)
@@ -61,7 +82,8 @@ fun ProfileAvatarPicker(
       // Fundo visivel: sem ele, sem foto, so o icone aparecia e o "toque no
       // circulo" do primeiro acesso apontava para um circulo invisivel.
       .background(MaterialTheme.colorScheme.surfaceVariant)
-      .clickable { requestCamera.launch(Manifest.permission.CAMERA) },
+      // Depois do clip, para o efeito do toque tambem ficar redondo.
+      .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
     contentScale = ContentScale.Crop,
     model = ImageRequest.Builder(LocalContext.current)
       .data(photo)
@@ -72,6 +94,6 @@ fun ProfileAvatarPicker(
     placeholder = fallback,
     error = fallback,
     fallback = fallback,
-    contentDescription = stringResource(R.string.profile_image_description)
+    contentDescription = contentDescription
   )
 }
