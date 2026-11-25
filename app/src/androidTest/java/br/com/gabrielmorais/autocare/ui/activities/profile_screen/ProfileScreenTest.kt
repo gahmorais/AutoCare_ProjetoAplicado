@@ -105,7 +105,9 @@ class ProfileScreenTest {
     compose.onNodeWithText("Excluir").performClick()
 
     compose.waitUntil(5_000) { runBlocking { profiles.countProfiles() } == 1 }
-    assertEquals("pedro", activeStore.activeProfileId.value)
+    // A ViewModel apaga e so depois troca o perfil ativo: conferir logo apos a
+    // contagem cair era uma corrida que falhava de vez em quando.
+    compose.waitUntil(5_000) { activeStore.activeProfileId.value == "pedro" }
     runBlocking { assertEquals(null, vehicles.getVehicle("gol")) }
   }
 

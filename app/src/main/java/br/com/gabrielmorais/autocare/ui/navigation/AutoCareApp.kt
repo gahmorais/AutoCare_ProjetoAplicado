@@ -1,6 +1,8 @@
 package br.com.gabrielmorais.autocare.ui.navigation
 
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -68,6 +70,10 @@ private fun AutoCareShell(
   }
 
   Scaffold(
+    // As barras do sistema ficam por conta do Scaffold de cada tela (a TopAppBar
+    // dela desce da status bar). Aqui so entra a altura da barra inferior, que
+    // ja inclui a barra de navegacao do sistema.
+    contentWindowInsets = WindowInsets(0),
     snackbarHost = { SnackbarHost(snackbarHostState) },
     bottomBar = {
       if (showBottomBar) {
@@ -105,7 +111,11 @@ private fun AutoCareShell(
     NavHost(
       navController = navController,
       startDestination = TopLevelDestination.INICIO.route,
-      modifier = Modifier.padding(padding),
+      // consumeWindowInsets: sem ele a tela por baixo somaria de novo a barra de
+      // navegacao do sistema, que a barra inferior ja cobre, e sobraria um vao.
+      modifier = Modifier
+        .padding(padding)
+        .consumeWindowInsets(padding),
       enterTransition = transitions.enter,
       exitTransition = transitions.exit,
       popEnterTransition = transitions.popEnter,

@@ -27,6 +27,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AutoCare"
         tools:targetApi="31">
+        <!-- tools:targetApi fica: dataExtractionRules so existe a partir da API 31
+             e a minSdk e 28. Sem ele o lint acusa o atributo. -->
 
         <receiver
             android:name=".data.notifications.NotificationReceiver"
@@ -51,7 +53,8 @@
         <activity
             android:name=".ui.activities.main_screen.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AutoCare.Splash">
+            android:theme="@style/Theme.AutoCare.Splash"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

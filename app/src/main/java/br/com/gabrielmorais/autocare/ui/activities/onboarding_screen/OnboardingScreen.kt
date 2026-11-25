@@ -1,5 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.activities.onboarding_screen
 
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,7 +47,11 @@ fun OnboardingScreen(onStart: (name: String, photo: Uri?) -> Unit) {
   var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
   val canStart = name.isNotBlank()
 
-  Scaffold { padding ->
+  Scaffold(
+    // safeDrawing inclui o teclado: com edge-to-edge a janela nao encolhe
+    // sozinha, e o campo em foco ficaria escondido atras dele.
+    contentWindowInsets = WindowInsets.safeDrawing,
+  ) { padding ->
     Column(
       modifier = Modifier
         .padding(padding)

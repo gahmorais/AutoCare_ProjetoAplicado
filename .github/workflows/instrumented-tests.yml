@@ -23,8 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # minSdk 28 e targetSdk 34: as duas pontas suportadas.
-        api-level: [28, 34]
+        # minSdk 28 e targetSdk 36: as duas pontas suportadas. A 36 e a que
+        # impoe edge-to-edge e o voltar preditivo.
+        api-level: [28, 36]
 
     steps:
       - uses: actions/checkout@v4
