@@ -17,6 +17,9 @@ interface ProfileDao {
   @Query("SELECT * FROM profiles WHERE id = :id")
   suspend fun get(id: String): ProfileEntity?
 
+  @Query("SELECT * FROM profiles ORDER BY created_at")
+  suspend fun getAll(): List<ProfileEntity>
+
   @Query("SELECT COUNT(*) FROM profiles")
   suspend fun count(): Int
 
@@ -26,6 +29,9 @@ interface ProfileDao {
    */
   @Upsert
   suspend fun upsert(profile: ProfileEntity)
+
+  @Upsert
+  suspend fun upsertAll(profiles: List<ProfileEntity>)
 
   @Query("DELETE FROM profiles WHERE id = :id")
   suspend fun delete(id: String)

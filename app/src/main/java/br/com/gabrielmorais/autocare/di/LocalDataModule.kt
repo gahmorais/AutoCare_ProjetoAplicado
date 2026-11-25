@@ -1,5 +1,11 @@
 package br.com.gabrielmorais.autocare.di
 
+import br.com.gabrielmorais.autocare.BuildConfig
+import br.com.gabrielmorais.autocare.data.backup.BackupExporter
+import br.com.gabrielmorais.autocare.data.backup.BackupImporter
+import br.com.gabrielmorais.autocare.data.backup.BackupStore
+import br.com.gabrielmorais.autocare.data.backup.BitmapImportedImageCheck
+import br.com.gabrielmorais.autocare.data.backup.RoomBackupStore
 import br.com.gabrielmorais.autocare.data.images.ImageCompressor
 import br.com.gabrielmorais.autocare.data.images.LocalImageStore
 import br.com.gabrielmorais.autocare.data.images.PhotoHousekeeping
@@ -17,6 +23,7 @@ import br.com.gabrielmorais.autocare.data.local.repository.ServicesRepository
 import br.com.gabrielmorais.autocare.data.local.repository.VehicleRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import java.io.File
 
 /**
  * Armazenamento local: banco, fotos e perfil ativo. E todo o grafo de dados do
@@ -30,6 +37,23 @@ val localDataModule = module {
   single<ServicesRepository> { AssetServicesRepository(androidContext().assets) }
   single<ActiveProfileStore> { DataStoreActiveProfileStore(androidContext().settingsDataStore) }
   single { PhotoHousekeeping(get(), get(), get()) }
+  single<BackupStore> { RoomBackupStore(get()) }
+  single {
+    BackupExporter(
+      store = get(),
+      imagesRoot = androidContext().filesDir,
+      appVersion = BuildConfig.VERSION_NAME
+    )
+  }
+  single {
+    val context = androidContext()
+    BackupImporter(
+      store = get(),
+      imagesRoot = context.filesDir,
+      stagingRoot = File(context.cacheDir, "backup-import"),
+      imageCheck = BitmapImportedImageCheck(context.contentResolver)
+    )
+  }
   single {
     val context = androidContext()
     LocalImageStore(

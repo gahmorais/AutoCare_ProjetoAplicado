@@ -21,7 +21,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ## Andamento
 
-*Atualizado em 24/11/2026.* Etapas 1 a 7 feitas e commitadas, **ainda sem push nem PR**. A etapa 7 foi adiantada para antes da 6, e as branches estão empilhadas: `feat/etapa-6-perfis` contém todas as anteriores.
+*Atualizado em 24/11/2026.* Etapas 1 a 7 já estão em `main` (squash no PR #7, `6923146`; a 7 foi adiantada para antes da 6). A etapa 8 está na branch `feat/etapa-8-exportar`, sobre `main`, **ainda sem push nem PR**.
 
 | Etapa | Commit | Situação |
 |---|---|---|
@@ -32,12 +32,13 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | 5 — Remoção do Firebase | `75070f3` | ✅ APK de release de 8,07 MB para 5,62 MB; CI sem secrets ainda não rodou (sem push) |
 | 7 — Auto Backup | `f46154c` | ✅ falta testar em aparelho físico com conta Google |
 | 6 — Múltiplos perfis | `91cda85` | ✅ |
-| 8 — Exportar / importar | — | próxima |
-| 9 — `targetSdk` + edge-to-edge | — | pendente |
+| 8 — Exportar / importar | ver `git log` | ✅ falta a troca real entre dois aparelhos |
+| — `.idea/` fora do git | `d20bd19` | ✅ |
+| 9 — `targetSdk` + edge-to-edge | — | próxima |
 | 10 — AdMob + UMP | — | pendente |
 | 11 — Release e Play Console | — | pendente |
 
-**Situação no último commit (`91cda85`):** 116 testes na JVM e 41 instrumentados passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.679.217 bytes.
+**Situação no último commit (etapa 8):** 163 testes na JVM e 45 instrumentados passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.720.417 bytes.
 
 **Bugs antigos achados e corrigidos no caminho:** excluir um veículo não cancelava os alarmes dele, e o desfazer não devolvia as manutenções; o recorte de foto não travava a proporção; o círculo do avatar ficava invisível.
 
@@ -49,6 +50,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 **Sobras conhecidas, para resolver antes da release**
 - Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
+- A importação só existe na tela de Perfil. Num aparelho novo sem Auto Backup, a pessoa precisa criar um perfil no onboarding antes de importar, e esse perfil vazio fica sobrando. Avaliar um "Restaurar de um arquivo" no onboarding.
 - No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
 
 ## Regras gerais de cada etapa
@@ -326,7 +328,7 @@ adb shell bmgr restore <token> br.com.gabrielmorais.autocare
 
 ---
 
-## Etapa 8 — Exportar / importar
+## Etapa 8 — Exportar / importar ✅
 
 **Formato do arquivo** `autocare-backup-AAAA-MM-DD.zip`:
 ```
@@ -347,19 +349,19 @@ images/<uuid>.jpg
 - Depois de importar: reagendar as notificações e rodar a varredura de órfãos.
 
 **Segurança do importador** (o arquivo vem de fora e não é confiável)
-- [ ] Rejeitar entradas com `..`, caminho absoluto ou fora de `manifest.json` / `images/*.jpg` (zip slip).
-- [ ] Limites: tamanho total descompactado, número de entradas e tamanho de cada imagem (contra zip bomb).
-- [ ] Cada imagem importada precisa ser um JPEG válido (marcador `FF D8 FF` e decodificável). Se passar do lado máximo da política da etapa 3, é **recomprimida** pelo `ImageCompressor` antes de ir para `filesDir`, para que um arquivo vindo de fora não fure a política de espaço.
-- [ ] Validar `format` e `schemaVersion`. Uma versão **maior** que a suportada gera a mensagem "Atualize o app para importar este arquivo".
-- [ ] Validar campos obrigatórios e tipos. Um registro inválido aborta a importação com uma mensagem clara.
-- [ ] O JSON é mapeado à mão com `org.json`: nenhuma dependência nova e nenhuma reflexão (seguro para o R8).
+- [x] Rejeitar entradas com `..`, caminho absoluto ou fora de `manifest.json` / `images/*.jpg` (zip slip).
+- [x] Limites: tamanho total descompactado, número de entradas e tamanho de cada imagem (contra zip bomb).
+- [x] Cada imagem importada precisa ser um JPEG válido (marcador `FF D8 FF` e decodificável). Se passar do lado máximo da política da etapa 3, é **recomprimida** pelo `ImageCompressor` antes de ir para `filesDir`, para que um arquivo vindo de fora não fure a política de espaço.
+- [x] Validar `format` e `schemaVersion`. Uma versão **maior** que a suportada gera a mensagem "Atualize o app para importar este arquivo".
+- [x] Validar campos obrigatórios e tipos. Um registro inválido aborta a importação com uma mensagem clara.
+- [x] O JSON é mapeado à mão com `org.json`: nenhuma dependência nova e nenhuma reflexão (seguro para o R8).
 
 **Mudanças**
-- [ ] `data/backup/`: `BackupSerializer` (domínio ↔ JSON), `BackupExporter` (zip) e `BackupImporter` (validação + aplicação).
-- [ ] UI de backup e `BackupViewModel` com estados de progresso, sucesso e erro.
+- [x] `data/backup/`: `BackupSerializer` (domínio ↔ JSON), `BackupExporter` (zip) e `BackupImporter` (validação + aplicação).
+- [x] UI de backup e `BackupViewModel` com estados de progresso, sucesso e erro.
 
 **Testes**
-- [ ] Unitários (JVM, `java.util.zip` + `org.json` reais):
+- [x] Unitários (JVM, `java.util.zip` + `org.json` reais):
   - ida e volta: exportar → importar num banco vazio → dados iguais;
   - mescla: importar sobre dados existentes atualiza pelo id e não duplica;
   - mescla: registros do aparelho que não estão no arquivo continuam intactos;
@@ -369,11 +371,12 @@ images/<uuid>.jpg
   - um `schemaVersion` maior é rejeitado com a mensagem certa;
   - um JSON truncado ou campo obrigatório ausente aborta sem aplicar nada;
   - limites de tamanho e de quantidade de entradas.
-- [ ] 📱 Instrumentado: exportar com fotos → limpar o banco → importar → as fotos abrem.
+- [x] 📱 Instrumentado: exportar com fotos → limpar o banco → importar → as fotos abrem.
 
 **Validação**
-- [ ] Portão mínimo e portão de release verdes (o release confirma que o R8 não quebrou o serializador).
+- [x] Portão mínimo e portão de release verdes (o release confirma que o R8 não quebrou o serializador).
 - [ ] Manual: exportar no emulador A → enviar o arquivo → importar no emulador B.
+  - Feito no APK de release (assinado com a chave de debug) num emulador: exportar para Downloads; importar um backup montado fora do app, com perfil, veículo, manutenção e foto de 3000 × 2250 px; prévia, importação e foto aparecendo no card; reimportar o mesmo arquivo mostra "Nada a importar"; um arquivo com `schemaVersion` 9 mostra "Atualize o app…". Falta a troca real entre dois aparelhos pelo Drive ou WhatsApp.
 
 **Commit:** `Adiciona exportar e importar dados em arquivo zip`
 
