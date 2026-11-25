@@ -7,7 +7,7 @@ A ordem vai do mais grave para o mais simples. A S4 fica por último porque as e
 | Etapa | Branch | Gravidade |
 |---|---|---|
 | S1 — Descrição fora do catálogo ✅ | `fix/sobra-1-descricao-fora-do-catalogo` | perda de dado sem aviso |
-| S2 — "Adicionar veículo" com filtro | `fix/sobra-2-adicionar-veiculo-filtro` | veículo vai para o perfil errado |
+| S2 — "Adicionar veículo" com filtro ✅ | `fix/sobra-2-adicionar-veiculo-filtro` | veículo vai para o perfil errado |
 | S3 — Restaurar no onboarding | `feat/sobra-3-restaurar-onboarding` | perfil vazio sobrando |
 | S4 — Recursos sem uso | `chore/sobra-4-recursos-sem-uso` | só limpeza |
 
@@ -48,23 +48,23 @@ Hoje isso só acontece com um backup importado que foi montado fora do app ou qu
 
 ---
 
-## S2 — "Adicionar veículo" do Início com o filtro em outro perfil
+## S2 — "Adicionar veículo" do Início com o filtro em outro perfil ✅
 
 **Problema.** No Início, com o filtro num perfil que não é o ativo e esse perfil sem veículos, o estado vazio mostra "Adicionar veículo". O botão leva para a aba Veículos, e `MainViewModel.saveVehicle` sempre grava o veículo com `profileId` do perfil **ativo**. O usuário filtrou "Maria", tocou em adicionar e o carro foi parar no perfil "João".
 
 **Correção proposta.** Se houver filtro, o botão primeiro torna ativo o perfil filtrado e só depois navega. A aba Veículos já mostra os veículos do perfil ativo, então a pessoa vê que está no perfil certo, e o seletor de perfil no topo mostra a troca. Isso evita passar o dono por argumento de navegação e não muda `saveVehicle`.
 
 **Mudanças**
-- [ ] `MainViewModel.prepareAddVehicle()`: se `homeFilter` não for nulo e for diferente do ativo, chama a mesma lógica de `selectProfile`.
-- [ ] `HomeScreen`: o `onAction` do estado vazio chama `viewModel.prepareAddVehicle()` e depois `onAddVehicle()`.
+- [x] `MainViewModel.prepareAddVehicle()`: se `homeFilter` não for nulo e for diferente do ativo, chama a mesma lógica de `selectProfile`.
+- [x] `HomeScreen`: o `onAction` do estado vazio chama `viewModel.prepareAddVehicle()` e depois `onAddVehicle()`.
 
 **Testes**
-- [ ] `MainViewModelTest`: dois perfis, ativo A, filtro B → `prepareAddVehicle()` → o perfil ativo passa a ser B; `saveVehicle` em seguida grava com `profileId == B`.
-- [ ] `MainViewModelTest`: sem filtro, ou com filtro igual ao ativo → o perfil ativo não muda.
+- [x] `MainViewModelTest`: dois perfis, ativo A, filtro B → `prepareAddVehicle()` → o perfil ativo passa a ser B; `saveVehicle` em seguida grava com `profileId == B`.
+- [x] `MainViewModelTest`: sem filtro, ou com filtro igual ao ativo → o perfil ativo não muda.
 
 **Validação**
-- [ ] Portão mínimo verde.
-- [ ] Manual: dois perfis, filtrar o que não tem carro, adicionar, voltar ao Início → o carro aparece no filtro certo.
+- [x] Portão mínimo verde.
+- [x] Manual no emulador: perfis "Importado" (ativo) e "Teste" (sem carro); filtrar "Teste" → "Adicionar veículo" abre Veículos já em "Teste" → salvar "Uno do Teste" → no Início, o filtro "Teste" passa a ter o carro e "Importado" continua só com o dele.
 
 **Commit:** `Cria o veículo no perfil filtrado ao adicionar pelo Início`
 

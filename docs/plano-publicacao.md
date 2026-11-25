@@ -52,7 +52,6 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 **Sobras conhecidas, para resolver antes da release** (plano de correção em [plano-sobras.md](plano-sobras.md))
 - Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
 - A importação só existe na tela de Perfil. Num aparelho novo sem Auto Backup, a pessoa precisa criar um perfil no onboarding antes de importar, e esse perfil vazio fica sobrando. Avaliar um "Restaurar de um arquivo" no onboarding.
-- No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
 
 ## Regras gerais de cada etapa
 
