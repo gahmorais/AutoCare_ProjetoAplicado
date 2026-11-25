@@ -39,7 +39,12 @@ class FakeVehicleRepository(private val vehicle: Vehicle? = null) : VehicleRepos
 }
 
 class FakeMaintenanceRepository : MaintenanceRepository {
-  override suspend fun saveMaintenance(vehicleId: String, maintenance: Maintenance) = Unit
+  /** O que a tela mandou gravar, na ordem. */
+  val saved = mutableListOf<Maintenance>()
+
+  override suspend fun saveMaintenance(vehicleId: String, maintenance: Maintenance) {
+    saved += maintenance
+  }
   override suspend fun getMaintenance(id: Int): Maintenance? = null
   override suspend fun deleteMaintenance(id: Int) = Unit
   override suspend fun getPendingWithForecast(): List<Maintenance> = emptyList()

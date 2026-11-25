@@ -49,10 +49,9 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Confirmar no Play Console o `targetSdk` mínimo (etapa 9 usou 36).
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
 
-**Sobras conhecidas, para resolver antes da release**
+**Sobras conhecidas, para resolver antes da release** (plano de correção em [plano-sobras.md](plano-sobras.md))
 - Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
 - A importação só existe na tela de Perfil. Num aparelho novo sem Auto Backup, a pessoa precisa criar um perfil no onboarding antes de importar, e esse perfil vazio fica sobrando. Avaliar um "Restaurar de um arquivo" no onboarding.
-- O formulário de manutenção procura a descrição no catálogo e, se não acha, mostra o primeiro serviço ("Aditivo do radiador"); salvar troca a descrição sem aviso. Só acontece com dado importado de um arquivo com descrição fora do catálogo, mas é perda de dado silenciosa.
 - No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
 
 ## Regras gerais de cada etapa
