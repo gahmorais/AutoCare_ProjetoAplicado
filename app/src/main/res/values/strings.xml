@@ -34,6 +34,7 @@
     <string name="text_average_distace_traveled_per_month">Média de distância viajada por mês</string>
     <string name="placeholder_average_distance_traveled">1000</string>
     <string name="text_service_type">Tipo de serviço</string>
+    <string name="text_service_outside_catalog">%1$s (fora do catálogo)</string>
     <string name="mileage_placeholder">KM:</string>
     <string name="notification_title">title</string>
     <string name="notification_description">description</string>

@@ -82,16 +82,6 @@ fun MaintenanceFormRoute(
   AddMaintenanceScreen(viewModel = viewModel, onBack = onBack)
 }
 
-/**
- * Servico ja validado: os campos do modelo sao nulaveis e um registro
- * incompleto derrubava a tela inteira.
- */
-private data class ServiceOption(
-  val name: String,
-  val mileageChange: Int,
-  val mustBeDoneBefore: Int
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit) {
@@ -108,18 +98,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
 
   val notificationContext = LocalContext.current
 
-  val options = remember(services) {
-    services.mapNotNull { service ->
-      val name = service.name
-      val mileageChange = service.mileageChange
-      val mustBeDoneBefore = service.mustBeDoneBefore
-      if (name != null && mileageChange != null && mustBeDoneBefore != null) {
-        ServiceOption(name, mileageChange, mustBeDoneBefore)
-      } else {
-        null
-      }
-    }
-  }
+  val options = remember(services) { catalogOptions(services) }
 
   Scaffold(
     // safeDrawing inclui o teclado: com edge-to-edge a janela nao encolhe
@@ -178,7 +157,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
         ) {
           MaintenanceForm(
             state = state,
-            options = options,
+            catalog = options,
             vehicle = vehicle,
             editing = editing,
             onSave = { vehicleId, maintenance ->
@@ -209,19 +188,23 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
 @Composable
 private fun MaintenanceForm(
   state: AddMaintenanceUiState,
-  options: List<ServiceOption>,
+  catalog: List<ServiceOption>,
   vehicle: Vehicle?,
   editing: Maintenance?,
   onSave: (vehicleId: String, maintenance: Maintenance) -> Unit
 ) {
   val isEditing = editing != null
   var expanded by remember { mutableStateOf(false) }
-  var selectedIndex by remember(options, editing?.id) {
-    // Em modo edicao comeca no servico do registro; caso nao esteja mais na
-    // lista, cai no primeiro.
-    mutableStateOf(options.indexOfFirst { it.name == editing?.description }.coerceAtLeast(0))
+  // Em modo edicao comeca no servico do registro. Se ele nao estiver no
+  // catalogo, entra como opcao propria em vez de ser trocado pelo primeiro.
+  val choices = remember(catalog, editing?.id, editing?.description) {
+    serviceChoices(catalog, editing?.description)
   }
+  val options = choices.options
+  var selectedIndex by remember(choices) { mutableStateOf(choices.initialIndex) }
   val selectedOption = options[selectedIndex.coerceIn(options.indices)]
+  val outsideCatalogLabel = stringResource(R.string.text_service_outside_catalog)
+  fun ServiceOption.label() = if (fromCatalog) name else outsideCatalogLabel.format(name)
   val averageTraveledDistance = vehicle?.averageDistanceTraveledPerMonth
 
   val datepickerDialog = rememberMaterialDialogState()
@@ -261,10 +244,10 @@ private fun MaintenanceForm(
       mileageDerivationArmed = true
       return@LaunchedEffect
     }
+    // Fora do catalogo nao ha intervalo: a previsao gravada continua valendo.
+    val mileageChange = selectedOption.mileageChange ?: return@LaunchedEffect
     val currentMileage = state.currentMileage.toIntOrNull() ?: 0
-    state.onForecastNextExchangeMileageChange(
-      (selectedOption.mileageChange + currentMileage).toString()
-    )
+    state.onForecastNextExchangeMileageChange((mileageChange + currentMileage).toString())
   }
 
   LaunchedEffect(selectedOption, state.date, averageTraveledDistance) {
@@ -272,23 +255,25 @@ private fun MaintenanceForm(
       dateDerivationArmed = true
       return@LaunchedEffect
     }
+    val mileageChange = selectedOption.mileageChange ?: return@LaunchedEffect
+    val mustBeDoneBefore = selectedOption.mustBeDoneBefore ?: return@LaunchedEffect
     // Sem a guarda, media nula estourava NPE e media zero, divisao por zero.
     val monthsByMileage = if (averageTraveledDistance != null && averageTraveledDistance > 0) {
-      selectedOption.mileageChange / averageTraveledDistance
+      mileageChange / averageTraveledDistance
     } else {
       0
     }
-    val months = maxOf(monthsByMileage, selectedOption.mustBeDoneBefore)
+    val months = maxOf(monthsByMileage, mustBeDoneBefore)
     Utils.futureDateMonth(state.date, months)
       ?.let { state.onForecastNextExchangeDateChange(it) }
   }
 
   SelectMenu(
     modifier = Modifier.fillMaxWidth(),
-    items = options.map { it.name },
+    items = options.map { it.label() },
     expanded = expanded,
     onExpandedChange = { expanded = !expanded },
-    value = selectedOption.name,
+    value = selectedOption.label(),
     label = stringResource(R.string.text_service_type),
     onDissmis = { expanded = false },
     onClick = { _, index ->
