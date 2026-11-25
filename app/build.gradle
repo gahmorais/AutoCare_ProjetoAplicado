@@ -32,7 +32,8 @@ android {
     defaultConfig {
         applicationId "br.com.gabrielmorais.autocare"
         minSdk 28
-        targetSdk 34
+        // Minimo exigido pela Play para upload novo (36 desde agosto de 2026).
+        targetSdk 36
         versionCode releaseVersionCode
         versionName releaseVersionName
 

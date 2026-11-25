@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
@@ -36,6 +37,11 @@ class MainActivity : ComponentActivity() {
     }
 
     super.onCreate(savedInstanceState)
+    // Com targetSdk 35+ o sistema impoe edge-to-edge de qualquer forma. Chamar
+    // explicitamente deixa as barras transparentes com icones que acompanham o
+    // tema em todas as versoes desde a minSdk, e nao so no Android 15+. Depois
+    // do super: a splash reconfigura as barras ao ser instalada.
+    enableEdgeToEdge()
     setContent {
       val notificationPermission = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),

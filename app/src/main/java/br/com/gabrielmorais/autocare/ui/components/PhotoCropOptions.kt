@@ -16,17 +16,24 @@ import com.canhub.cropper.CropImageView
 object PhotoCropOptions {
   private const val INTERMEDIATE_QUALITY = 90
 
-  /** Proporcao 2:1, a do card do veiculo. */
-  fun vehicle(): CropImageContractOptions = options(aspectRatioX = 2, aspectRatioY = 1)
+  /**
+   * Proporcao 2:1, a do card do veiculo.
+   *
+   * @param includeCamera false quando a permissao da camera foi negada: o
+   * intent de captura falharia, mas a galeria continua valendo.
+   */
+  fun vehicle(includeCamera: Boolean = true): CropImageContractOptions =
+    options(aspectRatioX = 2, aspectRatioY = 1, includeCamera = includeCamera)
 
-  /** Quadrada, para o avatar redondo. */
-  fun profile(): CropImageContractOptions = options(aspectRatioX = 1, aspectRatioY = 1)
+  /** Quadrada, para o avatar redondo. Ver [vehicle] sobre [includeCamera]. */
+  fun profile(includeCamera: Boolean = true): CropImageContractOptions =
+    options(aspectRatioX = 1, aspectRatioY = 1, includeCamera = includeCamera)
 
-  private fun options(aspectRatioX: Int, aspectRatioY: Int) = CropImageContractOptions(
+  private fun options(aspectRatioX: Int, aspectRatioY: Int, includeCamera: Boolean) = CropImageContractOptions(
     null,
     CropImageOptions(
       imageSourceIncludeGallery = true,
-      imageSourceIncludeCamera = true,
+      imageSourceIncludeCamera = includeCamera,
       guidelines = CropImageView.Guidelines.ON,
       // Sem fixAspectRatio a proporcao era so a inicial e o usuario podia
       // recortar livre - a foto do veiculo saia quadrada num banner 2:1.

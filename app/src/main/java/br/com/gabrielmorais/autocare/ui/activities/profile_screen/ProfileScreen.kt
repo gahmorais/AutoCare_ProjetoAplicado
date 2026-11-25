@@ -1,5 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.activities.profile_screen
 
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +74,9 @@ fun ProfileScreen(viewModel: MainViewModel, backupSection: @Composable () -> Uni
   val context = LocalContext.current
 
   Scaffold(
+    // safeDrawing inclui o teclado: com edge-to-edge a janela nao encolhe
+    // sozinha, e o campo em foco ficaria escondido atras dele.
+    contentWindowInsets = WindowInsets.safeDrawing,
     topBar = { TopAppBar(title = { Text(stringResource(R.string.text_profile)) }) }
   ) { padding ->
     Column(

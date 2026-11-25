@@ -1,5 +1,7 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -120,6 +122,9 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
   }
 
   Scaffold(
+    // safeDrawing inclui o teclado: com edge-to-edge a janela nao encolhe
+    // sozinha, e o campo em foco ficaria escondido atras dele.
+    contentWindowInsets = WindowInsets.safeDrawing,
     topBar = {
       TopAppBar(
         title = {

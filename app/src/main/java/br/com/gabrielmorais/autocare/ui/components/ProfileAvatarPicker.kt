@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.vector.RenderVectorGroup
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -44,10 +46,11 @@ fun ProfileAvatarPicker(
     onResult = { result -> result.uriContent?.let(onPhotoPicked) }
   )
   // O manifesto declara CAMERA, entao o intent de captura exige a permissao
-  // concedida mesmo sendo o cropper quem abre a camera.
+  // concedida mesmo sendo o cropper quem abre a camera. Negada, a galeria
+  // continua disponivel - antes o toque simplesmente nao fazia nada.
   val requestCamera = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestPermission(),
-    onResult = { granted -> if (granted) cropImage.launch(PhotoCropOptions.profile()) }
+    onResult = { granted -> cropImage.launch(PhotoCropOptions.profile(includeCamera = granted)) }
   )
 
   ProfileAvatar(
@@ -73,7 +76,22 @@ fun ProfileAvatar(
 ) {
   // Painter unico para os tres estados: sem foto, carregando e falha. Sem ele o
   // AsyncImage sem tamanho colapsava para 0x0 e a area ficava visualmente vazia.
-  val fallback = rememberVectorPainter(Icons.Outlined.Person)
+  //
+  // O vetor sai preto por padrao e sumia sobre o surfaceVariant do tema escuro.
+  // A cor vai so no painter do icone: um colorFilter no AsyncImage tingiria a
+  // foto tambem.
+  val icon = Icons.Outlined.Person
+  val fallback = rememberVectorPainter(
+    defaultWidth = icon.defaultWidth,
+    defaultHeight = icon.defaultHeight,
+    viewportWidth = icon.viewportWidth,
+    viewportHeight = icon.viewportHeight,
+    name = icon.name,
+    tintColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    tintBlendMode = BlendMode.SrcIn,
+    autoMirror = icon.autoMirror,
+    content = { _, _ -> RenderVectorGroup(group = icon.root) }
+  )
 
   AsyncImage(
     modifier = modifier

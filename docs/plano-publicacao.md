@@ -21,7 +21,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ## Andamento
 
-*Atualizado em 24/11/2026.* Etapas 1 a 7 já estão em `main` (squash no PR #7, `6923146`; a 7 foi adiantada para antes da 6). A etapa 8 está na branch `feat/etapa-8-exportar`, sobre `main`, **ainda sem push nem PR**.
+*Atualizado em 24/11/2026.* Etapas 1 a 7 já estão em `main` (squash no PR #7, `6923146`; a 7 foi adiantada para antes da 6). A etapa 8 está em `main` (PR #8). A etapa 9 está na branch `feat/etapa-9-target-sdk`, **ainda sem push nem PR**.
 
 | Etapa | Commit | Situação |
 |---|---|---|
@@ -32,13 +32,13 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | 5 — Remoção do Firebase | `75070f3` | ✅ APK de release de 8,07 MB para 5,62 MB; CI sem secrets ainda não rodou (sem push) |
 | 7 — Auto Backup | `f46154c` | ✅ falta testar em aparelho físico com conta Google |
 | 6 — Múltiplos perfis | `91cda85` | ✅ |
-| 8 — Exportar / importar | ver `git log` | ✅ falta a troca real entre dois aparelhos |
+| 8 — Exportar / importar | `38ee2e1` (#8) | ✅ falta a troca real entre dois aparelhos |
 | — `.idea/` fora do git | `d20bd19` | ✅ |
-| 9 — `targetSdk` + edge-to-edge | — | próxima |
-| 10 — AdMob + UMP | — | pendente |
+| 9 — `targetSdk` + edge-to-edge | ver `git log` | ✅ `targetSdk` 36 ainda não confirmado no Play Console |
+| 10 — AdMob + UMP | — | próxima |
 | 11 — Release e Play Console | — | pendente |
 
-**Situação no último commit (etapa 8):** 163 testes na JVM e 45 instrumentados passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.720.417 bytes.
+**Situação no último commit (etapa 9):** 163 testes na JVM e 45 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.736.789 bytes.
 
 **Bugs antigos achados e corrigidos no caminho:** excluir um veículo não cancelava os alarmes dele, e o desfazer não devolvia as manutenções; o recorte de foto não travava a proporção; o círculo do avatar ficava invisível.
 
@@ -46,11 +46,13 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Testar o Auto Backup num aparelho físico com conta Google (etapa 7).
 - [ ] Medir o tamanho de fotos reais de câmera e de galeria (etapa 3).
 - [ ] Apagar no GitHub os secrets antigos (`GOOGLE_SERVICES_JSON_BASE64`, `CLOUDINARY_*`).
+- [ ] Confirmar no Play Console o `targetSdk` mínimo (etapa 9 usou 36).
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
 
 **Sobras conhecidas, para resolver antes da release**
 - Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
 - A importação só existe na tela de Perfil. Num aparelho novo sem Auto Backup, a pessoa precisa criar um perfil no onboarding antes de importar, e esse perfil vazio fica sobrando. Avaliar um "Restaurar de um arquivo" no onboarding.
+- O formulário de manutenção procura a descrição no catálogo e, se não acha, mostra o primeiro serviço ("Aditivo do radiador"); salvar troca a descrição sem aviso. Só acontece com dado importado de um arquivo com descrição fora do catálogo, mas é perda de dado silenciosa.
 - No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
 
 ## Regras gerais de cada etapa
@@ -382,22 +384,31 @@ images/<uuid>.jpg
 
 ---
 
-## Etapa 9 — `targetSdk` exigido pela Play + edge-to-edge
+## Etapa 9 — `targetSdk` exigido pela Play + edge-to-edge ✅
 
 **Por quê:** a Play bloqueia o upload de apps abaixo do `targetSdk` mínimo vigente. **Confirme o valor no Play Console** antes de começar (35 desde agosto de 2025; provavelmente 36 a partir de agosto de 2026).
 
 **Mudanças**
-- [ ] `targetSdk` → valor exigido.
-- [ ] `enableEdgeToEdge()` na `MainActivity`. Revisar os insets em todas as telas: `Scaffold` (já usado em `AutoCareApp`), onboarding, diálogos, formulário com teclado aberto (`imePadding`) e a `CropImageActivity` da biblioteca.
-- [ ] Com o target 36, o *predictive back* fica ativo por padrão. Conferir os `BackHandler` e o comportamento do NavHost.
-- [ ] Revisar o pedido de `POST_NOTIFICATIONS` e da câmera no novo target.
-- [ ] Remover `tools:targetApi="31"` do manifesto, se não for mais necessário.
+- [x] `targetSdk` → valor exigido.
+- [x] `enableEdgeToEdge()` na `MainActivity`. Revisar os insets em todas as telas: `Scaffold` (já usado em `AutoCareApp`), onboarding, diálogos, formulário com teclado aberto (`imePadding`) e a `CropImageActivity` da biblioteca.
+- [x] Com o target 36, o *predictive back* fica ativo por padrão. Conferir os `BackHandler` e o comportamento do NavHost.
+- [x] Revisar o pedido de `POST_NOTIFICATIONS` e da câmera no novo target.
+- [x] `tools:targetApi="31"` fica: o `dataExtractionRules` só existe a partir da API 31 e a minSdk é 28.
 
 **Testes**
-- [ ] 📱 Rodar a suíte instrumentada num emulador com a API do novo target (incluir na matriz do `instrumented-tests.yml`).
+- [x] 📱 Rodar a suíte instrumentada num emulador com a API do novo target (incluir na matriz do `instrumented-tests.yml`).
 
 **Validação**
-- [ ] Manual, no emulador com a API nova, modo claro e escuro, navegação por gestos e por 3 botões: nenhum conteúdo sob a status bar ou a barra de navegação, e o FAB e a barra inferior não são cobertos.
+- [x] Manual, no emulador com a API nova, modo claro e escuro, navegação por gestos e por 3 botões: nenhum conteúdo sob a status bar ou a barra de navegação, e o FAB e a barra inferior não são cobertos.
+
+**Como ficou**
+- `targetSdk 36` (não confirmado no Play Console: 36 é o mínimo esperado desde agosto de 2026).
+- O `Scaffold` externo (barra inferior) não aplica as margens das barras do sistema e consome a altura da barra inferior; cada tela cuida da barra de status pela própria TopAppBar. Onboarding, Perfil e formulário usam `safeDrawing`, que inclui o teclado, e a Activity tem `adjustResize`.
+- Saíram do tema `statusBarColor` e `windowLightStatusBar`, ignorados a partir do Android 15.
+- Câmera negada agora abre o recorte só com a galeria (antes o toque não fazia nada), no avatar e na foto do veículo.
+- O ícone do avatar sem foto usa `onSurfaceVariant`; antes ficava preto e quase sumia no tema escuro.
+- O teste `ProfileScreenTest.excluir_…` tinha uma corrida (conferia o perfil ativo antes de a ViewModel trocá-lo) e falhava de vez em quando; agora espera a troca.
+- Conferido no emulador API 36, claro e escuro, gestos e 3 botões: onboarding e formulário com teclado aberto, Início, Veículos, detalhe, recorte da biblioteca (a barra dela não fica sob a status bar) e o voltar preditivo do detalhe para a lista.
 
 **Commit:** `Sobe targetSdk e adota edge-to-edge`
 

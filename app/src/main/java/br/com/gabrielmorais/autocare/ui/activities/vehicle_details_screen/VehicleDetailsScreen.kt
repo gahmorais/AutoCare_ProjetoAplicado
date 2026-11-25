@@ -169,11 +169,8 @@ fun VehicleDetailsScreen(
 
   val launcherRequestCameraPermisison = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestPermission(),
-    onResult = { isGranted ->
-      if (isGranted) {
-        takePicture.launch(PhotoCropOptions.vehicle())
-      }
-    }
+    // Negada a camera, a galeria continua valendo (ver PhotoCropOptions).
+    onResult = { isGranted -> takePicture.launch(PhotoCropOptions.vehicle(includeCamera = isGranted)) }
   )
 
   Scaffold(
