@@ -18,6 +18,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -96,21 +97,93 @@ fun BackupSectionContent(
       Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.backup_import))
     }
 
-    state.operation?.let { operation ->
-      LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-      Text(
-        text = stringResource(
-          when (operation) {
-            BackupOperation.EXPORTING -> R.string.backup_exporting
-            BackupOperation.READING -> R.string.backup_reading
-            BackupOperation.IMPORTING -> R.string.backup_importing
-          }
-        ),
-        style = MaterialTheme.typography.bodySmall
-      )
-    }
+    state.operation?.let { BackupProgress(it) }
   }
 
+  BackupDialogs(
+    state = state,
+    onConfirmImport = onConfirmImport,
+    onCancelImport = onCancelImport,
+    onDismissResult = onDismissResult
+  )
+}
+
+/**
+ * "Restaurar de um arquivo", no primeiro acesso: quem troca de aparelho sem o
+ * Auto Backup importa o .zip direto, sem criar antes um perfil que sobraria
+ * vazio. Usa o mesmo fluxo da tela de Perfil, com a previa obrigatoria. Quando
+ * a importacao grava os perfis, o app sai sozinho do onboarding
+ * (StartState.READY), entao nao ha "Dados importados" a mostrar aqui.
+ */
+@Composable
+fun RestoreFromFileButton(viewModel: BackupViewModel, modifier: Modifier = Modifier) {
+  val state by viewModel.state.collectAsState()
+  val importLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.OpenDocument()
+  ) { uri -> uri?.let(viewModel::readImport) }
+
+  RestoreFromFileContent(
+    modifier = modifier,
+    state = state,
+    onImport = { importLauncher.launch(IMPORT_MIME_TYPES) },
+    onConfirmImport = viewModel::confirmImport,
+    onCancelImport = viewModel::cancelImport,
+    onDismissResult = viewModel::dismissResult
+  )
+}
+
+@Composable
+fun RestoreFromFileContent(
+  state: BackupUiState,
+  onImport: () -> Unit,
+  onConfirmImport: () -> Unit,
+  onCancelImport: () -> Unit,
+  onDismissResult: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Column(
+    modifier = modifier.fillMaxWidth(),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.spacedBy(8.dp)
+  ) {
+    TextButton(enabled = !state.busy, onClick = onImport) {
+      Icon(Icons.Outlined.FileDownload, contentDescription = null)
+      Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.onboarding_restore))
+    }
+    state.operation?.let { BackupProgress(it) }
+  }
+
+  BackupDialogs(
+    state = state,
+    onConfirmImport = onConfirmImport,
+    onCancelImport = onCancelImport,
+    onDismissResult = onDismissResult
+  )
+}
+
+@Composable
+private fun BackupProgress(operation: BackupOperation) {
+  LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+  Text(
+    text = stringResource(
+      when (operation) {
+        BackupOperation.EXPORTING -> R.string.backup_exporting
+        BackupOperation.READING -> R.string.backup_reading
+        BackupOperation.IMPORTING -> R.string.backup_importing
+      }
+    ),
+    style = MaterialTheme.typography.bodySmall
+  )
+}
+
+/** Previa antes de importar e o resultado de cada operacao. */
+@Composable
+private fun BackupDialogs(
+  state: BackupUiState,
+  onConfirmImport: () -> Unit,
+  onCancelImport: () -> Unit,
+  onDismissResult: () -> Unit
+) {
   state.preview?.let { preview ->
     AlertDialog(
       onDismissRequest = onCancelImport,

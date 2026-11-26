@@ -28,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.com.gabrielmorais.autocare.ui.activities.profile_screen.BackupSection
+import br.com.gabrielmorais.autocare.ui.activities.profile_screen.RestoreFromFileButton
 import br.com.gabrielmorais.autocare.ui.activities.profile_screen.ProfileScreen
 import org.koin.androidx.compose.koinViewModel
 import br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen.MaintenanceFormRoute
@@ -49,7 +50,13 @@ fun AutoCareApp(shellViewModel: MainViewModel) {
   when (startState) {
     // A splash continua na tela enquanto o banco nao responde (ver MainActivity).
     StartState.LOADING -> Unit
-    StartState.NEEDS_ONBOARDING -> OnboardingScreen(onStart = shellViewModel::createProfile)
+    StartState.NEEDS_ONBOARDING -> OnboardingScreen(
+      onStart = shellViewModel::createProfile,
+      // Fora do NavHost, o koinViewModel fica preso a Activity: a importacao
+      // continua (notificacoes, varredura de fotos) depois que o onboarding sai
+      // da tela.
+      restoreAction = { RestoreFromFileButton(viewModel = koinViewModel()) }
+    )
     StartState.READY -> AutoCareShell(shellViewModel)
   }
 }

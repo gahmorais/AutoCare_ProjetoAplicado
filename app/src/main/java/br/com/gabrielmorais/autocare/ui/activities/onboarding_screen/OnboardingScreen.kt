@@ -40,9 +40,16 @@ import br.com.gabrielmorais.autocare.ui.components.ProfileAvatarPicker
  *
  * Sem estado de ViewModel: recebe o resultado por [onStart], o que deixa a tela
  * testavel isolada.
+ *
+ * @param restoreAction o "Restaurar de um arquivo" (RestoreFromFileButton). E um
+ * slot, como o backupSection da tela de Perfil, para a tela continuar testavel
+ * sem Koin.
  */
 @Composable
-fun OnboardingScreen(onStart: (name: String, photo: Uri?) -> Unit) {
+fun OnboardingScreen(
+  onStart: (name: String, photo: Uri?) -> Unit,
+  restoreAction: @Composable () -> Unit = {}
+) {
   var name by rememberSaveable { mutableStateOf("") }
   var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
   val canStart = name.isNotBlank()
@@ -102,6 +109,8 @@ fun OnboardingScreen(onStart: (name: String, photo: Uri?) -> Unit) {
       ) {
         Text(stringResource(R.string.onboarding_start))
       }
+
+      restoreAction()
     }
   }
 }

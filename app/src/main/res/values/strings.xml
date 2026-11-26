@@ -87,6 +87,7 @@
     <string name="onboarding_body">Como você se chama? Seus veículos e manutenções ficam salvos só neste aparelho, sem cadastro nem senha.</string>
     <string name="onboarding_photo_hint">Toque no círculo para adicionar uma foto (opcional)</string>
     <string name="onboarding_start">Começar</string>
+    <string name="onboarding_restore">Restaurar de um arquivo</string>
 
     <!-- Multiplos perfis (etapa 6 do plano) -->
     <string name="content_desc_switch_profile">Perfil ativo: %1$s. Toque para trocar</string>

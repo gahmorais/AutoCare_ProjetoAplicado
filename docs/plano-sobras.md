@@ -8,7 +8,7 @@ A ordem vai do mais grave para o mais simples. A S4 fica por último porque as e
 |---|---|---|
 | S1 — Descrição fora do catálogo ✅ | `fix/sobra-1-descricao-fora-do-catalogo` | perda de dado sem aviso |
 | S2 — "Adicionar veículo" com filtro ✅ | `fix/sobra-2-adicionar-veiculo-filtro` | veículo vai para o perfil errado |
-| S3 — Restaurar no onboarding | `feat/sobra-3-restaurar-onboarding` | perfil vazio sobrando |
+| S3 — Restaurar no onboarding ✅ | `feat/sobra-3-restaurar-onboarding` | perfil vazio sobrando |
 | S4 — Recursos sem uso | `chore/sobra-4-recursos-sem-uso` | só limpeza |
 
 ---
@@ -70,7 +70,7 @@ Hoje isso só acontece com um backup importado que foi montado fora do app ou qu
 
 ---
 
-## S3 — "Restaurar de um arquivo" no onboarding
+## S3 — "Restaurar de um arquivo" no onboarding ✅
 
 **Problema.** A importação só existe em Perfil → Backup. Num aparelho novo sem Auto Backup, a pessoa precisa criar um perfil no onboarding para chegar à importação. Depois de importar, esse perfil fica sobrando, vazio.
 
@@ -78,22 +78,24 @@ Hoje isso só acontece com um backup importado que foi montado fora do app ou qu
 - A tela "Como você se chama?" ganha um botão secundário **"Restaurar de um arquivo"**, abaixo do principal.
 - O fluxo é o mesmo do Perfil: `OpenDocument` → prévia obrigatória → confirmar ou cancelar. Cancelar volta ao onboarding sem resíduo.
 - Depois de importar, o app vai direto para o Início sem criar perfil. Isso já sai de graça: `MainViewModel.startState` passa a `READY` quando a lista de perfis deixa de ser vazia. Como o DataStore ainda não tem perfil ativo, `activeProfile` cai no primeiro perfil.
+- Por isso o diálogo "Dados importados" não aparece no onboarding: a tela sai assim que os perfis são gravados, e o Início com os dados é a confirmação.
 - Um arquivo sem perfis, ou que dá "Nada a importar", mantém o onboarding e mostra a mensagem atual.
 - Notificações e varredura de órfãos rodam como hoje, pelo `ImportSideEffects`.
 
 **Mudanças**
-- [ ] Separar de `BackupSection` a parte de importar (launcher `OpenDocument`, diálogo de prévia, progresso e resultado) num composable reutilizável, por exemplo `ImportBackupFlow(viewModel, trigger)`. A tela de Perfil passa a usar esse composable, sem mudar o que o usuário vê.
-- [ ] `OnboardingScreen` recebe um slot `restoreAction: @Composable () -> Unit`, como o `backupSection` da tela de Perfil, para continuar testável sem Koin. O `AutoCareApp` passa o `ImportBackupFlow` com `koinViewModel()`.
-- [ ] String "Restaurar de um arquivo".
+- [x] Em `BackupSection.kt`, a barra de progresso e os diálogos de prévia e resultado viraram `BackupProgress` e `BackupDialogs`, usados pela seção do Perfil (sem mudança visível) e pelo novo `RestoreFromFileButton` / `RestoreFromFileContent`.
+- [x] `OnboardingScreen` recebe um slot `restoreAction: @Composable () -> Unit`, como o `backupSection` da tela de Perfil, para continuar testável sem Koin. O `AutoCareApp` passa o `RestoreFromFileButton` com `koinViewModel()`, que fora do NavHost fica preso à Activity: a importação termina mesmo depois que o onboarding sai da tela.
+- [x] String "Restaurar de um arquivo".
 
 **Testes**
-- [ ] `OnboardingScreenTest`: o botão aparece e aciona o slot; o fluxo de criar perfil continua igual.
-- [ ] `ProfileScreenTest` e `BackupViewModelTest` continuam verdes depois da extração, que é a rede de segurança dela.
-- [ ] `MainViewModelTest`: com o banco vazio, inserir perfis pelo repositório (como faz a importação) → `startState` vai de `NEEDS_ONBOARDING` para `READY`, e `activeProfile` é o primeiro perfil.
+- [x] `OnboardingScreenTest`: o botão abre o seletor sem criar perfil; a prévia aparece e "Importar" confirma; o botão fica desabilitado enquanto lê o arquivo. Os testes de criar perfil continuam iguais.
+- [x] `ProfileScreenTest` e `BackupViewModelTest` continuam verdes depois da extração.
+- [x] `MainViewModelTest`: com o banco vazio, inserir perfis pelo repositório (como faz a importação) → `startState` vai de `NEEDS_ONBOARDING` para `READY`, e `activeProfile` é o primeiro perfil.
 
 **Validação**
-- [ ] Portão mínimo verde. Também o portão de release, porque o fluxo de importação passa a ter um segundo ponto de entrada.
-- [ ] Manual: `adb shell pm clear br.com.gabrielmorais.autocare` → abrir → "Restaurar de um arquivo" → escolher um backup exportado → prévia → importar → o Início aparece com os dados, as fotos e **nenhum perfil extra**. Repetir cancelando na prévia → continua no onboarding.
+- [x] Portão mínimo verde (171 testes na JVM) e portão de release verde (APK de 5.737.661 bytes).
+- [x] 📱 `connectedDebugAndroidTest` verde no emulador API 36 (50 testes).
+- [x] Manual no emulador, com o app recém-instalado: "Restaurar de um arquivo" → backup com 1 perfil, 1 veículo e 1 manutenção → cancelar na prévia mantém o onboarding e não deixa nada em `files/` → repetir e importar leva direto ao Início, e a aba Perfil mostra só o perfil importado. Repetido no APK de release assinado com a chave de debug. O backup de teste não tinha fotos; a importação de fotos é a mesma da etapa 8.
 
 **Commit:** `Adiciona restaurar de um arquivo no primeiro acesso`
 
