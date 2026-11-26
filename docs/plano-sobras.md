@@ -9,7 +9,7 @@ A ordem vai do mais grave para o mais simples. A S4 fica por último porque as e
 | S1 — Descrição fora do catálogo ✅ | `fix/sobra-1-descricao-fora-do-catalogo` | perda de dado sem aviso |
 | S2 — "Adicionar veículo" com filtro ✅ | `fix/sobra-2-adicionar-veiculo-filtro` | veículo vai para o perfil errado |
 | S3 — Restaurar no onboarding ✅ | `feat/sobra-3-restaurar-onboarding` | perfil vazio sobrando |
-| S4 — Recursos sem uso | `chore/sobra-4-recursos-sem-uso` | só limpeza |
+| S4 — Recursos sem uso ✅ | `chore/sobra-4-recursos-sem-uso` | só limpeza |
 
 ---
 
@@ -101,7 +101,7 @@ Hoje isso só acontece com um backup importado que foi montado fora do app ou qu
 
 ---
 
-## S4 — Recursos sem uso
+## S4 — Recursos sem uso ✅
 
 **Problema.** O `lintDebug` lista 21 `UnusedResources`. Isso pesa no APK e confunde quem mexe no app: por exemplo, existem dois conjuntos de ícone e o manifesto usa só `ic_autocare_logo`.
 
@@ -110,17 +110,19 @@ Lista atual, do relatório de lint (gerá-lo de novo antes de apagar, porque S1 
 - Strings: `text_maintenance`, `text_unknow`, `text_description`, `text_my_maintenance`, `mileage_placeholder`, `notification_title`, `notification_description`, `channel_name`, `channel_description`, `notify_again`, `content_desc_open_menu`, `text_mileage_done`, `text_mileage_now`, `text_mileage_forecast`.
 
 **Mudanças**
-- [ ] Rodar `./gradlew lintDebug` e partir da lista nova.
-- [ ] Antes de apagar, conferir cada string: a que tem um texto fixo equivalente no código, como o nome do canal em `NotificationUtils`, deve **passar a ser usada** em vez de apagada. A tradução fica centralizada e o texto fixo sai do código.
-- [ ] Apagar o resto, incluindo as versões por densidade (`mipmap-*dpi/`, `mipmap-anydpi-v26/`, `mipmap-anydpi-v33/`).
-- [ ] Em `lint { }` no `app/build.gradle`, tornar `UnusedResources` fatal (`error 'UnusedResources'`) para a lista não voltar a crescer.
+- [x] Rodar `./gradlew lintDebug` e partir da lista nova. Deu a mesma lista de 21.
+- [x] Antes de apagar, conferir cada string: a que tem um texto fixo equivalente no código, como o nome do canal em `NotificationUtils`, deve **passar a ser usada** em vez de apagada. A tradução fica centralizada e o texto fixo sai do código.
+  - Só `channel_name` e `channel_description` tinham equivalente: o canal usava "Autocare Channel" e "Notification Channel for Autocare App", em inglês, nas configurações do Android. Agora usa as strings, com "Lembretes de manutenção" e "Avisa quando uma manutenção está perto de vencer.". O `channelID` não mudou, então o que a pessoa ajustou no canal continua valendo.
+  - "Feito", "Agora" e "Prevista" eram rótulos antigos da régua de quilometragem, que hoje só mostra números. Foram apagados.
+- [x] Apagar o resto, incluindo as versões por densidade (`mipmap-*dpi/`, `mipmap-anydpi-v26/`, `mipmap-anydpi-v33/`). Foram 23 arquivos e 12 strings.
+- [x] Em `lint { }` no `app/build.gradle`, tornar `UnusedResources` fatal (`error 'UnusedResources'`) para a lista não voltar a crescer.
 
 **Testes**
 - Nenhum teste novo. A suíte atual e o lint fatal são a rede de segurança.
 
 **Validação**
-- [ ] Portão mínimo e portão de release verdes. O release é o que confirma que o R8 e o `shrinkResources` não dependiam desses recursos.
-- [ ] Instalar o APK de release e conferir o ícone no launcher, na tela de apps e na notificação de lembrete.
+- [x] Portão mínimo e portão de release verdes. O release é o que confirma que o R8 e o `shrinkResources` não dependiam desses recursos. O `resources.arsc` ficou cerca de 5 KB menor; o arquivo do APK (5.749.085 bytes) não diminuiu porque o empacotamento incremental do AGP deixa espaços vazios entre as entradas do zip.
+- [x] Instalar o APK de release (assinado com a chave de debug) e conferir: o ícone aparece na gaveta de apps e o canal aparece como "Lembretes de manutenção" nas configurações. O ícone da notificação é o `ic_autocare_logo`, que não foi mexido; não houve lembrete disparado no teste.
 
 **Commit:** `Remove recursos sem uso e torna o UnusedResources fatal no lint`
 
@@ -128,5 +130,5 @@ Lista atual, do relatório de lint (gerá-lo de novo antes de apagar, porque S1 
 
 ## Depois das quatro
 
-- [ ] Esvaziar a seção "Sobras conhecidas" de `plano-publicacao.md` e atualizar o "Andamento", que ainda descreve a etapa 9 como "sem push nem PR", embora ela já esteja em `main` pelo PR #9.
+- [x] Esvaziar a seção "Sobras conhecidas" de `plano-publicacao.md` e atualizar o "Andamento" (feito no commit da S4).
 - [ ] Seguir para a etapa 10 (AdMob + UMP).

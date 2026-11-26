@@ -15,11 +15,13 @@ import java.time.ZoneId
 
 object NotificationUtils {
   fun createNotificationChannel(context: Context) {
-    val name = "Autocare Channel"
-    val desc = "Notification Channel for Autocare App"
+    // Nome e descricao aparecem nas configuracoes de notificacao do Android.
+    // Mudar o texto e seguro; mudar o channelID criaria um canal novo e
+    // perderia o que a pessoa ajustou no antigo.
+    val name = context.getString(R.string.channel_name)
     val importance = NotificationManager.IMPORTANCE_DEFAULT
     val channel = NotificationChannel(channelID, name, importance)
-    channel.description = desc
+    channel.description = context.getString(R.string.channel_description)
     val notificationManager = context
       .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.createNotificationChannel(channel)
