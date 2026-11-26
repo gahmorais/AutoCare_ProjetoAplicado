@@ -14,8 +14,10 @@
     <!-- Necessaria para reagendar os alarmes, que o sistema descarta no reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Sem INTERNET: os dados nao saem do aparelho. O SDK de anuncios (etapa 10)
-         adiciona a permissao pelo proprio manifesto. -->
+    <!-- Sem INTERNET declarada aqui: os dados do usuario nao saem do aparelho. O
+         SDK de anuncios traz INTERNET, ACCESS_NETWORK_STATE e AD_ID pelo proprio
+         manifesto, e so ele usa a rede. -->
+
 
     <application
         android:name=".AutoCareApplication"
@@ -29,6 +31,12 @@
         tools:targetApi="31">
         <!-- tools:targetApi fica: dataExtractionRules so existe a partir da API 31
              e a minSdk e 28. Sem ele o lint acusa o atributo. -->
+
+        <!-- ID de teste no debug; o real so entra na release assinada (ver
+             app/build.gradle). Sem ele o SDK derruba o app na abertura. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
 
         <receiver
             android:name=".data.notifications.NotificationReceiver"

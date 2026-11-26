@@ -1,14 +1,18 @@
 package br.com.gabrielmorais.autocare.ui.activities.add_maintenance_screen
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import br.com.gabrielmorais.autocare.data.ads.LocalAdsController
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Service
 import br.com.gabrielmorais.autocare.data.models.Vehicle
+import br.com.gabrielmorais.autocare.fakes.FakeAdsController
 import br.com.gabrielmorais.autocare.fakes.FakeMaintenanceRepository
 import br.com.gabrielmorais.autocare.fakes.FakeServicesRepository
 import br.com.gabrielmorais.autocare.fakes.FakeVehicleRepository
@@ -47,10 +51,14 @@ class MaintenanceFormScreenTest {
     )
   )
 
+  private val ads = FakeAdsController()
+
   private fun renderizar(viewModel: AddMaintenanceViewModel) {
     compose.setContent {
       AutoCareTheme {
-        AddMaintenanceScreen(viewModel = viewModel, onBack = {})
+        CompositionLocalProvider(LocalAdsController provides ads) {
+          AddMaintenanceScreen(viewModel = viewModel, onBack = {})
+        }
       }
     }
   }
@@ -146,6 +154,9 @@ class MaintenanceFormScreenTest {
 
     val salva = repository.saved.single()
     assertEquals("Troca de óleo", salva.description)
+    // O intersticial e pedido uma vez, so depois da gravacao confirmada.
+    compose.waitUntil { ads.interstitialRequests > 0 }
+    assertEquals(1, ads.interstitialRequests)
     assertEquals(importada.forecastNextExchangeMileage, salva.forecastNextExchangeMileage)
     assertEquals(importada.forecastNextExchangeDate, salva.forecastNextExchangeDate)
   }
@@ -164,5 +175,13 @@ class MaintenanceFormScreenTest {
     assertEquals(60_000, salva.forecastNextExchangeMileage)
     // max(10.000 km / 1.000 km por mes, 12 meses) = 12 meses depois da execucao.
     assertEquals(LocalDate.of(2027, 1, 10).toEpochDay(), salva.forecastNextExchangeDate)
+  }
+
+  @Test
+  fun formulario_nao_mostra_banner_nem_pede_intersticial_sem_salvar() {
+    editarImportada()
+
+    compose.onNodeWithTag(FakeAdsController.BANNER_TAG).assertDoesNotExist()
+    assertEquals(0, ads.interstitialRequests)
   }
 }

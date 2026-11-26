@@ -47,6 +47,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.utils.findActivity
+import br.com.gabrielmorais.autocare.data.ads.LocalAdsController
+import androidx.compose.material.icons.outlined.PrivacyTip
 import br.com.gabrielmorais.autocare.data.models.Profile
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
@@ -147,6 +150,7 @@ fun ProfileScreen(viewModel: MainViewModel, backupSection: @Composable () -> Uni
 
       HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
       backupSection()
+      PrivacyOptionsItem()
       Spacer(modifier = Modifier.height(24.dp))
     }
   }
@@ -285,4 +289,26 @@ private fun DeleteProfileDialog(
       TextButton(onClick = onDismiss) { Text(stringResource(R.string.text_cancel)) }
     }
   )
+}
+
+/**
+ * Rever o consentimento de anuncios. O UMP exige este ponto de entrada quando
+ * o consentimento se aplica (por exemplo, no EEE e no Reino Unido); fora disso
+ * o item nao aparece.
+ */
+@Composable
+private fun PrivacyOptionsItem() {
+  val ads = LocalAdsController.current
+  val required by ads.privacyOptionsRequired.collectAsState()
+  val context = LocalContext.current
+  if (required) {
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    OutlinedButton(
+      modifier = Modifier.fillMaxWidth(),
+      onClick = { context.findActivity()?.let(ads::showPrivacyOptions) }
+    ) {
+      Icon(Icons.Outlined.PrivacyTip, contentDescription = null)
+      Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.ads_privacy_options))
+    }
+  }
 }

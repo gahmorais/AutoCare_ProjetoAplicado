@@ -21,7 +21,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ## Andamento
 
-*Atualizado em 26/11/2026.* Etapas 1 a 9 já estão em `main` (a 7 foi adiantada para antes da 6; a 9 entrou pelo PR #9). As sobras conhecidas foram corrigidas antes da etapa 10, pelo [plano-sobras.md](plano-sobras.md).
+*Atualizado em 26/11/2026.* Etapas 1 a 9 já estão em `main`, e a 10 está na branch `feat/etapa-10-anuncios` (a 7 foi adiantada para antes da 6; a 9 entrou pelo PR #9). As sobras conhecidas foram corrigidas antes da etapa 10, pelo [plano-sobras.md](plano-sobras.md).
 
 | Etapa | Commit | Situação |
 |---|---|---|
@@ -36,10 +36,10 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | — `.idea/` fora do git | `d20bd19` | ✅ |
 | 9 — `targetSdk` + edge-to-edge | `673c075` (#9) | ✅ `targetSdk` 36 ainda não confirmado no Play Console |
 | S1 a S4 — Sobras conhecidas | #10, #11, #12 e o da S4 | ✅ ver [plano-sobras.md](plano-sobras.md) |
-| 10 — AdMob + UMP | — | próxima |
-| 11 — Release e Play Console | — | pendente |
+| 10 — AdMob + UMP | ver `git log` | ✅ falta criar o app e os blocos no AdMob e cadastrar os secrets |
+| 11 — Release e Play Console | — | próxima |
 
-**Situação no último commit (S4):** 171 testes na JVM e 50 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando, com `UnusedResources` como erro; APK de release com 5.749.085 bytes.
+**Situação no último commit (etapa 10):** 175 testes na JVM e 56 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 9.846.702 bytes.
 
 **Bugs antigos achados e corrigidos no caminho:** excluir um veículo não cancelava os alarmes dele, e o desfazer não devolvia as manutenções; o recorte de foto não travava a proporção; o círculo do avatar ficava invisível.
 
@@ -49,8 +49,11 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Apagar no GitHub os secrets antigos (`GOOGLE_SERVICES_JSON_BASE64`, `CLOUDINARY_*`).
 - [ ] Confirmar no Play Console o `targetSdk` mínimo (etapa 9 usou 36).
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
+- [ ] Criar o app no AdMob, os blocos de banner adaptativo e intersticial, e cadastrar `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID` nos secrets do GitHub (etapa 10). Sem eles o `release.yml` falha.
+- [ ] Configurar a mensagem de consentimento (GDPR) em AdMob → Privacidade e mensagens; sem ela o UMP não tem formulário a mostrar no EEE.
 
-**Sobras conhecidas:** nenhuma. As quatro que existiam foram corrigidas pelo [plano-sobras.md](plano-sobras.md) (PRs #10, #11, #12 e o da S4).
+**Sobras conhecidas, para resolver antes da release** (as quatro anteriores foram corrigidas pelo [plano-sobras.md](plano-sobras.md), PRs #10 a #13)
+- A aba Veículos quebra (o app fecha) quando um veículo não tem distância média por mês: `CardVehicle` formata `averageDistanceTraveledPerMonth` sem checar nulo. O app não deixa cadastrar sem distância, mas a importação de backup aceita o campo ausente. Achado na etapa 10 pelo `AdPlacementTest`.
 
 ## Regras gerais de cada etapa
 
@@ -411,37 +414,40 @@ images/<uuid>.jpg
 
 ---
 
-## Etapa 10 — Anúncios (AdMob + UMP)
+## Etapa 10 — Anúncios (AdMob + UMP) ✅
 
 **Mudanças**
-- [ ] Dependências: `play-services-ads` e `user-messaging-platform`.
-- [ ] IDs por build type, via `manifestPlaceholders` e `buildConfigField`:
+- [x] Dependências: `play-services-ads` 25.5.0 e `user-messaging-platform` 4.0.0.
+- [x] IDs por build type, via `manifestPlaceholders` e `buildConfigField`:
   - **debug:** IDs de teste oficiais do Google (app `ca-app-pub-3940256099942544~3347511713`, banner adaptativo `…/9214589741`, intersticial `…/1033173712`);
-  - **release:** variáveis de ambiente `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID`, vindas de secrets no CI. **O build de release falha** se alguma estiver vazia, para nunca publicar com ID de teste nem sem ID.
-- [ ] Manifesto: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}"/>`.
-- [ ] `AdsConsentManager` (UMP):
-  - `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` na abertura;
+  - **release:** variáveis de ambiente `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID`, vindas de secrets no CI. **A release assinada falha** se alguma estiver vazia ou for um ID de teste. A release sem keystore (o portão de release local) usa os IDs de teste, porque não é publicável; exigir os IDs ali quebraria o portão em toda etapa.
+- [x] Manifesto: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}"/>`.
+- [x] `GoogleAdsController` (UMP):
+  - `requestConsentInfoUpdate` → `loadAndShowConsentFormIfRequired` na abertura (só em sessão nova, não na rotação);
   - `MobileAds.initialize` **só depois** de `canRequestAds()`, fora da main thread.
-- [ ] Item **"Privacidade e anúncios"** em Perfil, visível quando `privacyOptionsRequirementStatus == REQUIRED` (exigência do UMP).
-- [ ] Abstração `AdsController` (interface) com implementação real e uma fake para os testes, para que nenhum teste dependa de rede ou do SDK.
-- [ ] **Posicionamento:**
-  - banner adaptativo âncora no rodapé de **Veículos** e do **Detalhe do veículo**, acima da barra inferior, sem cobrir conteúdo;
-  - **nenhum anúncio** no formulário de manutenção, no onboarding ou nas telas de backup, para evitar cliques acidentais (política da Play);
-  - intersticial **só depois de salvar uma manutenção**, regido por uma `InterstitialPolicy` em Kotlin puro: nunca na primeira sessão, no mínimo 3 minutos entre exibições, no máximo N por dia e pré-carregado (nunca bloqueia a navegação).
-- [ ] R8: o SDK já traz as regras de consumidor. Mesmo assim, confirmar com o portão de release.
-- [ ] Data safety (preparação): listar o que o SDK coleta, para usar na etapa 11.
+- [x] Item **"Privacidade e anúncios"** em Perfil, visível quando `privacyOptionsRequirementStatus == REQUIRED`.
+- [x] Interface `AdsController`, fornecida às telas por `LocalAdsController`. O padrão é `NoAdsController` (sem anúncio), então os testes antigos não dependem do SDK; os novos usam `FakeAdsController`.
+- [x] **Posicionamento:**
+  - banner adaptativo âncora no rodapé de **Veículos** (acima da barra de abas) e do **Detalhe do veículo** (acima da barra de navegação do sistema), com a altura reservada para o conteúdo não pular;
+  - **nenhum anúncio** no Início, no formulário de manutenção, no onboarding nem no Perfil (onde fica o backup);
+  - intersticial **só depois de salvar uma manutenção**, regido pela `InterstitialPolicy`: nunca na primeira sessão, no mínimo 3 minutos entre exibições, **no máximo 3 por dia** e pré-carregado (se não estiver pronto, não aparece).
+- [x] R8: portão de release verde, sem regra nova no `proguard-rules.pro`.
+- [x] Data safety (preparação, para confirmar na etapa 11 com a página oficial do Google sobre o SDK):
+  - permissões que o SDK adiciona: `INTERNET`, `ACCESS_NETWORK_STATE`, `AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`, `ACCESS_ADSERVICES_TOPICS`, `WAKE_LOCK`, `FOREGROUND_SERVICE`;
+  - dados coletados pelo SDK: identificadores do aparelho (ID de publicidade, App Set ID), localização aproximada (pelo IP), interações com o app e com os anúncios, diagnóstico (falhas e desempenho). Finalidade: publicidade, análise e prevenção de fraude. Criptografados em trânsito;
+  - o app em si continua sem enviar dados do usuário: perfis, veículos, manutenções e fotos ficam no aparelho.
 
 **Testes**
-- [ ] Unitários de `InterstitialPolicy` com relógio injetado: primeira sessão, intervalo mínimo, limite diário e virada do dia.
-- [ ] Unitário: o build de release sem IDs falha (testar a função de leitura e validação das variáveis).
-- [ ] 📱 UI: com o `AdsController` fake, o banner aparece só nas telas previstas e salvar uma manutenção chama `maybeShowInterstitial` uma vez.
+- [x] Unitários de `InterstitialPolicy` com relógio injetado: primeira sessão, intervalo mínimo, limite diário e virada do dia.
+- [x] Validação dos IDs da release assinada. A lógica está no `app/build.gradle` (Groovy), fora do alcance dos testes do app; foi verificada rodando o Gradle com keystore e: sem IDs → falha nomeando as três variáveis; um ID de teste → falha nomeando a variável; IDs reais → passa.
+- [x] 📱 `AdPlacementTest`: com o `FakeAdsController`, o banner aparece em Veículos e no Detalhe e não aparece no Início, no Perfil nem no onboarding. `MaintenanceFormScreenTest`: sem banner no formulário, e salvar pede o intersticial exatamente uma vez.
 
 **Validação**
-- [ ] Manual no debug: banner e intersticial **de teste** aparecendo.
-- [ ] Formulário de consentimento forçado com `ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA` → aceitar e recusar → o app continua utilizável nos dois casos.
-- [ ] O APK Analyzer não aponta bibliotecas nativas incompatíveis com páginas de 16 KB.
-- [ ] Portão de release verde.
-- [ ] ⚠️ Nunca clicar em anúncio real do próprio app.
+- [x] Manual no debug (emulador API 36): banner de teste em Veículos e no Detalhe; intersticial de teste depois de salvar na segunda sessão; salvar de novo logo em seguida não mostra outro.
+- [x] Formulário de consentimento forçado com `-PumpDebugEea=true` → recusar: o app segue normal, sem banner, e "Privacidade e anúncios" aparece no Perfil → aceitar por esse item: o banner aparece.
+- [x] Bibliotecas nativas com segmentos alinhados a 16 KB (todas são do androidx; o SDK de anúncios não traz `.so`).
+- [x] Portão de release verde. O APK de release foi de 5,75 MB para 9,85 MB com o SDK de anúncios.
+- [x] ⚠️ Nunca clicar em anúncio real do próprio app.
 
 **Commit:** `Adiciona anuncios AdMob com consentimento UMP`
 

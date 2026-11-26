@@ -2,6 +2,7 @@ package br.com.gabrielmorais.autocare
 
 import android.app.Application
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
+import br.com.gabrielmorais.autocare.di.adsModule
 import br.com.gabrielmorais.autocare.di.localDataModule
 import br.com.gabrielmorais.autocare.di.viewModelModule
 import org.koin.android.ext.koin.androidContext
@@ -15,7 +16,7 @@ class AutoCareApplication : Application() {
     startKoin {
       androidLogger(Level.DEBUG)
       androidContext(this@AutoCareApplication)
-      modules(listOf(localDataModule, viewModelModule))
+      modules(listOf(localDataModule, viewModelModule, adsModule))
     }
 
     // O canal precisa existir antes de qualquer notify, inclusive quando o

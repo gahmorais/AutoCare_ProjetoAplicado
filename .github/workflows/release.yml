@@ -27,10 +27,18 @@ jobs:
         # de release inteiro - ou pior, publicar um artefato nao assinado.
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+          ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
         run: |
           set -euo pipefail
           faltando=()
           [ -n "$RELEASE_KEYSTORE_BASE64" ] || faltando+=(RELEASE_KEYSTORE_BASE64)
+          # Sem os IDs do AdMob o build assinado falha de qualquer jeito (ver
+          # app/build.gradle); aqui a falha vem antes, e com o nome do secret.
+          [ -n "$ADMOB_APP_ID" ] || faltando+=(ADMOB_APP_ID)
+          [ -n "$ADMOB_BANNER_ID" ] || faltando+=(ADMOB_BANNER_ID)
+          [ -n "$ADMOB_INTERSTITIAL_ID" ] || faltando+=(ADMOB_INTERSTITIAL_ID)
           if [ ${#faltando[@]} -gt 0 ]; then
             echo "::error::Secrets ausentes: ${faltando[*]}. Ver a secao CI/CD no README."
             exit 1
@@ -80,6 +88,9 @@ jobs:
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+          ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
           VERSION_NAME: ${{ steps.versao.outputs.name }}
           VERSION_CODE: ${{ github.run_number }}
         run: ./gradlew assembleRelease bundleRelease --stacktrace
