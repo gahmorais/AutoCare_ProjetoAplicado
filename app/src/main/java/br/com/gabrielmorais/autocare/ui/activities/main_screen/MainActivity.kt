@@ -10,15 +10,19 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import br.com.gabrielmorais.autocare.data.ads.AdsController
+import br.com.gabrielmorais.autocare.data.ads.LocalAdsController
 import br.com.gabrielmorais.autocare.data.notifications.BootReceiver
 import br.com.gabrielmorais.autocare.ui.navigation.AutoCareApp
 import br.com.gabrielmorais.autocare.ui.theme.AutoCareTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -27,6 +31,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  */
 class MainActivity : ComponentActivity() {
   private val viewModel by viewModel<MainViewModel>()
+  private val ads: AdsController by inject()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     // Antes do super: a splash precisa estar instalada antes de a janela existir.
@@ -61,9 +66,15 @@ class MainActivity : ComponentActivity() {
       }
 
       AutoCareTheme {
-        AutoCareApp(shellViewModel = viewModel)
+        CompositionLocalProvider(LocalAdsController provides ads) {
+          AutoCareApp(shellViewModel = viewModel)
+        }
       }
     }
+
+    // Consentimento (UMP) e, se permitido, o SDK de anuncios. So numa abertura
+    // nova: na rotacao a Activity e recriada e o formulario apareceria de novo.
+    ads.onActivityCreated(this, newSession = savedInstanceState == null)
 
     // Reagenda os lembretes e recolhe fotos sem dono. Cobre o caso de o
     // BOOT_COMPLETED nao ter chegado (app forcado a parar, instalacao nova,

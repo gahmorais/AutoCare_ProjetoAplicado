@@ -1,5 +1,6 @@
 package br.com.gabrielmorais.autocare.ui.activities.vehicle_details_screen
 
+import br.com.gabrielmorais.autocare.ui.components.AdBanner
 import br.com.gabrielmorais.autocare.ui.components.rememberLocalPhoto
 import br.com.gabrielmorais.autocare.ui.components.ProfileAvatar
 import br.com.gabrielmorais.autocare.data.models.displayName
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -199,6 +201,9 @@ fun VehicleDetailsScreen(
         }
       )
     },
+    // Aqui nao ha barra de abas: o banner desvia sozinho da barra de navegacao
+    // do sistema.
+    bottomBar = { AdBanner(Modifier.navigationBarsPadding()) },
     floatingActionButton = {
       // Era um icone na app bar, com alvo menor e concorrendo com o titulo.
       FloatingActionButton(onClick = { vehicle.value?.id?.let(onAddMaintenance) }) {

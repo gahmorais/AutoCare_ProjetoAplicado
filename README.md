@@ -100,6 +100,21 @@ fork. Configure em *Settings → Secrets and variables → Actions*:
 | `RELEASE_KEYSTORE_PASSWORD` | senha do keystore |
 | `RELEASE_KEY_ALIAS` | alias da chave |
 | `RELEASE_KEY_PASSWORD` | senha da chave |
+| `ADMOB_APP_ID` | AdMob → Apps → Configurações do app → ID do app (`ca-app-pub-…~…`) |
+| `ADMOB_BANNER_ID` | AdMob → Blocos de anúncios → banner adaptativo (`ca-app-pub-…/…`) |
+| `ADMOB_INTERSTITIAL_ID` | AdMob → Blocos de anúncios → intersticial (`ca-app-pub-…/…`) |
+
+Os IDs do AdMob só são lidos na release **assinada**, e o build falha se algum faltar ou for um ID
+de teste do Google. Debug e release sem keystore usam sempre os IDs de teste. Nunca toque em um
+anúncio real do próprio app: o AdMob trata como clique inválido e pode suspender a conta.
+
+Para ver o formulário de consentimento como se o aparelho estivesse no EEE (só no debug):
+
+```sh
+./gradlew installDebug -PumpDebugEea=true
+```
+
+Num aparelho físico, o logcat do UMP mostra o hash a passar em `-PumpTestDeviceId=<hash>`.
 
 Os secrets antigos `GOOGLE_SERVICES_JSON_BASE64`, `CLOUDINARY_CLOUD_NAME`,
 `CLOUDINARY_UPLOAD_PRESET` e `FIREBASE_SERVICE_ACCOUNT` não são mais lidos e podem ser apagados.

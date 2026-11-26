@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.data.ads.LocalAdsController
 import br.com.gabrielmorais.autocare.data.models.Maintenance
 import br.com.gabrielmorais.autocare.data.models.Vehicle
 import br.com.gabrielmorais.autocare.data.notifications.NotificationUtils
@@ -46,6 +47,7 @@ import br.com.gabrielmorais.autocare.ui.components.LoadingPage
 import br.com.gabrielmorais.autocare.ui.components.SelectMenu
 import br.com.gabrielmorais.autocare.ui.navigation.Routes
 import br.com.gabrielmorais.autocare.utils.Utils
+import br.com.gabrielmorais.autocare.utils.findActivity
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -97,6 +99,7 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
   val state = remember(editing?.id) { AddMaintenanceUiState(editing) }
 
   val notificationContext = LocalContext.current
+  val ads = LocalAdsController.current
 
   val options = remember(services) { catalogOptions(services) }
 
@@ -168,6 +171,9 @@ fun AddMaintenanceScreen(viewModel: AddMaintenanceViewModel, onBack: () -> Unit)
                   maintenance = maintenance,
                   localDateTime = Utils.dateMinusFiveDays(state.forecastNextExchangeDate)
                 )
+                // Unico ponto de intersticial do app, e so depois da gravacao
+                // confirmada. A InterstitialPolicy decide se ele aparece.
+                notificationContext.findActivity()?.let(ads::maybeShowInterstitial)
                 onBack()
               }
 
