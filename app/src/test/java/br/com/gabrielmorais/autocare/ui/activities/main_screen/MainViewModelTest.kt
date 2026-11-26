@@ -245,6 +245,38 @@ internal class MainViewModelTest {
   }
 
   @Test
+  fun `adicionar veiculo com o inicio filtrado em outro perfil cria nele`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "ana"
+    val vm = viewModel()
+    vm.setHomeFilter("pedro")
+
+    vm.prepareAddVehicle()
+    advanceUntilIdle()
+    vm.saveVehicle(Vehicle(id = "uno", nickName = "Uno"))
+    advanceUntilIdle()
+
+    assertEquals("pedro", vm.activeProfile.value?.id)
+    assertEquals("pedro", vehicles.vehicles.value.single().profileId)
+  }
+
+  @Test
+  fun `adicionar veiculo sem filtro ou com o filtro no ativo nao troca o perfil`() = runTest(dispatcher) {
+    profiles.profiles.value = listOf(ana, pedro)
+    activeStore.activeProfileId.value = "ana"
+    val vm = viewModel()
+
+    vm.prepareAddVehicle()
+    advanceUntilIdle()
+    assertEquals("ana", vm.activeProfile.value?.id)
+
+    vm.setHomeFilter("ana")
+    vm.prepareAddVehicle()
+    advanceUntilIdle()
+    assertEquals("ana", vm.activeProfile.value?.id)
+  }
+
+  @Test
   fun `trocar o perfil ativo troca a lista de veiculos`() = runTest(dispatcher) {
     val vm = twoProfilesWithCars()
     assertEquals(listOf("gol"), vm.vehicles.value.map { it.id })

@@ -134,6 +134,17 @@ class MainViewModel(
   }
 
   /**
+   * Chamado pelo "Adicionar veiculo" do Inicio antes de abrir a aba Veiculos.
+   * O veiculo novo fica sempre com o perfil ativo (ver [saveVehicle]); com o
+   * filtro em outro perfil, ele ia parar no perfil errado. Ativar o filtrado
+   * resolve, e o seletor do topo mostra a troca.
+   */
+  fun prepareAddVehicle() {
+    val filtered = _homeFilter.value ?: return
+    if (filtered != activeProfile.value?.id) selectProfile(filtered)
+  }
+
+  /**
    * Cria um perfil e o torna ativo - no primeiro acesso e ao adicionar outro.
    * A foto e opcional e, se falhar, o perfil e criado sem ela: perder a foto e
    * melhor do que prender a pessoa no formulario.

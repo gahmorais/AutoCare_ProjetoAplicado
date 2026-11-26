@@ -91,7 +91,10 @@ fun HomeScreen(
         title = stringResource(R.string.text_any_car_registered),
         body = stringResource(R.string.text_empty_vehicles_hint),
         actionLabel = stringResource(R.string.text_add_vehicle),
-        onAction = onAddVehicle
+        onAction = {
+          viewModel.prepareAddVehicle()
+          onAddVehicle()
+        }
       )
 
       // Ha carro mas nenhuma manutencao: nao ha o que estar "em dia", e dizer
