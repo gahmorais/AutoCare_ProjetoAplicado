@@ -87,6 +87,20 @@ internal class MainViewModelTest {
   }
 
   @Test
+  fun `restaurar um arquivo no primeiro acesso libera o app sem criar perfil`() = runTest(dispatcher) {
+    // A importacao grava os perfis direto no banco, sem passar pelo createProfile.
+    val vm = viewModel()
+    assertEquals(StartState.NEEDS_ONBOARDING, vm.startState.value)
+
+    profiles.profiles.value = listOf(ana, pedro)
+    advanceUntilIdle()
+
+    assertEquals(StartState.READY, vm.startState.value)
+    assertEquals(ana, vm.activeProfile.value)
+    assertEquals(2, vm.profiles.value.size)
+  }
+
+  @Test
   fun `id ativo de perfil que nao existe cai no primeiro perfil`() = runTest(dispatcher) {
     profiles.profiles.value = listOf(ana, pedro)
     activeStore.activeProfileId.value = "excluido"
