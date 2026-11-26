@@ -21,7 +21,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ## Andamento
 
-*Atualizado em 24/11/2026.* Etapas 1 a 7 já estão em `main` (squash no PR #7, `6923146`; a 7 foi adiantada para antes da 6). A etapa 8 está em `main` (PR #8). A etapa 9 está na branch `feat/etapa-9-target-sdk`, **ainda sem push nem PR**.
+*Atualizado em 26/11/2026.* Etapas 1 a 9 já estão em `main` (a 7 foi adiantada para antes da 6; a 9 entrou pelo PR #9). As sobras conhecidas foram corrigidas antes da etapa 10, pelo [plano-sobras.md](plano-sobras.md).
 
 | Etapa | Commit | Situação |
 |---|---|---|
@@ -34,11 +34,12 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | 6 — Múltiplos perfis | `91cda85` | ✅ |
 | 8 — Exportar / importar | `38ee2e1` (#8) | ✅ falta a troca real entre dois aparelhos |
 | — `.idea/` fora do git | `d20bd19` | ✅ |
-| 9 — `targetSdk` + edge-to-edge | ver `git log` | ✅ `targetSdk` 36 ainda não confirmado no Play Console |
+| 9 — `targetSdk` + edge-to-edge | `673c075` (#9) | ✅ `targetSdk` 36 ainda não confirmado no Play Console |
+| S1 a S4 — Sobras conhecidas | #10, #11, #12 e o da S4 | ✅ ver [plano-sobras.md](plano-sobras.md) |
 | 10 — AdMob + UMP | — | próxima |
 | 11 — Release e Play Console | — | pendente |
 
-**Situação no último commit (etapa 9):** 163 testes na JVM e 45 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 5.736.789 bytes.
+**Situação no último commit (S4):** 171 testes na JVM e 50 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando, com `UnusedResources` como erro; APK de release com 5.749.085 bytes.
 
 **Bugs antigos achados e corrigidos no caminho:** excluir um veículo não cancelava os alarmes dele, e o desfazer não devolvia as manutenções; o recorte de foto não travava a proporção; o círculo do avatar ficava invisível.
 
@@ -49,9 +50,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Confirmar no Play Console o `targetSdk` mínimo (etapa 9 usou 36).
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
 
-**Sobras conhecidas, para resolver antes da release** (plano de correção em [plano-sobras.md](plano-sobras.md))
-- Recursos sem uso: `ic_launcher*` antigos e strings de notificação e de quilometragem.
-- No Início com o filtro em outro perfil, o "Adicionar veículo" do estado vazio cria o veículo no perfil **ativo**, e não no filtrado.
+**Sobras conhecidas:** nenhuma. As quatro que existiam foram corrigidas pelo [plano-sobras.md](plano-sobras.md) (PRs #10, #11, #12 e o da S4).
 
 ## Regras gerais de cada etapa
 

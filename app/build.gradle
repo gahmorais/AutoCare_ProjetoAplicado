@@ -91,6 +91,9 @@ android {
                 'CoroutineCreationDuringComposition',
                 'FlowOperatorInvokedInComposition',
                 'UnrememberedMutableState'
+        // 21 recursos sem uso tinham se acumulado (icones antigos, strings da
+        // versao com Firebase). Como erro, a lista nao volta a crescer.
+        error 'UnusedResources'
     }
 }
 
