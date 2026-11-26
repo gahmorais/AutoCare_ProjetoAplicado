@@ -47,6 +47,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import br.com.gabrielmorais.autocare.R
+import br.com.gabrielmorais.autocare.BuildConfig
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.material.icons.outlined.Policy
 import br.com.gabrielmorais.autocare.utils.findActivity
 import br.com.gabrielmorais.autocare.data.ads.LocalAdsController
 import androidx.compose.material.icons.outlined.PrivacyTip
@@ -151,6 +154,8 @@ fun ProfileScreen(viewModel: MainViewModel, backupSection: @Composable () -> Uni
       HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
       backupSection()
       PrivacyOptionsItem()
+      HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+      AboutSection()
       Spacer(modifier = Modifier.height(24.dp))
     }
   }
@@ -310,5 +315,35 @@ private fun PrivacyOptionsItem() {
       Icon(Icons.Outlined.PrivacyTip, contentDescription = null)
       Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.ads_privacy_options))
     }
+  }
+}
+
+/** Versao do app e a politica de privacidade, a mesma URL cadastrada na Play. */
+@Composable
+private fun AboutSection() {
+  val uriHandler = LocalUriHandler.current
+  Text(
+    modifier = Modifier
+      .fillMaxWidth()
+      .semantics { heading() },
+    text = stringResource(R.string.about_title),
+    style = MaterialTheme.typography.titleMedium
+  )
+  Text(
+    modifier = Modifier.fillMaxWidth(),
+    text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant
+  )
+  OutlinedButton(
+    modifier = Modifier.fillMaxWidth(),
+    onClick = {
+      // Sem navegador instalado o openUri lanca; nao ha o que fazer alem de
+      // nao derrubar o app.
+      runCatching { uriHandler.openUri(BuildConfig.PRIVACY_POLICY_URL) }
+    }
+  ) {
+    Icon(Icons.Outlined.Policy, contentDescription = null)
+    Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.about_privacy_policy))
   }
 }

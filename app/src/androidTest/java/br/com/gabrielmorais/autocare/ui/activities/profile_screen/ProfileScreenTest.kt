@@ -6,6 +6,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.performScrollTo
+import br.com.gabrielmorais.autocare.BuildConfig
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -51,6 +57,12 @@ class ProfileScreenTest {
     }
   }
   private val workDir = File(context.cacheDir, "profile-screen-test")
+  private val openedUris = mutableListOf<String>()
+  private val uriHandler = object : UriHandler {
+    override fun openUri(uri: String) {
+      openedUris += uri
+    }
+  }
 
   @Before
   fun setUp() {
@@ -76,7 +88,11 @@ class ProfileScreenTest {
         compress = { _, _ -> error("foto não faz parte deste teste") }
       )
     )
-    compose.setContent { AutoCareTheme { ProfileScreen(viewModel) } }
+    compose.setContent {
+      AutoCareTheme {
+        CompositionLocalProvider(LocalUriHandler provides uriHandler) { ProfileScreen(viewModel) }
+      }
+    }
     compose.waitUntil(5_000) {
       compose.onAllNodes(hasText("Em uso")).fetchSemanticsNodes().isNotEmpty()
     }
@@ -129,5 +145,13 @@ class ProfileScreenTest {
     compose.waitUntil(5_000) {
       runBlocking { profiles.getProfile(activeStore.activeProfileId.value!!)?.name } == "Bia"
     }
+  }
+
+  @Test
+  fun sobre_mostra_a_versao_e_abre_a_politica_de_privacidade() {
+    compose.onNodeWithText("AutoCare, versão ${BuildConfig.VERSION_NAME}").performScrollTo().assertIsDisplayed()
+    compose.onNodeWithText("Política de privacidade").performScrollTo().performClick()
+
+    assertEquals(listOf(BuildConfig.PRIVACY_POLICY_URL), openedUris)
   }
 }

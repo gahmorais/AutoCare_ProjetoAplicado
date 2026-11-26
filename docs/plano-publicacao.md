@@ -21,7 +21,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 
 ## Andamento
 
-*Atualizado em 26/11/2026.* Etapas 1 a 9 já estão em `main`, e a 10 está na branch `feat/etapa-10-anuncios` (a 7 foi adiantada para antes da 6; a 9 entrou pelo PR #9). As sobras conhecidas foram corrigidas antes da etapa 10, pelo [plano-sobras.md](plano-sobras.md).
+*Atualizado em 26/11/2026.* Etapas 1 a 10 já estão em `main`, e a parte do repositório da 11 está na branch `feat/etapa-11-release` (a 7 foi adiantada para antes da 6; a 9 entrou pelo PR #9). As sobras conhecidas foram corrigidas antes da etapa 10, pelo [plano-sobras.md](plano-sobras.md).
 
 | Etapa | Commit | Situação |
 |---|---|---|
@@ -36,8 +36,8 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 | — `.idea/` fora do git | `d20bd19` | ✅ |
 | 9 — `targetSdk` + edge-to-edge | `673c075` (#9) | ✅ `targetSdk` 36 ainda não confirmado no Play Console |
 | S1 a S4 — Sobras conhecidas | #10, #11, #12 e o da S4 | ✅ ver [plano-sobras.md](plano-sobras.md) |
-| 10 — AdMob + UMP | ver `git log` | ✅ falta criar o app e os blocos no AdMob e cadastrar os secrets |
-| 11 — Release e Play Console | — | próxima |
+| 10 — AdMob + UMP | `03f6142` (#14) | ✅ falta criar o app e os blocos no AdMob e cadastrar os secrets |
+| 11 — Release e Play Console | ver `git log` | parte do repositório feita; falta o que depende de contas, domínio e Console |
 
 **Situação no último commit (etapa 10):** 175 testes na JVM e 56 instrumentados (API 36) passando; `lintDebug`, `lintRelease` e `assembleRelease` passando; APK de release com 9.846.702 bytes.
 
@@ -51,6 +51,8 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
 - [ ] Criar o app no AdMob, os blocos de banner adaptativo e intersticial, e cadastrar `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID` nos secrets do GitHub (etapa 10). Sem eles o `release.yml` falha.
 - [ ] Configurar a mensagem de consentimento (GDPR) em AdMob → Privacidade e mensagens; sem ela o UMP não tem formulário a mostrar no EEE.
+- [ ] Escolher e registrar o domínio próprio, publicar `site/` na raiz e trocar os placeholders (etapa 11; ver `site/README.md`).
+- [ ] Criar o gráfico de recursos 1024×500 da ficha da loja (etapa 11).
 
 **Sobras conhecidas, para resolver antes da release** (as quatro anteriores foram corrigidas pelo [plano-sobras.md](plano-sobras.md), PRs #10 a #13)
 - A aba Veículos quebra (o app fecha) quando um veículo não tem distância média por mês: `CardVehicle` formata `averageDistanceTraveledPerMonth` sem checar nulo. O app não deixa cadastrar sem distância, mas a importação de backup aceita o campo ausente. Achado na etapa 10 pelo `AdPlacementTest`.
@@ -455,36 +457,34 @@ images/<uuid>.jpg
 
 ## Etapa 11 — Release, site e Play Console
 
-**Site (política de privacidade + app-ads.txt)**
-- [ ] O `app-ads.txt` precisa estar na **raiz do domínio** cadastrado como site do desenvolvedor. Uma página de projeto (`usuario.github.io/AutoCare/`) **não é raiz**. Use o repositório de site de usuário (`<usuario>.github.io`) ou um domínio próprio.
-- [ ] A política de privacidade (pt-BR) deve explicar:
-  - os dados ficam no aparelho;
-  - o backup é feito pelo Google Drive da própria pessoa (Auto Backup) ou por arquivo exportado por ela;
-  - o AdMob coleta ID de publicidade, localização aproximada, interações e diagnóstico;
-  - o consentimento e como revogá-lo;
-  - o contato do desenvolvedor.
-- [ ] Link para a política dentro do app (Perfil → Sobre).
+A parte do repositório está feita (branch `feat/etapa-11-release`). O resto depende de contas, do domínio e
+do Play Console, e está marcado como pendência do responsável pelo app.
+
+**Site (política de privacidade + app-ads.txt)**: arquivos em [`site/`](../site/README.md)
+- [x] `app-ads.txt` (modelo com o ID de editor a preencher), `privacidade.html`, `index.html` e o estilo, para servir na **raiz** do domínio próprio.
+- [x] Política de privacidade (pt-BR): dados no aparelho; backup pelo Auto Backup na conta Google da pessoa ou por arquivo exportado; o que o SDK do AdMob coleta; consentimento e como revogá-lo (Perfil → Privacidade e anúncios, e o ID de publicidade do Android); público 18+; LGPD; contato.
+- [x] Link para a política no app (Perfil → Sobre), com a versão do app. A URL fica num só lugar (`privacyPolicyPlaceholder` em `app/build.gradle`) e a release assinada falha enquanto ela for o placeholder.
+- [ ] Trocar os placeholders (`[NOME DA ORGANIZAÇÃO]`, `[E-MAIL DE CONTATO]`, `[DATA DE PUBLICAÇÃO]`, ID de editor, URL no `build.gradle`) e publicar o site no domínio. Passo a passo em `site/README.md`.
 
 **CI / release**
-- [ ] `release.yml`: adicionar os secrets do AdMob e conferir que os antigos foram removidos na etapa 5.
-- [ ] Manter o `mapping.txt` e **também** enviá-lo ao Play Console junto com cada AAB.
-- [ ] Primeira versão: tag `v1.0.0`.
-- [ ] Guardar o keystore e as senhas fora do GitHub. Na primeira publicação, ativar o Play App Signing (a chave do CI vira a chave de upload).
+- [x] `release.yml` com os secrets do AdMob (etapa 10). Nenhuma referência aos secrets antigos do Firebase e do Cloudinary.
+- [x] `mapping.txt` mantido como artefato da execução; o envio ao Play Console é manual, a cada AAB, documentado no README ("Enviando ao Play Console").
+- [x] Play App Signing e a guarda do keystore e das senhas fora do GitHub documentados no README.
+- [ ] Primeira versão: tag `v1.0.0`, depois de cadastrar os secrets do AdMob e trocar a URL da política.
 
-**Play Console**
-- [ ] Ficha da loja: ícone 512×512, feature graphic 1024×500, screenshots de celular (com dois perfis, para destacar o recurso) e descrições curta e completa.
-- [ ] Segurança dos dados:
-  - dados do app (perfis, veículos, fotos): **não coletados**, pois não saem do aparelho;
-  - SDK AdMob: ID do dispositivo, localização aproximada, interações e diagnóstico, **coletados e compartilhados** para publicidade, analytics e prevenção de fraude;
-  - criptografia em trânsito: sim.
-- [ ] Contém anúncios: **sim**. ID de publicidade: **sim** (uso: publicidade).
-- [ ] Classificação de conteúdo (questionário). Público-alvo **18+**, para ficar fora da política Families.
-- [ ] Acesso ao app: "todas as funcionalidades disponíveis sem restrições" (não há mais login).
-- [ ] **Conta de organização:** obter o número D-U-N-S (gratuito, mas leva alguns dias úteis; **iniciar já**), concluir a verificação da organização e do site no Console. O nome da organização aparece como desenvolvedor na loja.
-- [ ] Teste interno (ou fechado, com testadores próprios) → produção. A conta de organização **não** tem a exigência de 12 testadores por 14 dias, mas um teste interno curto num aparelho real antes da produção continua recomendado.
+**Play Console**: textos e respostas em [play-store.md](play-store.md)
+- [x] Descrições curta (77/80) e completa, nome (29/30) e categoria.
+- [x] Ícone 512×512 (`app/src/main/ic_autocare_logo-playstore.png`) e 5 capturas de celular em `docs/play-store/capturas/`, com dois perfis e sem anúncio (build `-PsemAnuncios=true`).
+- [ ] Gráfico de recursos 1024×500, a criar.
+- [x] Respostas de Segurança dos dados, anúncios, ID de publicidade, público-alvo 18+, classificação de conteúdo e acesso ao app.
+- [ ] Conferir a tabela de dados do SDK com a página oficial do Google para a versão 25.5.0 antes de enviar.
+- [ ] **Conta de organização:** D-U-N-S, verificação da organização e do site.
+- [ ] Teste interno → produção, seguindo "Ordem da primeira publicação" em `play-store.md`.
 - [ ] AdMob: vincular o app depois de publicado, para a revisão e a verificação do `app-ads.txt`.
 
 **Validação**
+- [x] Portão mínimo e de release verdes; 57 testes instrumentados (API 36), incluindo o novo de Perfil → Sobre (mostra a versão e abre a URL da política).
+- [x] A release assinada falha com a URL da política no placeholder.
 - [ ] O AAB assinado pelo `release.yml` é aceito no teste interno sem avisos bloqueantes (target SDK, 16 KB, permissões).
 - [ ] Instalação limpa pela Play num aparelho real: onboarding → veículo → manutenção → notificação → exportar → anúncios de produção aparecendo (sem clicar).
 

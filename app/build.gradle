@@ -38,6 +38,17 @@ if (releaseKeystore) {
         throw new GradleException("Release assinada com ID de teste do AdMob em ${testIds.join(', ')}.")
     }
 }
+// Politica de privacidade, aberta por Perfil -> Sobre. Precisa ser a mesma URL
+// cadastrada no Play Console, no dominio proprio que tambem serve o app-ads.txt
+// (ver site/README.md). Enquanto o dominio nao existe fica o placeholder, e a
+// release assinada se recusa a sair com ele.
+def privacyPolicyPlaceholder = 'https://SEU-DOMINIO/privacidade.html'
+def privacyPolicyUrl = privacyPolicyPlaceholder
+if (releaseKeystore && privacyPolicyUrl == privacyPolicyPlaceholder) {
+    throw new GradleException('Release assinada com a URL da politica de privacidade ainda no placeholder (app/build.gradle).')
+}
+// Debug sem anuncios, para as capturas de tela da loja: ./gradlew installDebug -PsemAnuncios=true
+def adsEnabledInDebug = !(findProperty('semAnuncios') ?: 'false').toBoolean()
 // Formulario de consentimento como se o aparelho estivesse no EEE, so no debug:
 // ./gradlew installDebug -PumpDebugEea=true [-PumpTestDeviceId=<hash do logcat>]
 def umpDebugEea = (findProperty('umpDebugEea') ?: 'false').toBoolean()
@@ -65,6 +76,7 @@ android {
         targetSdk 36
         versionCode releaseVersionCode
         versionName releaseVersionName
+        buildConfigField 'String', 'PRIVACY_POLICY_URL', "\"${privacyPolicyUrl}\""
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -79,6 +91,7 @@ android {
             buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', "\"${admobTestIds.interstitial}\""
             buildConfigField 'boolean', 'UMP_DEBUG_EEA', "${umpDebugEea}"
             buildConfigField 'String', 'UMP_TEST_DEVICE_ID', "\"${umpTestDeviceId}\""
+            buildConfigField 'boolean', 'ADS_ENABLED', "${adsEnabledInDebug}"
         }
         release {
             manifestPlaceholders = [admobAppId: admobReleaseIds.app]
@@ -86,6 +99,7 @@ android {
             buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', "\"${admobReleaseIds.interstitial}\""
             buildConfigField 'boolean', 'UMP_DEBUG_EEA', 'false'
             buildConfigField 'String', 'UMP_TEST_DEVICE_ID', '""'
+            buildConfigField 'boolean', 'ADS_ENABLED', 'true'
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

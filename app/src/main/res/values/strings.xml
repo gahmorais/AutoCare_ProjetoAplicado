@@ -77,6 +77,9 @@
     <string name="onboarding_start">Começar</string>
     <string name="onboarding_restore">Restaurar de um arquivo</string>
     <string name="ads_privacy_options">Privacidade e anúncios</string>
+    <string name="about_title">Sobre</string>
+    <string name="about_version">AutoCare, versão %1$s</string>
+    <string name="about_privacy_policy">Política de privacidade</string>
 
     <!-- Multiplos perfis (etapa 6 do plano) -->
     <string name="content_desc_switch_profile">Perfil ativo: %1$s. Toque para trocar</string>
