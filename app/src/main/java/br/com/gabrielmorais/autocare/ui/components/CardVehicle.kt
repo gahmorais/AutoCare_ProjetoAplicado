@@ -93,9 +93,7 @@ fun CardVehicle(
         Text(text = "Distância por mês: ")
         Row {
           Text(
-            text = NumberFormat
-              .getNumberInstance(Locale("pt", "BR"))
-              .format(vehicle.averageDistanceTraveledPerMonth),
+            text = formatMonthlyDistance(vehicle.averageDistanceTraveledPerMonth),
             style = MaterialTheme.typography.titleLarge
           )
           Text(text = " Km", style = MaterialTheme.typography.titleLarge)
@@ -104,6 +102,14 @@ fun CardVehicle(
     }
   }
 }
+
+/**
+ * O app nao deixa cadastrar sem distancia, mas um backup importado pode trazer o
+ * campo ausente. Formatar null com NumberFormat lancava IllegalArgumentException e
+ * derrubava a aba Veiculos inteira.
+ */
+internal fun formatMonthlyDistance(value: Int?): String =
+  value?.let { NumberFormat.getNumberInstance(Locale("pt", "BR")).format(it) } ?: "—"
 
 @Preview(showBackground = true)
 @Composable

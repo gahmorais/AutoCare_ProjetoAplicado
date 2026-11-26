@@ -61,9 +61,9 @@ class AdPlacementTest {
     val vehicles = RoomVehicleRepository(database)
     runBlocking {
       profiles.saveProfile(Profile(id = "ana", name = "Ana", createdAt = 1L))
-      vehicles.saveVehicle(
-        Vehicle(id = "gol", profileId = "ana", nickName = "Gol", averageDistanceTraveledPerMonth = 1_000)
-      )
+      // Sem distancia de proposito, como um veiculo vindo de backup: a aba
+      // Veiculos quebrava ao formatar o valor nulo.
+      vehicles.saveVehicle(Vehicle(id = "gol", profileId = "ana", nickName = "Gol"))
     }
     val imageStore = LocalImageStore(
       rootDir = File(workDir, "files"),
