@@ -51,7 +51,6 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Pedir o número D-U-N-S da organização (etapa 11; demora dias).
 - [ ] Criar o app no AdMob, os blocos de banner adaptativo e intersticial, e cadastrar `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID` nos secrets do GitHub (etapa 10). Sem eles o `release.yml` falha.
 - [ ] Configurar a mensagem de consentimento (GDPR) em AdMob → Privacidade e mensagens; sem ela o UMP não tem formulário a mostrar no EEE.
-- [ ] Escolher e registrar o domínio próprio, publicar `site/` na raiz e trocar os placeholders (etapa 11; ver `site/README.md`).
 - [ ] Criar o gráfico de recursos 1024×500 da ficha da loja (etapa 11).
 
 **Sobras conhecidas, para resolver antes da release** (as quatro anteriores foram corrigidas pelo [plano-sobras.md](plano-sobras.md), PRs #10 a #13)
@@ -460,11 +459,11 @@ images/<uuid>.jpg
 A parte do repositório está feita (branch `feat/etapa-11-release`). O resto depende de contas, do domínio e
 do Play Console, e está marcado como pendência do responsável pelo app.
 
-**Site (política de privacidade + app-ads.txt)**: arquivos em [`site/`](../site/README.md)
-- [x] `app-ads.txt` (modelo com o ID de editor a preencher), `privacidade.html`, `index.html` e o estilo, para servir na **raiz** do domínio próprio.
-- [x] Política de privacidade (pt-BR): dados no aparelho; backup pelo Auto Backup na conta Google da pessoa ou por arquivo exportado; o que o SDK do AdMob coleta; consentimento e como revogá-lo (Perfil → Privacidade e anúncios, e o ID de publicidade do Android); público 18+; LGPD; contato.
-- [x] Link para a política no app (Perfil → Sobre), com a versão do app. A URL fica num só lugar (`privacyPolicyPlaceholder` em `app/build.gradle`) e a release assinada falha enquanto ela for o placeholder.
-- [ ] Trocar os placeholders (`[NOME DA ORGANIZAÇÃO]`, `[E-MAIL DE CONTATO]`, `[DATA DE PUBLICAÇÃO]`, ID de editor, URL no `build.gradle`) e publicar o site no domínio. Passo a passo em `site/README.md`.
+**Site (política de privacidade + app-ads.txt)**: no site da GeA Software (repositório `gahmorais/geasoftware`)
+- [x] Política de privacidade (pt-BR) no ar em https://geasoftware.com.br/autocare/privacidade desde 26/11/2026 (PR gahmorais/geasoftware#10): dados no aparelho; backup pelo Auto Backup na conta Google da pessoa ou por arquivo exportado; o que o SDK do AdMob coleta; consentimento e como revogá-lo (Perfil → Privacidade e anúncios, e o ID de publicidade do Android); público 18+; LGPD; contato da GeA Software LTDA. O texto-base saiu deste repositório (commit `8179ce4`, `site/privacidade.html`, removido depois); mudanças de conteúdo agora vão por mensagem ao inbox de `gahmorais/geasoftware`.
+- [x] `app-ads.txt` no ar na raiz de geasoftware.com.br, com a conta AdMob da empresa (`pub-5331769887811788`). Vale para o AutoCare se ele for cadastrado nessa mesma conta.
+- [x] Card do AutoCare na home do site, com duas capturas e o link para a política; o botão da Play entra depois da publicação.
+- [x] Link para a política no app (Perfil → Sobre), com a versão do app. A URL fica num só lugar (`privacyPolicyUrl` em `app/build.gradle`).
 
 **CI / release**
 - [x] `release.yml` com os secrets do AdMob (etapa 10). Nenhuma referência aos secrets antigos do Firebase e do Cloudinary.
@@ -484,7 +483,7 @@ do Play Console, e está marcado como pendência do responsável pelo app.
 
 **Validação**
 - [x] Portão mínimo e de release verdes; 57 testes instrumentados (API 36), incluindo o novo de Perfil → Sobre (mostra a versão e abre a URL da política).
-- [x] A release assinada falha com a URL da política no placeholder.
+- [x] A URL da política no app é a que está no ar (HTTP 200 em 26/11/2026).
 - [ ] O AAB assinado pelo `release.yml` é aceito no teste interno sem avisos bloqueantes (target SDK, 16 KB, permissões).
 - [ ] Instalação limpa pela Play num aparelho real: onboarding → veículo → manutenção → notificação → exportar → anúncios de produção aparecendo (sem clicar).
 

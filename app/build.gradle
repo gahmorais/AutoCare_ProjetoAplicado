@@ -38,15 +38,11 @@ if (releaseKeystore) {
         throw new GradleException("Release assinada com ID de teste do AdMob em ${testIds.join(', ')}.")
     }
 }
-// Politica de privacidade, aberta por Perfil -> Sobre. Precisa ser a mesma URL
-// cadastrada no Play Console, no dominio proprio que tambem serve o app-ads.txt
-// (ver site/README.md). Enquanto o dominio nao existe fica o placeholder, e a
-// release assinada se recusa a sair com ele.
-def privacyPolicyPlaceholder = 'https://SEU-DOMINIO/privacidade.html'
-def privacyPolicyUrl = privacyPolicyPlaceholder
-if (releaseKeystore && privacyPolicyUrl == privacyPolicyPlaceholder) {
-    throw new GradleException('Release assinada com a URL da politica de privacidade ainda no placeholder (app/build.gradle).')
-}
+// Politica de privacidade, aberta por Perfil -> Sobre. Tem de ser a mesma URL
+// cadastrada no Play Console. A pagina vive no site da GeA Software (repositorio
+// gahmorais/geasoftware), no mesmo dominio que serve o app-ads.txt. Sem barra no
+// final: e a URL canonica (com barra o site redireciona).
+def privacyPolicyUrl = 'https://geasoftware.com.br/autocare/privacidade'
 // Debug sem anuncios, para as capturas de tela da loja: ./gradlew installDebug -PsemAnuncios=true
 def adsEnabledInDebug = !(findProperty('semAnuncios') ?: 'false').toBoolean()
 // Formulario de consentimento como se o aparelho estivesse no EEE, so no debug:

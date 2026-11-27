@@ -42,8 +42,8 @@ de enviar a versão.
 
 **Categoria:** Auto e veículos. **Tags:** manutenção, carro, lembretes.
 
-**Contato:** `[E-MAIL DE CONTATO]` e o site do domínio próprio (ver [site/README.md](../site/README.md)).
-**Política de privacidade:** `https://<seu-domínio>/privacidade.html`.
+**Desenvolvedor:** GeA Software LTDA. **Contato:** `contato@geasoftware.com.br`. **Site:** `https://geasoftware.com.br`.
+**Política de privacidade:** `https://geasoftware.com.br/autocare/privacidade` (sem barra no final).
 
 ### Recursos gráficos
 
