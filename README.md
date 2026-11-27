@@ -136,7 +136,27 @@ continua funcionando**: versão `1`/`1.0` e `app-release-unsigned.apk`.
 
 O `mapping.txt` do R8 vai só para os artefatos da execução (90 dias), fora da Release — é anexo
 público e serve para desofuscar o APK. Sem ele, as stack traces daquela versão ficam ilegíveis
-para sempre, então baixe e guarde antes de expirar (e envie junto com o AAB ao Play Console).
+para sempre, então baixe e guarde antes de expirar.
+
+### Enviando ao Play Console
+
+A primeira vez segue a ordem de [docs/play-store.md](docs/play-store.md), que também tem a ficha da loja e
+as respostas dos formulários. A cada versão:
+
+1. Baixe o artefato `release-<versão>` da execução do `release.yml` (AAB, APK e `mapping-<versão>.txt`).
+2. Envie o `.aab` numa nova versão do teste interno.
+3. Envie o `mapping-<versão>.txt` para esse mesmo pacote: *Pacote de app → Explorador de pacotes de app →
+   Downloads → Arquivo de desofuscação do ReTrace → Fazer upload*. É ele que deixa legíveis as falhas no
+   Android Vitals. O envio é manual de propósito, para não precisar de uma conta de serviço da Play no CI.
+4. Teste num aparelho real instalado pela Play e promova para produção.
+
+**Play App Signing:** ativado na criação do app. O Google guarda a chave que assina o que chega aos
+aparelhos, e o keystore do CI passa a ser só a chave de **upload**. Se ele vazar ou se perder, a chave de
+upload pode ser trocada pelo Console, sem perder o app.
+
+**Keystore e senhas fora do GitHub:** guarde o `release.jks` e as três senhas num gerenciador de senhas
+ou cofre, além dos secrets. Os secrets do GitHub não podem ser lidos de volta; sem uma cópia, a única
+saída é pedir a troca da chave de upload ao Google.
 
 ## Atualizando versões
 
