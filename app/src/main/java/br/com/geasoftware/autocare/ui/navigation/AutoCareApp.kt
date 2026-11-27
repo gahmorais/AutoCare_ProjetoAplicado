@@ -1,0 +1,205 @@
+package br.com.geasoftware.autocare.ui.navigation
+
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import br.com.geasoftware.autocare.ui.activities.profile_screen.BackupSection
+import br.com.geasoftware.autocare.ui.activities.profile_screen.RestoreFromFileButton
+import br.com.geasoftware.autocare.ui.activities.profile_screen.ProfileScreen
+import org.koin.androidx.compose.koinViewModel
+import br.com.geasoftware.autocare.ui.activities.add_maintenance_screen.MaintenanceFormRoute
+import br.com.geasoftware.autocare.ui.activities.home_screen.HomeScreen
+import br.com.geasoftware.autocare.ui.activities.main_screen.MainViewModel
+import br.com.geasoftware.autocare.ui.activities.main_screen.StartState
+import br.com.geasoftware.autocare.ui.activities.onboarding_screen.OnboardingScreen
+import br.com.geasoftware.autocare.ui.activities.vehicle_details_screen.VehicleDetailsRoute
+import br.com.geasoftware.autocare.ui.activities.vehicles_screen.VehiclesScreen
+
+/**
+ * O app inteiro num NavHost so. Antes eram cinco Activities ligadas por Intent,
+ * sem botao de voltar em duas delas e com a lista de veiculos duplicada entre a
+ * tela inicial e "Minha Conta".
+ */
+@Composable
+fun AutoCareApp(shellViewModel: MainViewModel) {
+  val startState by shellViewModel.startState.collectAsState()
+  when (startState) {
+    // A splash continua na tela enquanto o banco nao responde (ver MainActivity).
+    StartState.LOADING -> Unit
+    StartState.NEEDS_ONBOARDING -> OnboardingScreen(
+      onStart = shellViewModel::createProfile,
+      // Fora do NavHost, o koinViewModel fica preso a Activity: a importacao
+      // continua (notificacoes, varredura de fotos) depois que o onboarding sai
+      // da tela.
+      restoreAction = { RestoreFromFileButton(viewModel = koinViewModel()) }
+    )
+    StartState.READY -> AutoCareShell(shellViewModel)
+  }
+}
+
+@Composable
+private fun AutoCareShell(
+  shellViewModel: MainViewModel,
+  navController: NavHostController = rememberNavController()
+) {
+  val snackbarHostState = remember { SnackbarHostState() }
+  val backStackEntry by navController.currentBackStackEntryAsState()
+  val currentDestination = backStackEntry?.destination
+
+  // A barra some nos destinos de detalhe e de formulario: la o que vale e o
+  // botao de voltar, e manter as abas convidaria a perder o contexto do veiculo.
+  val showBottomBar = TopLevelDestination.values().any { destination ->
+    currentDestination?.hierarchy?.any { it.route == destination.route } == true
+  }
+
+  Scaffold(
+    // As barras do sistema ficam por conta do Scaffold de cada tela (a TopAppBar
+    // dela desce da status bar). Aqui so entra a altura da barra inferior, que
+    // ja inclui a barra de navegacao do sistema.
+    contentWindowInsets = WindowInsets(0),
+    snackbarHost = { SnackbarHost(snackbarHostState) },
+    bottomBar = {
+      if (showBottomBar) {
+        NavigationBar {
+          TopLevelDestination.values().forEach { destination ->
+            val selected =
+              currentDestination?.hierarchy?.any { it.route == destination.route } == true
+            NavigationBarItem(
+              selected = selected,
+              onClick = { navController.navigateToTopLevel(destination) },
+              // Icone e rotulo juntos: rotulo sozinho no destino ativo esconde
+              // os demais e obriga o usuario a adivinhar.
+              icon = {
+                Icon(
+                  imageVector = destination.icon,
+                  contentDescription = null
+                )
+              },
+              label = { Text(stringResource(destination.labelRes)) },
+              // O indicador padrao do M3 usa secondaryContainer, que aqui e o
+              // oliva reservado para "em dia" - aba ativa nao pode falar a
+              // mesma lingua do status da manutencao.
+              colors = NavigationBarItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface
+              )
+            )
+          }
+        }
+      }
+    }
+  ) { padding ->
+    val transitions = rememberNavTransitions()
+    NavHost(
+      navController = navController,
+      startDestination = TopLevelDestination.INICIO.route,
+      // consumeWindowInsets: sem ele a tela por baixo somaria de novo a barra de
+      // navegacao do sistema, que a barra inferior ja cobre, e sobraria um vao.
+      modifier = Modifier
+        .padding(padding)
+        .consumeWindowInsets(padding),
+      enterTransition = transitions.enter,
+      exitTransition = transitions.exit,
+      popEnterTransition = transitions.popEnter,
+      popExitTransition = transitions.popExit
+    ) {
+      composable(TopLevelDestination.INICIO.route) {
+        HomeScreen(
+          viewModel = shellViewModel,
+          onOpenVehicle = { navController.navigate(Routes.vehicleDetails(it)) },
+          onOpenMaintenance = { vehicleId, maintenanceId ->
+            navController.navigate(Routes.maintenanceForm(vehicleId, maintenanceId))
+          },
+          onAddVehicle = { navController.navigateToTopLevel(TopLevelDestination.VEICULOS) },
+          onManageProfiles = { navController.navigateToTopLevel(TopLevelDestination.EU) }
+        )
+      }
+
+      composable(TopLevelDestination.VEICULOS.route) {
+        VehiclesScreen(
+          viewModel = shellViewModel,
+          onOpenVehicle = { navController.navigate(Routes.vehicleDetails(it)) },
+          onManageProfiles = { navController.navigateToTopLevel(TopLevelDestination.EU) }
+        )
+      }
+
+      composable(TopLevelDestination.EU.route) {
+        ProfileScreen(
+          viewModel = shellViewModel,
+          backupSection = { BackupSection(viewModel = koinViewModel()) }
+        )
+      }
+
+      composable(
+        route = Routes.VEHICLE_DETAILS,
+        arguments = listOf(navArgument(Routes.VEHICLE_ID) { type = NavType.StringType })
+      ) { entry ->
+        VehicleDetailsRoute(
+          vehicleId = entry.arguments?.getString(Routes.VEHICLE_ID).orEmpty(),
+          onBack = { navController.popBackStack() },
+          onAddMaintenance = { vehicleId ->
+            navController.navigate(Routes.maintenanceForm(vehicleId))
+          },
+          onEditMaintenance = { vehicleId, maintenanceId ->
+            navController.navigate(Routes.maintenanceForm(vehicleId, maintenanceId))
+          }
+        )
+      }
+
+      composable(
+        route = Routes.MAINTENANCE_FORM,
+        arguments = listOf(
+          navArgument(Routes.VEHICLE_ID) { type = NavType.StringType },
+          navArgument(Routes.MAINTENANCE_ID) {
+            type = NavType.IntType
+            defaultValue = Routes.NO_MAINTENANCE
+          }
+        )
+      ) { entry ->
+        MaintenanceFormRoute(
+          vehicleId = entry.arguments?.getString(Routes.VEHICLE_ID).orEmpty(),
+          maintenanceId = entry.arguments?.getInt(Routes.MAINTENANCE_ID) ?: Routes.NO_MAINTENANCE,
+          onBack = { navController.popBackStack() }
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Troca de aba sem empilhar: volta ao inicio do grafo salvando o estado da aba
+ * que sai e restaurando o da que entra. Sem isso, alternar abas empilharia
+ * destinos e o botao voltar percorreria todo o historico de cliques.
+ */
+private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
+  navigate(destination.route) {
+    popUpTo(graph.findStartDestination().id) { saveState = true }
+    launchSingleTop = true
+    restoreState = true
+  }
+}

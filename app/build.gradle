@@ -51,7 +51,7 @@ def umpDebugEea = (findProperty('umpDebugEea') ?: 'false').toBoolean()
 def umpTestDeviceId = findProperty('umpTestDeviceId') ?: ''
 
 android {
-    namespace 'br.com.gabrielmorais.autocare'
+    namespace 'br.com.geasoftware.autocare'
     compileSdk 36
 
     signingConfigs {
@@ -66,7 +66,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "br.com.gabrielmorais.autocare"
+        applicationId "br.com.geasoftware.autocare"
         minSdk 28
         // Minimo exigido pela Play para upload novo (36 desde agosto de 2026).
         targetSdk 36

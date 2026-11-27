@@ -184,8 +184,8 @@ maintenances (id INTEGER PK — mantém o Int aleatório atual, que também é r
 
 **Validação (manual)**
 - [ ] Tirar 3 fotos reais pela câmera e 3 da galeria, abrir o card e o detalhe e conferir a nitidez (sem blocos ou serrilhado visíveis).
-- [ ] `adb shell run-as br.com.gabrielmorais.autocare ls -l files/images` e registrar no PR o tamanho médio por foto.
-- [x] `adb shell run-as br.com.gabrielmorais.autocare ls cache` sem sobras do cropper.
+- [ ] `adb shell run-as br.com.geasoftware.autocare ls -l files/images` e registrar no PR o tamanho médio por foto.
+- [x] `adb shell run-as br.com.geasoftware.autocare ls cache` sem sobras do cropper.
 - [x] Unitário: `sweepOrphans` nunca apaga fora de `images/`, e caminhos com `..` são rejeitados.
 
 **Validação**
@@ -317,10 +317,10 @@ adb shell bmgr enable true
 adb shell bmgr transport com.android.localtransport/.LocalTransport
 # o app NAO pode estar em estado "stopped" (force-stop): o Android recusa com
 # "Backup is not allowed". Abra o app e volte para a home antes.
-adb shell bmgr backupnow br.com.gabrielmorais.autocare
-adb shell pm clear br.com.gabrielmorais.autocare
+adb shell bmgr backupnow br.com.geasoftware.autocare
+adb shell pm clear br.com.geasoftware.autocare
 adb shell bmgr list sets                                   # token do conjunto
-adb shell bmgr restore <token> br.com.gabrielmorais.autocare
+adb shell bmgr restore <token> br.com.geasoftware.autocare
 ```
 - [x] Restauração depois de `pm clear`: perfil, veículo, manutenção, foto e perfil ativo de volta; o app abre direto no Início, sem onboarding; alarme reagendado ao abrir.
 - [x] Desinstalar → reinstalar (restauração automática na instalação, transporte local): dados de volta.

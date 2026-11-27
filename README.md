@@ -24,7 +24,7 @@ O plano completo da migração para dados locais e da publicação na Play Store
 
 ### Fotos
 
-Toda foto passa pelo [`ImageCompressor`](app/src/main/java/br/com/gabrielmorais/autocare/data/images/ImageCompressor.kt)
+Toda foto passa pelo [`ImageCompressor`](app/src/main/java/br/com/geasoftware/autocare/data/images/ImageCompressor.kt)
 antes de ser salva — o arquivo original nunca é guardado:
 
 | | Veículo | Perfil |
@@ -34,7 +34,7 @@ antes de ser salva — o arquivo original nunca é guardado:
 
 A recompressão aplica a orientação do EXIF e descarta os metadados da origem, inclusive a
 localização GPS. Não existe "apagar foto": a foto que perde o dono (trocada, veículo ou perfil
-excluído) é recolhida por [`PhotoHousekeeping`](app/src/main/java/br/com/gabrielmorais/autocare/data/images/PhotoHousekeeping.kt)
+excluído) é recolhida por [`PhotoHousekeeping`](app/src/main/java/br/com/geasoftware/autocare/data/images/PhotoHousekeeping.kt)
 na abertura do app, com carência de 1 hora — é o que mantém o *desfazer* do snackbar funcionando.
 
 ### Catálogo de serviços
@@ -75,7 +75,7 @@ SQLite são stubs no android.jar de teste e qualquer asserção passaria sem exe
 > ./gradlew installDebug installDebugAndroidTest
 > adb shell wm dismiss-keyguard   # senão a Activity para em STOPPED
 > adb shell am instrument -w \
->   br.com.gabrielmorais.autocare.test/androidx.test.runner.AndroidJUnitRunner
+>   br.com.geasoftware.autocare.test/androidx.test.runner.AndroidJUnitRunner
 > ```
 
 ## CI/CD
