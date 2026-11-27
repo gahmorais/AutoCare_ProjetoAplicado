@@ -15,7 +15,7 @@ A ordem vai do mais grave para o mais simples. A S4 fica por último porque as e
 
 ## S1 — Descrição fora do catálogo no formulário de manutenção ✅
 
-**Problema.** Em [MaintenanceFormScreen.kt](../app/src/main/java/br/com/gabrielmorais/autocare/ui/activities/add_maintenance_screen/MaintenanceFormScreen.kt), `selectedIndex` começa em `options.indexOfFirst { it.name == editing?.description }.coerceAtLeast(0)`. Quando a descrição não está no catálogo (`assets/services.json`), o formulário cai em "Aditivo do radiador". Ao salvar, esse nome substitui a descrição original. Os dois `LaunchedEffect` de previsão também passam a usar a quilometragem e o prazo desse serviço errado.
+**Problema.** Em [MaintenanceFormScreen.kt](../app/src/main/java/br/com/geasoftware/autocare/ui/activities/add_maintenance_screen/MaintenanceFormScreen.kt), `selectedIndex` começa em `options.indexOfFirst { it.name == editing?.description }.coerceAtLeast(0)`. Quando a descrição não está no catálogo (`assets/services.json`), o formulário cai em "Aditivo do radiador". Ao salvar, esse nome substitui a descrição original. Os dois `LaunchedEffect` de previsão também passam a usar a quilometragem e o prazo desse serviço errado.
 
 Hoje isso só acontece com um backup importado que foi montado fora do app ou que veio de uma versão com outro catálogo. Exemplo reproduzido: uma manutenção importada "Troca de óleo", sendo que o catálogo tem "Óleo de motor".
 
