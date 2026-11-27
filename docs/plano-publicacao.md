@@ -52,8 +52,7 @@ exportar/importar** e **monetização por anúncios (AdMob)**.
 - [ ] Criar o app no AdMob, os blocos de banner adaptativo e intersticial, e cadastrar `ADMOB_APP_ID`, `ADMOB_BANNER_ID` e `ADMOB_INTERSTITIAL_ID` nos secrets do GitHub (etapa 10). Sem eles o `release.yml` falha.
 - [ ] Configurar a mensagem de consentimento (GDPR) em AdMob → Privacidade e mensagens; sem ela o UMP não tem formulário a mostrar no EEE.
 
-**Sobras conhecidas, para resolver antes da release** (as quatro anteriores foram corrigidas pelo [plano-sobras.md](plano-sobras.md), PRs #10 a #13)
-- A aba Veículos quebra (o app fecha) quando um veículo não tem distância média por mês: `CardVehicle` formata `averageDistanceTraveledPerMonth` sem checar nulo. O app não deixa cadastrar sem distância, mas a importação de backup aceita o campo ausente. Achado na etapa 10 pelo `AdPlacementTest`.
+**Sobras conhecidas:** nenhuma. As quatro do [plano-sobras.md](plano-sobras.md) foram corrigidas nos PRs #10 a #13, e o crash da aba Veículos com veículo sem distância média (achado na etapa 10) no PR `fix/veiculo-sem-distancia`.
 
 ## Regras gerais de cada etapa
 
